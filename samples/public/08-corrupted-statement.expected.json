@@ -1,0 +1,5 @@
+{
+  "sample": "08-corrupted-statement",
+  "expectation": "reject",
+  "reason": "The typical-month statement cut off partway: no cross-reference table, trailer or end-of-file marker."
+}

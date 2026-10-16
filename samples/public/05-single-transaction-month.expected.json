@@ -1,0 +1,29 @@
+{
+  "sample": "05-single-transaction-month",
+  "expectation": "parse",
+  "statement": {
+    "accountHolder": "ANNA OSAMELÁ",
+    "iban": "SK22 9900 0000 0056 4738 2910",
+    "bic": "VZORSKXX",
+    "currency": "EUR",
+    "periodStart": "2025-11-01",
+    "periodEnd": "2025-11-30",
+    "openingBalance": 96.15,
+    "closingBalance": 72.70,
+    "totalDeposits": 0,
+    "totalWithdrawals": -23.45,
+    "totalFees": 0
+  },
+  "transactions": [
+    {
+      "bookingDate": "2025-11-14",
+      "valueDate": "2025-11-13",
+      "type": "walletCardPayment",
+      "amount": -23.45,
+      "currency": "EUR",
+      "card": "3306",
+      "description": "MINIMARKET U LIPY PRESOV",
+      "reference": "1411220007919"
+    }
+  ]
+}

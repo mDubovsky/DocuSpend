@@ -4,6 +4,12 @@ Thumbs.db
 .idea/
 .vscode/
 
+# .NET build output
+bin/
+obj/
+*.user
+TestResults/
+
 # Claude Code local settings (skills in .claude/skills/ ARE committed)
 .claude/settings.local.json
 

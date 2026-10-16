@@ -1,0 +1,159 @@
+{
+  "sample": "03-awkward-month",
+  "expectation": "parse",
+  "statement": {
+    "accountHolder": "ĽUDMILA ŠŤASTNÁ",
+    "iban": "SK88 9900 0000 0088 1204 7365",
+    "bic": "VZORSKXX",
+    "currency": "EUR",
+    "periodStart": "2026-02-01",
+    "periodEnd": "2026-02-28",
+    "openingBalance": 412.06,
+    "closingBalance": 454.66,
+    "totalDeposits": 1583.62,
+    "totalWithdrawals": -1541.02,
+    "totalFees": 0.00
+  },
+  "transactions": [
+    {
+      "bookingDate": "2026-02-01",
+      "valueDate": "2026-01-29",
+      "type": "cardPayment",
+      "amount": -18.40,
+      "currency": "EUR",
+      "card": "5512",
+      "description": "KAVIAREŇ ČIERNY ŽELUDOK ŽILINA",
+      "reference": "0102220007919"
+    },
+    {
+      "bookingDate": "2026-02-03",
+      "valueDate": "2026-02-02",
+      "type": "walletCardPayment",
+      "amount": -129.99,
+      "currency": "EUR",
+      "card": "5512",
+      "description": "ŠPORTOVÉ POTREBY ĽADOVÝ MEDVEĎ ŽILINA-JUH",
+      "reference": "0302220015838"
+    },
+    {
+      "bookingDate": "2026-02-04",
+      "valueDate": "2026-02-04",
+      "type": "transfer",
+      "amount": -60.00,
+      "currency": "EUR",
+      "counterpartyAccount": "SK63 9900 0000 0090 4617 2835"
+    },
+    {
+      "bookingDate": "2026-02-09",
+      "valueDate": "2026-02-06",
+      "type": "transfer",
+      "amount": -1240.00,
+      "currency": "EUR",
+      "description": "Úhrada faktúry číslo 2026-0117 za opravu",
+      "counterpartyName": "Ľubomír Šťastný – stavebné práce",
+      "counterpartyAccount": "SK07 1100 0000 0051 8392 0647",
+      "counterpartyBic": "TATRSKBX",
+      "variableSymbol": "20260117",
+      "constantSymbol": "0308",
+      "paymentPurpose": "Úhrada faktúry číslo 2026-0117 za opravu strechy, materiál a prácu podľa zmluvy o dielo uzavretej v januári 2026",
+      "reference": "2602097HNLSHH"
+    },
+    {
+      "bookingDate": "2026-02-10",
+      "valueDate": "2026-02-10",
+      "type": "transfer",
+      "amount": 1508.62,
+      "currency": "EUR",
+      "description": "Odmena za január",
+      "counterpartyName": "Želmíra Ďurčová – účtovníctvo a dane",
+      "counterpartyAccount": "SK50 0900 0000 0028 1740 6395",
+      "counterpartyBic": "GIBASKBX",
+      "variableSymbol": "12026",
+      "constantSymbol": "0138",
+      "payerReference": "/VS12026/SS/KS0138",
+      "paymentPurpose": "Odmena za január",
+      "reference": "2602106UTPPLU",
+      "feeType": "X"
+    },
+    {
+      "bookingDate": "2026-02-14",
+      "valueDate": "2026-02-14",
+      "type": "instantTransfer",
+      "amount": -35.50,
+      "currency": "EUR",
+      "description": "SEPA Okamžitá platba",
+      "counterpartyName": "Ondrej Čížik",
+      "counterpartyAccount": "SK14 7500 0000 0033 0194 8276",
+      "counterpartyBic": "CEKOSKBX",
+      "reference": "2602145EXTLNE"
+    },
+    {
+      "bookingDate": "2026-02-17",
+      "valueDate": "2026-02-15",
+      "type": "walletCardPayment",
+      "amount": -6.20,
+      "currency": "EUR",
+      "card": "5512",
+      "description": "PEKÁREŇ U ĎATELINY",
+      "reference": "1702220047514"
+    },
+    {
+      "bookingDate": "2026-02-20",
+      "valueDate": "2026-02-20",
+      "type": "transfer",
+      "amount": 75.00,
+      "currency": "EUR",
+      "description": "Príspevok na dovolenku – ďakujem",
+      "counterpartyName": "Ľudmila Šťastná st.",
+      "counterpartyAccount": "SK97 9900 0000 0044 7102 9386",
+      "counterpartyBic": "VZORSKXX",
+      "paymentPurpose": "Príspevok na dovolenku – ďakujem",
+      "reference": "2602203BFAFUB",
+      "feeType": "E"
+    },
+    {
+      "bookingDate": "2026-02-26",
+      "valueDate": "2026-02-26",
+      "type": "cardPayment",
+      "amount": -47.83,
+      "currency": "EUR",
+      "card": "5512",
+      "description": "LEKÁREŇ ŠŤASTNÁ RUKA ŽILINA",
+      "reference": "2602220063352"
+    },
+    {
+      "bookingDate": "2026-02-28",
+      "valueDate": "2026-02-28",
+      "type": "walletCardPayment",
+      "amount": -3.10,
+      "currency": "EUR",
+      "card": "5512",
+      "description": "AUTOMAT NA KÁVU ŽILINA",
+      "reference": "2802220071271"
+    },
+    {
+      "bookingDate": "2026-02-28",
+      "valueDate": "2026-02-28",
+      "type": "accountFee",
+      "amount": -6.90,
+      "currency": "EUR",
+      "description": "Vedenie konta Účet Štandard",
+      "variableSymbol": "0226",
+      "constantSymbol": "0558",
+      "reference": "2602280JVLYCJ",
+      "feeAmount": -6.90
+    },
+    {
+      "bookingDate": "2026-02-28",
+      "valueDate": "2026-02-28",
+      "type": "feeReversal",
+      "amount": 6.90,
+      "currency": "EUR",
+      "description": "Storno-vedenie konta",
+      "variableSymbol": "0226",
+      "constantSymbol": "0558",
+      "reference": "2602289VZRWFV",
+      "feeAmount": 6.90
+    }
+  ]
+}

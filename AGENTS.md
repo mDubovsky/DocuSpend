@@ -8,9 +8,10 @@ DocuSpend is an open-source tool that turns bank statements (PDF, spreadsheet, â
 2. **Never push. Pushing is for humans only.**
 3. **Never work or commit on `main`.** `main` is for merging PRs only. Work on a branch named after the item (`NNN-slug`, where NNN is the GitHub issue number), created from an up-to-date `main`.
 4. Never commit real financial data. Do not read anything in `samples/private/` unless the human explicitly asks, and never reproduce its contents in committed files, tests, or docs. Use synthetic fixtures only.
-5. Before working on an item, read its `intent.md`, `spec.md` and `plan.md` in `work/<NNN-slug>/`.
-6. Unit tests are required from the start. Every behavior change ships with tests, and tests use synthetic statements from `samples/public/`, never real data.
-7. Do not make technology choices outside a `plan.md`. Do not start implementing before the spec and plan are approved.
+5. Test samples may copy a bank's statement layout but never its identity (name, legal details, BIC, bank code, logo); see [decision 0002](docs/decisions/0002-fictional-bank-identity-in-samples.md).
+6. Before working on an item, read its `intent.md`, `spec.md` and `plan.md` in `work/<NNN-slug>/`.
+7. Unit tests are required from the start. Every behavior change ships with tests, and tests use synthetic statements from `samples/public/`, never real data.
+8. Do not make technology choices outside a `plan.md`. Do not start implementing before the spec and plan are approved.
 
 ## Where things are
 
@@ -26,4 +27,12 @@ DocuSpend is an open-source tool that turns bank statements (PDF, spreadsheet, â
 
 ## Stack, build and test
 
-TBD. Decided in work items.
+.NET (C#), see [docs/decisions/0001-use-dotnet.md](docs/decisions/0001-use-dotnet.md). The SDK version is pinned in `global.json`. UI and charting technology are still undecided.
+
+Run from the repo root:
+
+- Build: `dotnet build`
+- Test: `dotnet test`
+- Regenerate test samples: `dotnet run --project tools/DocuSpend.SampleGenerator -- generate` (see [samples/README.md](samples/README.md); never edit samples by hand)
+
+Layout: `tools/` for developer tooling, `tests/` for test projects. Application code will live in `src/`.

@@ -1,0 +1,5 @@
+{
+  "sample": "09-empty-file",
+  "expectation": "reject",
+  "reason": "A zero-byte file with a .pdf name."
+}

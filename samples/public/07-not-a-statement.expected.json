@@ -1,0 +1,5 @@
+{
+  "sample": "07-not-a-statement",
+  "expectation": "reject",
+  "reason": "A valid PDF that is not a bank statement (an invoice)."
+}

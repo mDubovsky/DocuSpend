@@ -1,0 +1,5 @@
+{
+  "sample": "06-other-bank-statement",
+  "expectation": "reject",
+  "reason": "A statement from a different (invented) bank, with a different layout and identity."
+}
