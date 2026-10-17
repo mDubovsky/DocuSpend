@@ -26,6 +26,9 @@ The same information as the record files in `samples/public/*.expected.json`, on
 These rules are what a reader has to know that the PDF doesn't say outright. The layout itself is described in [work/001-synthetic-statements/layout.md](../001-synthetic-statements/layout.md).
 
 - **Dates.** The table prints dates as day/month without a year. A date takes the year that places it nearest the statement period, so a January statement can contain a value date in December of the previous year and a December statement a booking date of 31/12.
+- **Value date.** Card payments always print a value date. A transfer or fee row prints one only when it differs from the booking date; when none is printed, the value date equals the booking date.
+- **Period.** The period start and end are the dates printed with the statement's fee breakdown, not derived from the transactions, so an empty month still has a period.
+- **Currency.** Each transaction's currency is the statement's currency.
 - **Type.** It is not a printed column; it comes from how the row reads:
   - card payment: the row says "PLATBA KARTOU" and a card
   - wallet card payment: the row says "PLATBA KARTOU A-PAY"
@@ -85,6 +88,7 @@ Taken from the sample generator, which is based on one real statement. The local
 - [ ] A statement missing its summary totals is rejected, and the reason names the balance summary.
 - [ ] A statement with a transaction whose amount, date or other required part can't be read is rejected, and the reason names the page and which transaction.
 - [ ] A statement for January with a value date in December reads with the correct years, and so does a statement for December with a booking date of 31/12.
+- [ ] A transfer that prints no value date reads with a value date equal to its booking date; one that prints a different value date reads with that date.
 - [ ] Two identical transactions on the same statement are both read.
 - [ ] A transfer whose purpose wraps onto several lines reads with its full purpose, and a transfer with a payer reference of "Neuvedené" reads with that field absent.
 - [ ] Reading the same file twice gives identical results.
