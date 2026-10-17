@@ -1,5 +1,5 @@
 ---
-status: draft
+status: specced
 issue: 2
 ---
 
