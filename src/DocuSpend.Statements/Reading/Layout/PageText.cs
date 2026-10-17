@@ -3,8 +3,11 @@ using UglyToad.PdfPig.Content;
 
 namespace DocuSpend.Statements.Reading.Layout;
 
-/// <summary>A word with its position, in points from the page's top-left corner. <see cref="Top"/> is the top of its glyphs.</summary>
-internal sealed record Word(int Page, double X, double Right, double Top, string Text);
+/// <summary>
+/// A word with its position, in points from the page's top-left corner. <see cref="Top"/> is the top of its glyphs, which
+/// varies with accents and size; <see cref="Baseline"/> doesn't, so lines are grouped by baseline.
+/// </summary>
+internal sealed record Word(int Page, double X, double Right, double Top, double Baseline, string Text);
 
 /// <summary>Words sharing a visual line, left to right.</summary>
 internal sealed record Line(int Page, double Top, IReadOnlyList<Word> Words)
@@ -50,7 +53,8 @@ internal static class PageText
         doc.GetPages()
             .Select(page => (IReadOnlyList<Word>)page.GetWords()
                 .Where(w => w.TextOrientation == TextOrientation.Horizontal)
-                .Select(w => new Word(page.Number, w.BoundingBox.Left, w.BoundingBox.Right, page.Height - w.BoundingBox.Top, w.Text))
+                .Select(w => new Word(page.Number, w.BoundingBox.Left, w.BoundingBox.Right, page.Height - w.BoundingBox.Top,
+                    page.Height - w.Letters[0].StartBaseLine.Y, w.Text))
                 .ToList())
             .ToList();
 
@@ -59,16 +63,16 @@ internal static class PageText
     {
         var lines = new List<Line>();
         var current = new List<Word>();
-        double top = 0;
-        foreach (var word in words.OrderBy(w => w.Top))
+        double baseline = 0;
+        foreach (var word in words.OrderBy(w => w.Baseline))
         {
-            if (current.Count > 0 && word.Top - top > VubLayout.LineTolerance)
+            if (current.Count > 0 && word.Baseline - baseline > VubLayout.LineTolerance)
             {
                 lines.Add(MakeLine(current));
                 current = [];
             }
             if (current.Count == 0)
-                top = word.Top;
+                baseline = word.Baseline;
             current.Add(word);
         }
         if (current.Count > 0)

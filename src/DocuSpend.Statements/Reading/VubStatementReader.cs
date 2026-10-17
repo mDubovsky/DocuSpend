@@ -1,4 +1,6 @@
+using DocuSpend.Statements.Model;
 using DocuSpend.Statements.Reading.Layout;
+using DocuSpend.Statements.Reading.Sections;
 using UglyToad.PdfPig;
 
 namespace DocuSpend.Statements.Reading;
@@ -31,7 +33,46 @@ public sealed class VubStatementReader : IStatementReader
             return ReadResult.Reject(RejectionKind.NotAVubStatement,
                 $"This doesn't look like a VÚB monthly statement: {missing} wasn't found.");
 
-        return ReadResult.Reject(RejectionKind.Unreadable, "Reading statements is not finished yet.");
+        Statement statement;
+        try
+        {
+            statement = ReadStatement(lines);
+        }
+        catch (UnreadableException e)
+        {
+            return ReadResult.Reject(RejectionKind.Unreadable, e.Message);
+        }
+
+        return Reconciliation.Check(statement) is { } disagreement
+            ? ReadResult.Reject(RejectionKind.DoesNotReconcile, disagreement)
+            : ReadResult.Success(statement);
+    }
+
+    private static Statement ReadStatement(IReadOnlyList<IReadOnlyList<Line>> pages)
+    {
+        var page1 = pages[0];
+        var tableTop = page1.First(l => l.Contains("Zaúčt.", "Valuta")).Top;
+        var aboveTable = page1.Where(l => l.Top < tableTop).ToList();
+
+        var header = HeaderSection.Read(aboveTable);
+        var summary = SummarySection.Read(aboveTable);
+        var (start, end) = PeriodSection.Read(pages.SelectMany(p => p));
+
+        return new Statement
+        {
+            AccountHolder = header.AccountHolder,
+            Iban = header.Iban,
+            Bic = header.Bic,
+            Currency = header.Currency,
+            PeriodStart = start,
+            PeriodEnd = end,
+            OpeningBalance = summary.Opening,
+            ClosingBalance = summary.Closing,
+            TotalDeposits = summary.Deposits,
+            TotalWithdrawals = summary.Withdrawals,
+            TotalFees = summary.Fees,
+            Transactions = TransactionSection.Read(pages, start, end, header.Currency),
+        };
     }
 
     /// <summary>The first expected part of the layout that is missing, or null when the layout is recognized.</summary>
@@ -42,10 +83,9 @@ public sealed class VubStatementReader : IStatementReader
         var first = pages[0];
         if (!first.Any(l => l.Contains("VÝPIS", "Z", "ÚČTU")))
             return "the statement title";
+        // The balance summary isn't required here: a statement without it is recognized, then rejected as unreadable.
         if (!first.Any(l => l.StartingAt(VubLayout.AccountLabelX)?.Text == "Číslo:"))
             return "the account block";
-        if (!first.Any(l => l.Contains("Vklady", "spolu")))
-            return "the balance summary";
         if (!first.Any(l => l.Contains("Zaúčt.", "Valuta")))
             return "the transaction table";
         return null;
