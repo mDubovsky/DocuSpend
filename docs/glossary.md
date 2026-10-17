@@ -5,6 +5,9 @@ Shared terms. Use them consistently in docs, specs, and code.
 - **Statement:** a document from a bank listing an account's transactions for a period.
 - **Transaction:** a single movement of money on a statement: date, amount, type, counterparty, description.
 - **Transaction type:** how the money moved, e.g. card payment, transfer, instant transfer.
+- **Reader:** the part of DocuSpend that turns a statement file into a statement with its transactions, or rejects it.
+- **Rejection:** the reader's answer for a file it can't read completely: one of a few kinds (empty, not a PDF, not a known statement, unreadable part, doesn't add up) with a human-readable reason that never repeats the file's content.
+- **Reconcile:** a read statement reconciles when its transactions add up to its own printed totals and its closing balance follows from its opening balance and totals.
 - **Counterparty:** the other party in a transaction (merchant, payer, or payee).
 - **Category:** a named group of transactions shown in the spending chart, e.g. Subscriptions.
 - **Uncategorized:** the category for transactions that match no rule.

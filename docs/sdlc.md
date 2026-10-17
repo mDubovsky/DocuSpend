@@ -32,7 +32,7 @@ Every change moves through the same stages. Each stage produces a markdown file 
 1. Start from an issue. Create branch `NNN-slug` from an up-to-date `main`. Never work or commit on `main`.
 2. Commit the stages in order, each after human approval: intent, spec, plan, then code and tests in small commits. Update `status:` as you go.
 3. Open a PR into `main` that says `Closes #NNN`. One PR per item by default. For large items, merge a docs-only PR (intent, spec, plan) first, then a separate code PR.
-4. A human reviews and merges with a squash merge, so `main` has one commit per item. The stage-by-stage history stays visible in the PR.
+4. A human reviews and merges with a squash merge, so `main` has one commit per item. The stage-by-stage history stays visible in the PR and on the item branch, which is kept after merging (not deleted) to preserve that history.
 5. Protect `main` on GitHub (PR required, no direct pushes) once more than one person contributes. While the repo is private and single-contributor, the maintainer may merge item branches into `main` locally instead of through a PR; the rule that nobody works directly on `main` still applies.
 
 ## Layout
