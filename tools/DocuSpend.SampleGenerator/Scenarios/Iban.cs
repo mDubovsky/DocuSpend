@@ -2,7 +2,10 @@ using System.Numerics;
 
 namespace DocuSpend.SampleGenerator.Scenarios;
 
-/// <summary>Structurally valid IBANs for invented accounts, printed in groups of four as on the statement.</summary>
+/// <summary>
+/// Structurally valid IBANs for invented accounts, printed in groups of four as on the statement. IBANs whose
+/// length isn't a multiple of four end with a shorter group (a German one ends with two digits).
+/// </summary>
 public static class Iban
 {
     /// <summary>A Slovak IBAN from a 4-digit bank code, 6-digit prefix and 10-digit account number.</summary>
@@ -11,8 +14,16 @@ public static class Iban
         var bban = bankCode + prefix + account;
         if (bban.Length != 20 || !bban.All(char.IsAsciiDigit))
             throw new ArgumentException("Slovak BBAN must be 20 digits.");
-        var check = 98 - Mod97(bban + Numeric("SK") + "00");
-        return Group($"SK{check:00}{bban}");
+        return Create("SK", bban);
+    }
+
+    /// <summary>An IBAN for any country from its two-letter code and national account number (BBAN).</summary>
+    public static string Create(string country, string bban)
+    {
+        if (country.Length != 2 || !country.All(char.IsAsciiLetterUpper) || bban.Length == 0 || !bban.All(char.IsAsciiLetterOrDigit))
+            throw new ArgumentException("Expected a two-letter country code and an alphanumeric BBAN.");
+        var check = 98 - Mod97(Numeric(bban + country + "00"));
+        return Group($"{country}{check:00}{bban}");
     }
 
     public static bool IsValid(string iban)

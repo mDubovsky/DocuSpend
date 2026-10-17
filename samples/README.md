@@ -33,6 +33,14 @@ dotnet run --project tools/DocuSpend.SampleGenerator -- generate
 
 Tests fail if the committed files differ from what the generator produces, so every change to a sample is deliberate.
 
+## Checking the reader on real statements (maintainer, locally)
+
+```
+dotnet run --project tools/DocuSpend.StatementCheck
+```
+
+Reads every PDF in `samples/private/` with the statement reader and prints, per file, `OK` with page and transaction counts, or `REJECTED` with the kind of rejection and its reason. Reasons never contain the file's content. When a real statement is rejected because of a layout feature the samples don't show, add that feature to the generator and a sample, so it stays covered.
+
 ## Checking for leaks (maintainer, locally)
 
 Before committing changed samples, check them against your real statements:

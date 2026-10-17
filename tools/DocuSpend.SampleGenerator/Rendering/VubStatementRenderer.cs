@@ -53,8 +53,9 @@ public static class VubStatementRenderer
         ("2", "Prijaté elektronické prevody cez TP/AP"),
     ];
 
-    public static byte[] Render(StatementScenario scenario)
+    public static byte[] Render(StatementScenario scenario, RenderOptions? options = null)
     {
+        options ??= new RenderOptions();
         Validate(scenario);
         var pages = Paginate(scenario.Transactions);
         var total = pages.Count + 1; // plus the final notices page
@@ -62,7 +63,7 @@ public static class VubStatementRenderer
         var doc = SyntheticPdf.Create(scenario.IssueDate);
         for (var i = 0; i < total; i++)
         {
-            var (gfx, c) = SyntheticPdf.AddPage(doc);
+            var (gfx, c) = SyntheticPdf.AddPage(doc, options.TextTransform);
             using var _ = gfx;
 
             DrawHeader(c, scenario, i + 1, total);
@@ -76,7 +77,7 @@ public static class VubStatementRenderer
             if (i == 0)
             {
                 DrawAddress(c, scenario);
-                DrawSummary(c, scenario);
+                DrawSummary(c, scenario, options.PrintedTotals ?? scenario.Totals);
             }
             if (content.HasTable)
                 DrawTableHeader(c, i == 0 ? Page1HeaderY : NextHeaderY);
@@ -177,9 +178,8 @@ public static class VubStatementRenderer
         }
     }
 
-    private static void DrawSummary(Canvas c, StatementScenario s)
+    private static void DrawSummary(Canvas c, StatementScenario s, StatementTotals t)
     {
-        var t = s.Totals;
         const double valueRight = 215.9;
 
         c.Mono(45.4, 188.2, "Vlastné použiteľné prostriedky", 8, bold: true);

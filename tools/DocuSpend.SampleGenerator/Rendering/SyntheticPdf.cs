@@ -20,17 +20,20 @@ public static class SyntheticPdf
     /// <summary>The top of the footer marking, below everything the statement layout prints.</summary>
     public const double FooterY = 826.0;
 
-    /// <summary>Adds an A4 page with the marking already in its left margin and footer.</summary>
-    internal static (XGraphics Graphics, Canvas Canvas) AddPage(PdfDocument doc)
+    /// <summary>
+    /// Adds an A4 page with the marking already in its left margin and footer. The returned canvas applies
+    /// <paramref name="transform"/> to everything drawn with it; the marking itself is drawn without it.
+    /// </summary>
+    internal static (XGraphics Graphics, Canvas Canvas) AddPage(PdfDocument doc, Func<string, string?>? transform = null)
     {
         var page = doc.AddPage();
         page.Width = XUnit.FromPoint(VubStatementRenderer.PageWidth);
         page.Height = XUnit.FromPoint(VubStatementRenderer.PageHeight);
         var gfx = XGraphics.FromPdfPage(page);
-        var canvas = new Canvas(gfx);
-        canvas.Vertical(33.0, 450.0, VubStatementRenderer.SyntheticMarking, 6);
-        canvas.Sans(45.4, FooterY, FictionalBank.Footer, 7);
-        return (gfx, canvas);
+        var marking = new Canvas(gfx);
+        marking.Vertical(33.0, 450.0, VubStatementRenderer.SyntheticMarking, 6);
+        marking.Sans(45.4, FooterY, FictionalBank.Footer, 7);
+        return (gfx, new Canvas(gfx, transform));
     }
 
     internal static byte[] Save(PdfDocument doc, string seed)

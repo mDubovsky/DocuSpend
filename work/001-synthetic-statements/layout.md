@@ -68,7 +68,7 @@ Gap between transactions ≈ 15 to 16 pt (≈ 25 pt after a details block).
 
 - Amounts: dot thousands separator, comma decimals, leading `-` for debits, none for credits.
 - Dates in the table: `DD/MM`. Dates elsewhere: `DD.MM.YYYY`.
-- IBANs printed in groups of 4 separated by single spaces.
+- IBANs printed in groups of 4 separated by single spaces. A foreign IBAN whose length isn't a multiple of 4 ends with a shorter group (a German one, 22 characters, ends with a group of 2); found by the statement reader on the real statement and covered by sample 03.
 - Card shown as `KARTA:*` plus the last 4 digits.
 
 ### Page breaks
