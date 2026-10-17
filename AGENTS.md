@@ -35,4 +35,4 @@ Run from the repo root:
 - Test: `dotnet test`
 - Regenerate test samples: `dotnet run --project tools/DocuSpend.SampleGenerator -- generate` (see [samples/README.md](samples/README.md); never edit samples by hand)
 
-Layout: `tools/` for developer tooling, `tests/` for test projects. Application code will live in `src/`.
+Layout: `src/` for application code (`DocuSpend.Statements`: reading statements into transactions), `tools/` for developer tooling, `tests/` for test projects.
