@@ -116,6 +116,14 @@ public partial class ValidSamplesTests
     }
 
     [Fact]
+    public void Awkward_month_has_a_foreign_account_whose_last_group_is_short()
+    {
+        var txs = Sample("03-awkward-month").Scenario.Transactions;
+
+        Assert.Contains(txs, t => t.CounterpartyAccount is { } a && !a.StartsWith("SK", StringComparison.Ordinal) && a.Split(' ')[^1].Length < 4);
+    }
+
+    [Fact]
     public void Awkward_month_covers_differing_dates_and_both_ends_of_the_period()
     {
         var s = Sample("03-awkward-month").Scenario;

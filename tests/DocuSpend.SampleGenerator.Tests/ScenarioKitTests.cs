@@ -17,6 +17,15 @@ public class ScenarioKitTests
     }
 
     [Fact]
+    public void Foreign_ibans_have_valid_check_digits_and_a_short_last_group()
+    {
+        var german = Iban.Create("DE", "123456781234567890");
+
+        Assert.Matches(@"^DE\d{2}( \d{4}){4} \d{2}$", german);
+        Assert.True(Iban.IsValid(german), german);
+    }
+
+    [Fact]
     public void Iban_validation_rejects_a_wrong_check_digit()
     {
         var iban = Iban.Slovak("1100", "000000", "2612345678");

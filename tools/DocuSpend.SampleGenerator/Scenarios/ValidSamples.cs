@@ -173,7 +173,8 @@ public static class ValidSamples
                 vs: "20260117", ks: "0308", valueDate: D(6)),
             t.Incoming(D(10), 1508.62m, "Želmíra Ďurčová – účtovníctvo a dane", Iban.Slovak("0900", "000000", "2817406395"), "GIBASKBX",
                 "Odmena za január", vs: "12026", ks: "0138", payerReference: "/VS12026/SS/KS0138", currencyLine: true),
-            t.Instant(D(14), -35.50m, "Ondrej Čížik", Iban.Slovak("7500", "000000", "3301948276"), "CEKOSKBX"),
+            // A foreign account: a German IBAN is 22 characters, so its last printed group has two digits.
+            t.Instant(D(14), -35.50m, "Ondrej Čížik", Iban.Create("DE", "765432108765432109"), "MUSTDEFF"),
             t.Card(D(17), 2, 6.20m, "PEKÁREŇ U ĎATELINY", "5512", wallet: true),
             t.Incoming(D(20), 75.00m, "Ľudmila Šťastná st.", Iban.Slovak(FictionalBank.BankCode, "000000", "4471029386"), FictionalBank.Bic,
                 "Príspevok na dovolenku – ďakujem", feeType: Tx.OneOffElectronic),

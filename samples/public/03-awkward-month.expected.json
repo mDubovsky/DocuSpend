@@ -83,8 +83,8 @@
       "currency": "EUR",
       "description": "SEPA Okamžitá platba",
       "counterpartyName": "Ondrej Čížik",
-      "counterpartyAccount": "SK14 7500 0000 0033 0194 8276",
-      "counterpartyBic": "CEKOSKBX",
+      "counterpartyAccount": "DE57 7654 3210 8765 4321 09",
+      "counterpartyBic": "MUSTDEFF",
       "reference": "2602145EXTLNE"
     },
     {
