@@ -27,7 +27,8 @@ A user uploads one monthly PDF statement from Všeobecná úverová banka, a.s. 
 - **Rule persistence:** user rules are saved locally and are still there the next time the software is used.
 - **Rule editor:** a very basic editor to list, edit, and delete rules and change their priority.
 - **Clear failures:** if the file isn't a readable VÚB statement, the user gets a clear message, never a silently wrong chart.
-- **Private:** the statement is never sent to any server.
+- **Private:** the statement is never sent to any server. The application contains no networking code, and the build checks that ([decision 0006](decisions/0006-privacy-approach-and-network-boundary.md)).
+- **A desktop application:** a native Avalonia program for Windows first, not a website, so there is nothing to upload to ([decision 0005](decisions/0005-avalonia-for-the-user-interface.md)).
 - **Slovak:** the interface is in Slovak, including the names of the built-in categories ([decision 0003](decisions/0003-slovak-interface-english-code.md)).
 
 ## Out of scope (for the MVP)
@@ -51,7 +52,7 @@ Not built now, but early decisions should not make these hard:
 - Other banks, with different statement structures
 - Local retention of parsed statements, so a whole year can be viewed with one upload per month
 - Other periods: weekly, yearly, custom ranges
-- **Sharing categorization rules.** When a user categorizes something, offer to share that rule (never the statement, never amounts or personal details) so it can become a default rule for other people. Not for the MVP, because it is the one feature that would send anything off the user's machine and needs its own design. Constraints to keep in mind:
+- **Sharing categorization rules.** When a user categorizes something, offer to share that rule (never the statement, never amounts or personal details) so it can become a default rule for other people, through a server of our own, with anonymization as far as possible. Not for the MVP, because it is the one feature that would send anything off the user's machine and needs its own design; it would live in a small separate module that can never see statements ([decision 0006](decisions/0006-privacy-approach-and-network-boundary.md)). Constraints to keep in mind:
   - opt-in per rule, showing exactly what would be sent;
   - only rules that carry no personal data: never account-number, variable-symbol or amount rules, and text rules need a human review, since a text can be a person's name;
   - a review step before anything ships as a default, to keep out wrong or abusive rules;

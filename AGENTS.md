@@ -12,7 +12,8 @@ DocuSpend is an open-source tool that turns bank statements (PDF, spreadsheet, â
 6. Before working on an item, read its `intent.md`, `spec.md` and `plan.md` in `work/<NNN-slug>/`.
 7. Unit tests are required from the start. Every behavior change ships with tests, and tests use synthetic statements from `samples/public/`, never real data.
 8. Do not make technology choices outside a `plan.md`. Do not start implementing before the spec and plan are approved.
-9. Everything the user sees is in Slovak; code, docs, issues and commit messages are in English; see [decision 0003](docs/decisions/0003-slovak-interface-english-code.md).
+9. **No code that can see a statement may use the network, and no dependency that does.** No networking, telemetry, analytics, crash reporting or auto-update in the application. See [decision 0006](docs/decisions/0006-privacy-approach-and-network-boundary.md); changing this is a change to that decision.
+10. Everything the user sees is in Slovak; code, docs, issues and commit messages are in English; see [decision 0003](docs/decisions/0003-slovak-interface-english-code.md).
 
 ## Where things are
 
@@ -28,7 +29,7 @@ DocuSpend is an open-source tool that turns bank statements (PDF, spreadsheet, â
 
 ## Stack, build and test
 
-.NET (C#), see [docs/decisions/0001-use-dotnet.md](docs/decisions/0001-use-dotnet.md). The SDK version is pinned in `global.json`. UI and charting technology are still undecided.
+.NET (C#), see [docs/decisions/0001-use-dotnet.md](docs/decisions/0001-use-dotnet.md). The SDK version is pinned in `global.json`. The user interface will be a native Avalonia desktop application ([decision 0005](docs/decisions/0005-avalonia-for-the-user-interface.md)), after the spike in issue #5; no interface code exists yet.
 
 Run from the repo root:
 
