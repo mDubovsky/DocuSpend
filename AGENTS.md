@@ -12,6 +12,7 @@ DocuSpend is an open-source tool that turns bank statements (PDF, spreadsheet, â
 6. Before working on an item, read its `intent.md`, `spec.md` and `plan.md` in `work/<NNN-slug>/`.
 7. Unit tests are required from the start. Every behavior change ships with tests, and tests use synthetic statements from `samples/public/`, never real data.
 8. Do not make technology choices outside a `plan.md`. Do not start implementing before the spec and plan are approved.
+9. Everything the user sees is in Slovak; code, docs, issues and commit messages are in English; see [decision 0003](docs/decisions/0003-slovak-interface-english-code.md).
 
 ## Where things are
 
