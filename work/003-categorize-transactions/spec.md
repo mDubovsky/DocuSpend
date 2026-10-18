@@ -67,8 +67,8 @@ A condition matches a transaction or doesn't. A condition on a field the transac
 | Condition | Matches when… |
 |---|---|
 | Transaction type | the type is any of the chosen ones: card payment, wallet card payment, transfer, instant transfer, account fee, fee reversal |
-| Text | the transaction's description or its payment purpose satisfies the text test below |
-| Counterparty name | the counterparty's name satisfies the text test below |
+| Text | the transaction's description, its payment purpose or its counterparty name satisfies the text test below. Brands appear in different places: a card payment names the merchant in the description, a transfer to a company in its counterparty name |
+| Counterparty name | the counterparty's name alone satisfies the text test below, for rules that must not look at anything else |
 | Counterparty account | the counterparty's account number equals the given one, ignoring spaces and case |
 | Amount | the size of the amount, ignoring whether it is money in or out, is at least the lower bound and at most the upper bound; either bound may be left out but not both, and the lower may not exceed the upper |
 | Variable symbol | the variable symbol equals the given one exactly |
@@ -122,21 +122,21 @@ A first set, listed in priority order (first match wins). Rows are lists of alte
 | Type is account fee or fee reversal | Poplatky a úroky › Poplatky |
 | Text "SPORIACI UCET" (savings account) | Prevody medzi vlastnými účtami › Ostatné |
 | Text "NAJOM" (nájom, nájomné) | Bývanie › Nájom |
-| Text "HYPOTEK" (hypotéka, hypotekárny) | Bývanie › Úvery na bývanie |
+| Text "HYPOTEK" (hypotéka, hypotekárny), " HYPO " (the usual text of a VÚB mortgage payment) | Bývanie › Úvery na bývanie |
 | Text " OBI ", "IKEA", "JYSK", "HORNBACH" | Bývanie › Vybavenie a doplnky |
 | Text "ENERGETIK" (energetika, energetické), " SPP ", " ZSE ", "VODARENS" (energy and water suppliers) | Bývanie › Ostatné |
 | Text "MZD" (mzda, mzdy) | Príjmy › Mzda |
 | Counterparty name "URAD PRACE", "SOCIALNA POISTOVNA" | Príjmy › Dávky a prídavky |
 | Text "NETFLIX", "SPOTIFY", "DISNEY", "HBO MAX", "YOUTUBE PREMIUM", "YOUTUBEPREMIUM" | Nákupy online › Webové služby |
-| Text "ALIEXPRESS", "ALLEGRO", " TEMU", "GOPAY", "PAYPAL", "PACKETA", " DPD ", "SHOPTET", "POSTA SK" | Nákupy online › Ostatné |
+| Text "ALIEXPRESS", "ALLEGRO", " TEMU", "GOPAY", "PAYPAL", "PACKETA", " DPD ", "SHOPTET", "POSTA SK", "ZLAVOMAT" | Nákupy online › Ostatné |
 | Text "TESCO", "LIDL", "KAUFLAND", "BILLA", " COOP", "TERNO", "MINIMARKET", "POTRAVINY", "PEKAREN" | Stravovanie › Potraviny |
 | Text "MCDONALD", " KFC ", "STARBUCKS", "BISTRO", "RESTAURACIA", "KAVIAREN", "PIZZ", "WOLT", "FOODORA" | Stravovanie › Reštaurácie a kaviarne |
 | Text "SLOVNAFT", "SHELL", " OMV ", "ORLEN", " MOL ", "CERPACIA STANICA" | Auto-moto › Pohonné hmoty |
 | Text "CARWASH", "AUTOSERVIS", "PNEUSERVIS", "AUTOUMYVAREN" | Auto-moto › Servis |
-| Text "ORANGE", "SLOVAK TELEKOM", "O2 SLOVAKIA", "MOJEO2" | Elektronika, komunikácia a médiá › Účty za telefón |
+| Text "ORANGE", "SLOVAK TELEKOM", " O2 ", "MOJEO2" | Elektronika, komunikácia a médiá › Účty za telefón |
 | Text " ALZA", "DATART", "ELEKTRO", "MALL.SK" | Elektronika, komunikácia a médiá › Elektronika |
 | Text "MAGNETA", "SLOVANET" | Elektronika, komunikácia a médiá › Ostatné |
-| Text "DM DROGERIE", "DROGERIA", " TETA", "ROSSMANN" | Zdravie a osobná starostlivosť › Drogéria |
+| Text "DM DROGERIE", " DM ", "DROGERIA", " TETA", "ROSSMANN" | Zdravie a osobná starostlivosť › Drogéria |
 | Text "SYNLAB", "NEMOCNIC", "POLIKLINIK" | Zdravie a osobná starostlivosť › Lekári a nemocnice |
 | Text "LEKAREN", "DR.MAX", " BENU", "OPTIKA" | Zdravie a osobná starostlivosť › Ostatné |
 | Text " BOLT", " UBER", "TAXI" | Doprava › Taxi |
@@ -146,7 +146,7 @@ A first set, listed in priority order (first match wins). Rows are lists of alte
 | Text "SKOLNE", "SKOLK" (škôlka, škôlku), "MATERSKA SKOLA" | Vzdelanie › Škola a škôlka |
 | Text "KNIHKUPECTVO", "PAPIERNICTVO", "KNIHY" | Vzdelanie › Školské potreby |
 | Text "DOUCOVANIE", "JAZYKOVA SKOLA" | Vzdelanie › Kurzy a doučovanie |
-| Text "STEAM", "PLAYSTATION", "NINTENDO", " XBOX", "GOG SP" | Zábava a oddych › Hry a hračky |
+| Text "STEAM", "PLAYSTATION", "NINTENDO", " XBOX", "GOG SP", "BLIZZARD" | Zábava a oddych › Hry a hračky |
 | Text " KINO", "CINEMAX", "DECATHLON", "SKIPAS", "SKI RESORT" | Zábava a oddych › Ostatné |
 | Text " XTB ", "TRADING 212", "FINAX", "INTERACTIVE BROKERS" | Investície › Ostatné |
 
@@ -184,7 +184,7 @@ For every transaction the result says which rule decided: whether it is a defaul
 
 - Two identical transactions are categorized independently and both counted.
 - A rule can target a sub-category of an income or excluded category; a transaction in the "wrong" direction there (money out in Príjmy) simply lowers that category's balance.
-- Text conditions look at the description and the payment purpose; a transfer whose purpose is longer than its printed description is found by its purpose.
+- Text conditions look at the description, the payment purpose and the counterparty name; a transfer whose purpose is longer than its printed description is found by its purpose, and a brand that only appears in the counterparty name (for example a broker or a telecom company paid by transfer) is found by its name.
 - Fee rows and their reversals carry the type account fee or fee reversal, which the first default rule matches, so they go to Poplatky unless a user rule decides otherwise.
 
 ## Out of scope

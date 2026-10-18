@@ -18,7 +18,7 @@ public class DefaultRulesTests
     [
         ("own-transfers.other", ["SPORIACI UCET"]),
         ("housing.rent", ["NAJOM"]),
-        ("housing.mortgage", ["HYPOTEK"]),
+        ("housing.mortgage", ["HYPOTEK", " HYPO "]),
         ("housing.equipment", [" OBI ", "IKEA", "JYSK", "HORNBACH"]),
         ("housing.other", ["ENERGETIK", " SPP ", " ZSE ", "VODARENS"]),
         ("income.salary", ["MZD"]),
@@ -32,15 +32,15 @@ public class DefaultRulesTests
     private static readonly (string Target, string[] Texts)[] MoreTextRows =
     [
         ("online-shopping.web-services", ["NETFLIX", "SPOTIFY", "DISNEY", "HBO MAX", "YOUTUBE PREMIUM", "YOUTUBEPREMIUM"]),
-        ("online-shopping.other", ["ALIEXPRESS", "ALLEGRO", " TEMU", "GOPAY", "PAYPAL", "PACKETA", " DPD ", "SHOPTET", "POSTA SK"]),
+        ("online-shopping.other", ["ALIEXPRESS", "ALLEGRO", " TEMU", "GOPAY", "PAYPAL", "PACKETA", " DPD ", "SHOPTET", "POSTA SK", "ZLAVOMAT"]),
         ("food.groceries", ["TESCO", "LIDL", "KAUFLAND", "BILLA", " COOP", "TERNO", "MINIMARKET", "POTRAVINY", "PEKAREN"]),
         ("food.restaurants", ["MCDONALD", " KFC ", "STARBUCKS", "BISTRO", "RESTAURACIA", "KAVIAREN", "PIZZ", "WOLT", "FOODORA"]),
         ("car.fuel", ["SLOVNAFT", "SHELL", " OMV ", "ORLEN", " MOL ", "CERPACIA STANICA"]),
         ("car.service", ["CARWASH", "AUTOSERVIS", "PNEUSERVIS", "AUTOUMYVAREN"]),
-        ("electronics.phone", ["ORANGE", "SLOVAK TELEKOM", "O2 SLOVAKIA", "MOJEO2"]),
+        ("electronics.phone", ["ORANGE", "SLOVAK TELEKOM", " O2 ", "MOJEO2"]),
         ("electronics.electronics", [" ALZA", "DATART", "ELEKTRO", "MALL.SK"]),
         ("electronics.other", ["MAGNETA", "SLOVANET"]),
-        ("health.drugstore", ["DM DROGERIE", "DROGERIA", " TETA", "ROSSMANN"]),
+        ("health.drugstore", ["DM DROGERIE", " DM ", "DROGERIA", " TETA", "ROSSMANN"]),
         ("health.doctors", ["SYNLAB", "NEMOCNIC", "POLIKLINIK"]),
         ("health.other", ["LEKAREN", "DR.MAX", " BENU", "OPTIKA"]),
         ("transport.taxi", [" BOLT", " UBER", "TAXI"]),
@@ -50,7 +50,7 @@ public class DefaultRulesTests
         ("education.school", ["SKOLNE", "SKOLK", "MATERSKA SKOLA"]),
         ("education.supplies", ["KNIHKUPECTVO", "PAPIERNICTVO", "KNIHY"]),
         ("education.courses", ["DOUCOVANIE", "JAZYKOVA SKOLA"]),
-        ("leisure.games", ["STEAM", "PLAYSTATION", "NINTENDO", " XBOX", "GOG SP"]),
+        ("leisure.games", ["STEAM", "PLAYSTATION", "NINTENDO", " XBOX", "GOG SP", "BLIZZARD"]),
         ("leisure.other", [" KINO", "CINEMAX", "DECATHLON", "SKIPAS", "SKI RESORT"]),
         ("investments.other", [" XTB ", "TRADING 212", "FINAX", "INTERACTIVE BROKERS"]),
     ];
@@ -165,6 +165,32 @@ public class DefaultRulesTests
     [Fact]
     public void Fees_and_their_reversals_go_to_fees_by_type() =>
         Assert.All([Fee(-6.90m), Fee(6.90m)], t => Assert.Equal("fees.fees", Decide(t)));
+
+    // Found on a real statement: the brand is in another spot than the rules first looked.
+
+    [Theory]
+    [InlineData("SPLATKA HYPO UVER", "housing.mortgage")]
+    [InlineData("dm 228 NITRA", "health.drugstore")]
+    [InlineData("Zlavomat.sk Bratislava", "online-shopping.other")]
+    [InlineData("Blizzard Entert Cork", "leisure.games")]
+    [InlineData("PBS O2", "electronics.phone")]
+    public void Wording_seen_on_real_statements_is_found(string text, string target) =>
+        Assert.Equal(target, Decide(Card(text)));
+
+    [Fact]
+    public void A_brand_in_the_counterparty_name_is_found_by_the_text_rules()
+    {
+        Assert.Equal("investments.other", Decide(Transfer(amount: -70m, name: "Interactive Brokers Ireland Limited", type: TransactionType.InstantTransfer)));
+        Assert.Equal("electronics.phone", Decide(Transfer(amount: -12m, name: "O2 Slovakia, s.r.o.", purpose: "Faktura")));
+        Assert.Equal("other-expenses.insurance", Decide(Transfer(amount: -30m, name: "Uniqa poistovna a.s.")));
+    }
+
+    [Theory]
+    [InlineData("ADMIN SKLAD")]
+    [InlineData("DMYTRO")]
+    [InlineData("HYPOTENUZA")]
+    public void The_new_short_names_do_not_match_inside_other_words(string text) =>
+        Assert.Null(Decide(Card(text)));
 
     // Punctuation counts as a space, so names followed or preceded by a dot, comma or star are found.
 

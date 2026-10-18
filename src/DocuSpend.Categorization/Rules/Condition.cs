@@ -41,11 +41,11 @@ public sealed record TypeCondition : Condition
     public override int GetHashCode() => Types.Aggregate(0, (hash, type) => HashCode.Combine(hash, type));
 }
 
-/// <summary>The transaction's description or its payment purpose contains the text, or equals it.</summary>
+/// <summary>The transaction's description, its payment purpose or its counterparty name contains the text, or equals it.</summary>
 public sealed record TextCondition(string Text, TextMode Mode) : Condition
 {
     public override bool Matches(Transaction transaction) =>
-        Test(Mode, transaction.Description, Text) || Test(Mode, transaction.PaymentPurpose, Text);
+        Test(Mode, transaction.Description, Text) || Test(Mode, transaction.PaymentPurpose, Text) || Test(Mode, transaction.CounterpartyName, Text);
 
     public override Refusal? Validate() =>
         Needs(!TextMatching.HasNoWords(Text), RefusalKind.EmptyText, "A text condition needs text with letters or digits.");

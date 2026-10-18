@@ -18,9 +18,9 @@ A user uploads one monthly PDF statement from Všeobecná úverová banka, a.s. 
 - **Default rules:** built-in rules assign common transactions to sub-categories (e.g. a description containing NETFLIX goes to Nákupy online › Webové služby).
 - **User rules:** the user can create simple rules of their own, matching on:
   - transaction type (card payment, transfer, instant transfer)
-  - text in the merchant or description, either "contains" or "equals", ignoring case and diacritics
+  - text in the merchant, description or counterparty name, either "contains" or "equals", ignoring case and diacritics
   - the originator/destination account number
-  - the counterparty name (text, as above)
+  - the counterparty name alone (text, as above)
   - amount (a range or threshold)
   - variable symbol
 - **Rule priority:** every rule has a numbered priority. User rules always win over default rules. Among user rules, the priority number decides; rules may share a number, and then the newest rule wins, so correcting a category is just adding a rule on top.

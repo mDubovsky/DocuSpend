@@ -42,6 +42,25 @@ public class ConditionTests
     public void A_text_condition_tests_the_description_and_the_purpose(TextMode mode, string text, string? description, string? purpose, bool expected) =>
         Assert.Equal(expected, new TextCondition(text, mode).Matches(Transfer(description: description, purpose: purpose)));
 
+    [Theory]
+    [InlineData(TextMode.Contains, "o2", "O2 Slovakia, s.r.o.", true)]
+    [InlineData(TextMode.EqualTo, "uniqa", "UNIQA", true)]
+    [InlineData(TextMode.EqualTo, "uniqa", "Uniqa Životné Poistenie", false)]
+    [InlineData(TextMode.Contains, "o2", "Generali", false)]
+    public void A_text_condition_also_tests_the_counterparty_name(TextMode mode, string text, string name, bool expected) =>
+        Assert.Equal(expected, new TextCondition(text, mode).Matches(Transfer(name: name)));
+
+    [Fact]
+    public void A_text_condition_matches_when_any_of_the_three_texts_does()
+    {
+        var condition = new TextCondition("tesco", TextMode.Contains);
+
+        Assert.True(condition.Matches(Transfer(description: "TESCO")));
+        Assert.True(condition.Matches(Transfer(purpose: "Nakup Tesco")));
+        Assert.True(condition.Matches(Transfer(name: "Tesco Stores")));
+        Assert.False(condition.Matches(Transfer(description: "Lidl", purpose: "Nakup", name: "Lidl Slovensko")));
+    }
+
     [Fact]
     public void A_text_condition_never_matches_a_transaction_without_text() =>
         Assert.False(new TextCondition("x", TextMode.Contains).Matches(Transfer()));

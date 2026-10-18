@@ -35,21 +35,21 @@ internal static class BuiltInRules
         Add(new TypeCondition([TransactionType.AccountFee, TransactionType.FeeReversal]), "fees.fees", "type");
         Text("own-transfers.other", "SPORIACI UCET");
         Text("housing.rent", "NAJOM");
-        Text("housing.mortgage", "HYPOTEK");
+        Text("housing.mortgage", "HYPOTEK", " HYPO ");
         Text("housing.equipment", " OBI ", "IKEA", "JYSK", "HORNBACH");
         Text("housing.other", "ENERGETIK", " SPP ", " ZSE ", "VODARENS");
         Text("income.salary", "MZD");
         Name("income.benefits", "URAD PRACE", "SOCIALNA POISTOVNA");
         Text("online-shopping.web-services", "NETFLIX", "SPOTIFY", "DISNEY", "HBO MAX", "YOUTUBE PREMIUM", "YOUTUBEPREMIUM");
-        Text("online-shopping.other", "ALIEXPRESS", "ALLEGRO", " TEMU", "GOPAY", "PAYPAL", "PACKETA", " DPD ", "SHOPTET", "POSTA SK");
+        Text("online-shopping.other", "ALIEXPRESS", "ALLEGRO", " TEMU", "GOPAY", "PAYPAL", "PACKETA", " DPD ", "SHOPTET", "POSTA SK", "ZLAVOMAT");
         Text("food.groceries", "TESCO", "LIDL", "KAUFLAND", "BILLA", " COOP", "TERNO", "MINIMARKET", "POTRAVINY", "PEKAREN");
         Text("food.restaurants", "MCDONALD", " KFC ", "STARBUCKS", "BISTRO", "RESTAURACIA", "KAVIAREN", "PIZZ", "WOLT", "FOODORA");
         Text("car.fuel", "SLOVNAFT", "SHELL", " OMV ", "ORLEN", " MOL ", "CERPACIA STANICA");
         Text("car.service", "CARWASH", "AUTOSERVIS", "PNEUSERVIS", "AUTOUMYVAREN");
-        Text("electronics.phone", "ORANGE", "SLOVAK TELEKOM", "O2 SLOVAKIA", "MOJEO2");
+        Text("electronics.phone", "ORANGE", "SLOVAK TELEKOM", " O2 ", "MOJEO2");
         Text("electronics.electronics", " ALZA", "DATART", "ELEKTRO", "MALL.SK");
         Text("electronics.other", "MAGNETA", "SLOVANET");
-        Text("health.drugstore", "DM DROGERIE", "DROGERIA", " TETA", "ROSSMANN");
+        Text("health.drugstore", "DM DROGERIE", " DM ", "DROGERIA", " TETA", "ROSSMANN");
         Text("health.doctors", "SYNLAB", "NEMOCNIC", "POLIKLINIK");
         Text("health.other", "LEKAREN", "DR.MAX", " BENU", "OPTIKA");
         Text("transport.taxi", " BOLT", " UBER", "TAXI");
@@ -59,7 +59,7 @@ internal static class BuiltInRules
         Text("education.school", "SKOLNE", "SKOLK", "MATERSKA SKOLA");
         Text("education.supplies", "KNIHKUPECTVO", "PAPIERNICTVO", "KNIHY");
         Text("education.courses", "DOUCOVANIE", "JAZYKOVA SKOLA");
-        Text("leisure.games", "STEAM", "PLAYSTATION", "NINTENDO", " XBOX", "GOG SP");
+        Text("leisure.games", "STEAM", "PLAYSTATION", "NINTENDO", " XBOX", "GOG SP", "BLIZZARD");
         Text("leisure.other", " KINO", "CINEMAX", "DECATHLON", "SKIPAS", "SKI RESORT");
         Text("investments.other", " XTB ", "TRADING 212", "FINAX", "INTERACTIVE BROKERS");
 
