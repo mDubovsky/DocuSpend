@@ -39,7 +39,7 @@ Tests fail if the committed files differ from what the generator produces, so ev
 dotnet run --project tools/DocuSpend.StatementCheck
 ```
 
-Reads every PDF in `samples/private/` with the statement reader and prints, per file, `OK` with page and transaction counts, or `REJECTED` with the kind of rejection and its reason. Reasons never contain the file's content. When a real statement is rejected because of a layout feature the samples don't show, add that feature to the generator and a sample, so it stays covered.
+Reads every PDF in `samples/private/` with the statement reader and prints, per file, `OK` with page and transaction counts, or `REJECTED` with the kind of rejection and its reason. Reasons never contain the file's content. With `--categorize` it also prints how many transactions the built-in rules put in each category and how many stayed uncategorized: counts only, so it shows how well the default rules fit your statements without showing what's in them. When a real statement is rejected because of a layout feature the samples don't show, add that feature to the generator and a sample, so it stays covered.
 
 ## Checking for leaks (maintainer, locally)
 

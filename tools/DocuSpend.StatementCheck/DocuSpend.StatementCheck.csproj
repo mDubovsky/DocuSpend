@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DocuSpend.Statements\DocuSpend.Statements.csproj" />
+    <ProjectReference Include="..\..\src\DocuSpend.Categorization\DocuSpend.Categorization.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
