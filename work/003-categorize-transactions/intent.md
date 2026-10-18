@@ -1,5 +1,5 @@
 ---
-status: specced
+status: planned
 issue: 3
 ---
 
@@ -16,7 +16,7 @@ Every transaction of a statement ends up in exactly one sub-category of exactly 
 - **Default rules** built into DocuSpend assign common transactions (for example, a description containing NETFLIX goes to Nákupy online › Webové služby).
 - **User rules** let the user assign the rest. Each rule has one condition, which can be on: the transaction type, text in the merchant or description, the counterparty's account number, the counterparty's name, the amount (a range or threshold), or the variable symbol.
 - **Text conditions.** When creating a text condition the user chooses whether the text must be *contained* in the transaction's text or *equal* to it. Either way, case and diacritics are ignored, so "lekaren" matches "LEKÁREŇ".
-- **Priority.** Every rule has a number. User rules always win over default rules; among user rules, the priority number decides which wins. DocuSpend refuses to create a user rule whose priority number another user rule already has.
+- **Priority.** Every rule has a number. User rules always win over default rules; among user rules, the priority number decides which wins. Several user rules may share a priority number, so priorities are easy to shuffle; when rules with the same number match the same transaction, the newest rule wins, which is always the same answer. This makes correcting a wrong category easy: the user adds a new rule, and it wins, without having to think about numbers (later screens can hide priority numbers behind an "advanced" switch).
 - **Uncategorized.** A transaction that matches no rule goes to Uncategorized, so the user can see what still needs a rule. There is one for money going out (Nezaradené výdavky, "uncategorized expenses") and a separate one for incoming payments.
 - **Excluded from spending.** A category can be marked as not spending (moving money between the user's own accounts, investments, …), and everything under it follows. Exclusion comes only from the category, never from a single sub-category. In the MVP, excluded transactions are simply left out of the spending totals and the spending chart; counting them as spending is a later option.
 - **Spending is money going out.** Money coming back into a spending category (a refund, a reversed fee) reduces that category's spending, so a fee and its reversal cancel out. Incoming payments in the income category are never spending, but they are categorized too.
@@ -42,7 +42,8 @@ For any transaction, DocuSpend can tell which rule put it in its category, so th
 - A transaction is never directly in a category: every built-in category has an Ostatné sub-category.
 - A category's total equals the sum of its sub-categories' totals.
 - A user rule beats a default rule that matches the same transaction, and between two user rules the one with the winning priority number applies.
-- Creating a user rule with a priority number that another user rule already has is refused.
+- User rules may share a priority number; when two of them match the same transaction, the newest decides.
+- A new rule can be added so that it beats every existing user rule, without the user choosing a number, so correcting a wrongly categorized transaction is just adding a rule.
 - Each of the six kinds of rule condition matches the transactions it describes and no others.
 - A text condition set to "contains" and one set to "equals" each match accordingly, both ignoring case and diacritics.
 - A transaction that matches no rule is Uncategorized, and it still counts as spending if it is money going out.

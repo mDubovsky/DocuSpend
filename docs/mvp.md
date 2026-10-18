@@ -23,7 +23,7 @@ A user uploads one monthly PDF statement from Všeobecná úverová banka, a.s. 
   - the counterparty name (text, as above)
   - amount (a range or threshold)
   - variable symbol
-- **Rule priority:** every rule has a numbered priority. User rules always win over default rules. Among user rules, the priority number decides; a user rule whose number is already taken is refused.
+- **Rule priority:** every rule has a numbered priority. User rules always win over default rules. Among user rules, the priority number decides; rules may share a number, and then the newest rule wins, so correcting a category is just adding a rule on top.
 - **Rule persistence:** user rules are saved locally and are still there the next time the software is used.
 - **Rule editor:** a very basic editor to list, edit, and delete rules and change their priority.
 - **Clear failures:** if the file isn't a readable VÚB statement, the user gets a clear message, never a silently wrong chart.

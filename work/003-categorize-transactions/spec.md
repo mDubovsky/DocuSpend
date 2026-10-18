@@ -84,17 +84,19 @@ In both modes case and diacritics are ignored, so "lekaren" matches "LEKÁREŇ",
 
 - A priority number is a whole number from 1. **1 is the highest priority**: of two rules, the one with the lower number wins.
 - User rules always win over default rules, whatever their numbers; each group has its own numbers.
-- DocuSpend **refuses to create a user rule whose number another user rule already has**, and says the number is taken. Default rules have distinct numbers too.
+- **User rules may share a priority number.** Of user rules with the same number, the **newest** (the one created last) wins, so the outcome is always the same. DocuSpend remembers the order in which user rules were created.
+- **A rule can be added on top.** DocuSpend can add a user rule so that it beats every existing user rule: it gets the lowest priority number any user rule has now (1 if there are none), and being the newest, it wins the tie. The user doesn't choose a number. This is how a wrongly categorized transaction is corrected by adding a rule, and how a screen can hide priority numbers unless the user asks for them.
+- Default rules have distinct numbers, given by their order in the table below.
 
 #### A rule is refused when
 
 - its condition is incomplete or not valid, as above;
 - its target isn't an existing sub-category (a category without a sub-category can't be a target);
-- its priority number is taken, or isn't a whole number from 1.
+- its priority number isn't a whole number from 1.
 
 ### Deciding a transaction's category
 
-1. The user rules are tried in priority order. The first one whose condition matches decides.
+1. The user rules are tried in priority order, and rules with the same number from the newest to the oldest. The first one whose condition matches decides.
 2. If none matches, the default rules are tried in priority order. The first match decides.
 3. If none matches, the transaction goes to **Nezaradené výdavky** if it is money going out and to **Nezaradené príjmy** otherwise. A zero amount counts as money coming in.
 
@@ -162,8 +164,10 @@ For every transaction the result says which rule decided: whether it is a defaul
 - [ ] A category's balance equals the sum of its sub-categories' balances, for every category on every sample.
 - [ ] Every built-in category except the two Uncategorized buckets has an Ostatné sub-category, and no transaction is ever directly in a category that has sub-categories.
 - [ ] A user rule beats a default rule that matches the same transaction, whatever their priority numbers.
-- [ ] Between two user rules that match, the one with the lower priority number decides; between two default rules too.
-- [ ] Creating a user rule with a taken priority number is refused with a reason saying so; so is a number below 1.
+- [ ] Between two user rules with different numbers that both match, the one with the lower number decides; between two default rules too.
+- [ ] Creating a user rule with a priority number below 1, or that isn't a whole number, is refused with a reason saying so.
+- [ ] Two user rules with the same priority number are both accepted; when both match a transaction, the newest decides, and changing one rule's number afterwards doesn't change which was created first.
+- [ ] A rule added on top beats every existing user rule that matches the same transaction, whatever their numbers, and gets the lowest existing user number, or 1 when there are no user rules; adding several rules on top in a row, each wins over the earlier ones.
 - [ ] A rule with an empty text, an empty or inverted amount range, or a target that isn't an existing sub-category is refused.
 - [ ] Each of the six conditions matches the transactions it describes and no others, checked on constructed transactions, including a missing field not matching.
 - [ ] A text condition in "contains" mode and one in "equals" mode each match accordingly, with case, diacritics and extra spaces ignored.
@@ -194,4 +198,4 @@ For every transaction the result says which rule decided: whether it is a defaul
 - Other banks or periods.
 
 ## Open questions
-None. Decided with the maintainer: refunds reduce spending in their category; 1 is the highest priority; the names above; a Nájom sub-category under Bývanie; the default rule set above as a starting set; built-in roles fixed in the MVP.
+None. Decided with the maintainer: refunds reduce spending in their category; 1 is the highest priority; user rules may share a priority number and the newest wins, with a way to add a rule on top; the names above; a Nájom sub-category under Bývanie; the default rule set above as a starting set; built-in roles fixed in the MVP.

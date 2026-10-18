@@ -15,7 +15,7 @@ Shared terms. Use them consistently in docs, specs, and code.
 - **Rule:** one condition plus a target sub-category. Matching transactions are assigned to that sub-category.
 - **Default rule:** a rule built into the product.
 - **User rule:** a rule created by the user. Persisted locally.
-- **Priority:** a rule's number, used to choose between rules that match the same transaction. User rules always win over default rules.
+- **Priority:** a rule's number, used to choose between rules that match the same transaction. 1 is the highest. User rules always win over default rules. User rules may share a number; then the newest rule wins.
 - **Excluded from spending:** marks a category (and so everything under it) as not spending, e.g. transfers between the user's own accounts or investments.
 - **Spending:** money going out, minus anything that came back into the same category (a refund, a reversed fee), excluding categories excluded from spending. Income is not spending.
 - **VS / KS / SS:** variable, constant, and specific symbols; Slovak/Czech payment reference codes on transfers.
