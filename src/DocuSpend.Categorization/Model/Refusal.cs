@@ -28,6 +28,15 @@ public enum RefusalKind
 
     /// <summary>A sub-category added to one of the Uncategorized buckets.</summary>
     NoSubcategoriesAllowed,
+
+    /// <summary>A priority number below 1.</summary>
+    InvalidPriority,
+
+    /// <summary>A rule whose target is not an existing sub-category.</summary>
+    UnknownTarget,
+
+    /// <summary>A change that refers to a user rule that does not exist.</summary>
+    UnknownRule,
 }
 
 /// <summary>
