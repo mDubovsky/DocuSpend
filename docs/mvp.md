@@ -51,3 +51,10 @@ Not built now, but early decisions should not make these hard:
 - Other banks, with different statement structures
 - Local retention of parsed statements, so a whole year can be viewed with one upload per month
 - Other periods: weekly, yearly, custom ranges
+- **Sharing categorization rules.** When a user categorizes something, offer to share that rule (never the statement, never amounts or personal details) so it can become a default rule for other people. Not for the MVP, because it is the one feature that would send anything off the user's machine and needs its own design. Constraints to keep in mind:
+  - opt-in per rule, showing exactly what would be sent;
+  - only rules that carry no personal data: never account-number, variable-symbol or amount rules, and text rules need a human review, since a text can be a person's name;
+  - a review step before anything ships as a default, to keep out wrong or abusive rules;
+  - no server needed to start: export and import of rule packs as files, then a "suggest this rule" button that opens a prefilled GitHub issue for a maintainer to review.
+
+  The design already leaves room for it: rules are plain data with stable identifiers, and the default rules are data in the repository.
