@@ -1,8 +1,10 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/DocuSpend.Categorization/DocuSpend.Categorization.csproj" />
     <Project Path="src/DocuSpend.Statements/DocuSpend.Statements.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/DocuSpend.Categorization.Tests/DocuSpend.Categorization.Tests.csproj" />
     <Project Path="tests/DocuSpend.SampleGenerator.Tests/DocuSpend.SampleGenerator.Tests.csproj" />
     <Project Path="tests/DocuSpend.Statements.Tests/DocuSpend.Statements.Tests.csproj" />
   </Folder>
