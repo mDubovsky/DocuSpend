@@ -39,16 +39,50 @@ internal static class TextMatching
     }
 
     /// <summary>
-    /// Whether the text contains the pattern. The text is padded with a space at each end first, so a pattern with a
-    /// leading or trailing space ("MOL ", "OBI ") marks a word edge, also at the very start or end of the text.
+    /// Like <see cref="Fold"/>, and every character that is not a letter or a digit also counts as a space, so
+    /// "Mol.Benzinka" becomes "mol benzinka" and "DR.MAX" becomes "dr max". Used for *contains*, where punctuation in
+    /// bank text ("Dr.Max 382", "GOOGLE*YouTubePremium") must not stop a name from being found.
+    /// </summary>
+    public static string FoldWords(string? text)
+    {
+        var folded = Fold(text);
+        if (folded.Length == 0)
+            return "";
+
+        var words = new StringBuilder(folded.Length);
+        var lastWasSpace = false;
+        foreach (var c in folded)
+        {
+            if (char.IsLetterOrDigit(c))
+            {
+                words.Append(c);
+                lastWasSpace = false;
+            }
+            else if (!lastWasSpace)
+            {
+                words.Append(' ');
+                lastWasSpace = true;
+            }
+        }
+        return words.ToString();
+    }
+
+    /// <summary>
+    /// Whether the text contains the pattern, with punctuation counted as spaces. The text is padded with a space at
+    /// each end first, so a pattern with a leading or trailing space ("MOL ", " OBI ") marks a word edge, also at the
+    /// very start or end of the text and next to punctuation. A pattern with no letters or digits matches nothing.
     /// </summary>
     public static bool Contains(string? text, string pattern)
     {
-        var folded = Fold(text).Trim();
-        if (folded.Length == 0)
+        var words = FoldWords(text).Trim();
+        var wanted = FoldWords(pattern);
+        if (words.Length == 0 || HasNoWords(pattern))
             return false;
-        return $" {folded} ".Contains(Fold(pattern), StringComparison.Ordinal);
+        return $" {words} ".Contains(wanted, StringComparison.Ordinal);
     }
+
+    /// <summary>True when nothing is left of the text once spaces and punctuation are ignored.</summary>
+    public static bool HasNoWords(string? text) => FoldWords(text).Trim().Length == 0;
 
     /// <summary>Whether the whole text is the value, apart from surrounding spaces.</summary>
     public static bool Equal(string? text, string value)

@@ -48,7 +48,7 @@ public sealed record TextCondition(string Text, TextMode Mode) : Condition
         Test(Mode, transaction.Description, Text) || Test(Mode, transaction.PaymentPurpose, Text);
 
     public override Refusal? Validate() =>
-        Needs(!TextMatching.IsBlank(Text), RefusalKind.EmptyText, "A text condition needs text.");
+        Needs(!TextMatching.HasNoWords(Text), RefusalKind.EmptyText, "A text condition needs text with letters or digits.");
 
     internal static bool Test(TextMode mode, string? value, string text) => mode switch
     {
@@ -64,7 +64,7 @@ public sealed record CounterpartyNameCondition(string Text, TextMode Mode) : Con
     public override bool Matches(Transaction transaction) => TextCondition.Test(Mode, transaction.CounterpartyName, Text);
 
     public override Refusal? Validate() =>
-        Needs(!TextMatching.IsBlank(Text), RefusalKind.EmptyText, "A counterparty-name condition needs text.");
+        Needs(!TextMatching.HasNoWords(Text), RefusalKind.EmptyText, "A counterparty-name condition needs text with letters or digits.");
 }
 
 /// <summary>The counterparty's account number equals the given one, ignoring spaces and case.</summary>

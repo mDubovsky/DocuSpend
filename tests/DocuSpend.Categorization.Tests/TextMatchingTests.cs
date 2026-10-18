@@ -47,6 +47,45 @@ public class TextMatchingTests
         Assert.Equal(expected, TextMatching.Contains(text, pattern));
 
     [Theory]
+    [InlineData("Mol.Benzinka Nitra", " MOL ", true)]
+    [InlineData("MOL,BENZINKA", " MOL ", true)]
+    [InlineData("Platba (MOL)", " MOL ", true)]
+    [InlineData("Dr.Max 123 Nitra", "DR.MAX", true)]
+    [InlineData("Dr.Max 123 Nitra", "DR MAX", true)]
+    [InlineData("DR-MAX 123", "DR.MAX", true)]
+    [InlineData("www.mall.sk/objednavka", "MALL.SK", true)]
+    [InlineData("GOOGLE*YouTubePremium", "YOUTUBEPREMIUM", true)]
+    [InlineData("GOOGLE *YouTube Premium", "YOUTUBE PREMIUM", true)]
+    [InlineData("Bistro.sk, s. r. o.", "BISTRO", true)]
+    [InlineData("DOMOL.BRATISLAVA", " MOL ", false)]
+    [InlineData("MOLDAVSKA.CESTA", " MOL ", false)]
+    [InlineData("SCOOP.CAFE", " COOP", false)]
+    public void In_contains_mode_punctuation_counts_as_a_space(string text, string pattern, bool expected) =>
+        Assert.Equal(expected, TextMatching.Contains(text, pattern));
+
+    [Theory]
+    [InlineData("...")]
+    [InlineData(" . , ")]
+    [InlineData("***")]
+    public void A_pattern_of_only_punctuation_matches_nothing(string pattern) =>
+        Assert.False(TextMatching.Contains("Platba . , *** ...", pattern));
+
+    [Theory]
+    [InlineData("...", true)]
+    [InlineData(" * ", true)]
+    [InlineData("", true)]
+    [InlineData("MOL.", false)]
+    [InlineData("OBI ", false)]
+    public void A_pattern_without_letters_or_digits_has_no_words(string pattern, bool expected) =>
+        Assert.Equal(expected, TextMatching.HasNoWords(pattern));
+
+    [Theory]
+    [InlineData("MZDA.", "MZDA", false)]
+    [InlineData("MZDA", "MZDA.", false)]
+    public void Equals_mode_is_not_affected_by_punctuation(string text, string value, bool expected) =>
+        Assert.Equal(expected, TextMatching.Equal(text, value));
+
+    [Theory]
     [InlineData("MZDA", "mzda", true)]
     [InlineData("  Mzda  ", "MZDA", true)]
     [InlineData("MZDA 02/2026", "MZDA", false)]

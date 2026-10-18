@@ -78,7 +78,7 @@ A condition matches a transaction or doesn't. A condition on a field the transac
 - *contains*: the transaction's text contains the given text;
 - *equals*: the transaction's text, apart from surrounding spaces, is the given text.
 
-In both modes case and diacritics are ignored, so "lekaren" matches "LEKÁREŇ", and runs of spaces count as one. The given text must not be empty.
+In both modes case and diacritics are ignored, so "lekaren" matches "LEKÁREŇ", and runs of spaces count as one. In *contains* mode any punctuation also counts as a space, so "mol" matches "Mol.PetExpert" and "dr.max" matches "Dr.Max 382". The given text must contain at least one letter or digit.
 
 #### Priority
 
@@ -115,7 +115,7 @@ Because each transaction is in exactly one sub-category, **nothing is lost**: th
 
 ### Default rules
 
-A first set, listed in priority order (first match wins). Rows are lists of alternatives, and each alternative is its own rule with its own consecutive priority number, in the order shown. All text conditions are "contains" and, like every text condition, ignore case and diacritics. A space at either end of a text marks a word edge, also at the very start or end of the transaction's text: " MOL " matches "MOL Bratislava" and "Platba MOL" but not "DOMOL", and " COOP" matches "COOP Jednota" but not "SCOOP". The list is built from common Slovak merchants and services and will grow; adding a rule only changes the result for transactions it matches.
+A first set, listed in priority order (first match wins). Rows are lists of alternatives, and each alternative is its own rule with its own consecutive priority number, in the order shown. All text conditions are "contains" and, like every text condition, ignore case and diacritics. A space at either end of a text marks a word edge, also at the very start or end of the transaction's text, and punctuation counts as a space: " MOL " matches "MOL Bratislava", "Platba MOL" and "Mol.PetExpert" but not "DOMOL", and " COOP" matches "COOP Jednota" but not "SCOOP". The list is built from common Slovak merchants and services and will grow; adding a rule only changes the result for transactions it matches.
 
 | Condition | Target |
 |---|---|
@@ -170,7 +170,7 @@ For every transaction the result says which rule decided: whether it is a defaul
 - [ ] A rule added on top beats every existing user rule that matches the same transaction, whatever their numbers, and gets the lowest existing user number, or 1 when there are no user rules; adding several rules on top in a row, each wins over the earlier ones.
 - [ ] A rule with an empty text, an empty or inverted amount range, or a target that isn't an existing sub-category is refused.
 - [ ] Each of the six conditions matches the transactions it describes and no others, checked on constructed transactions, including a missing field not matching.
-- [ ] A text condition in "contains" mode and one in "equals" mode each match accordingly, with case, diacritics and extra spaces ignored.
+- [ ] A text condition in "contains" mode and one in "equals" mode each match accordingly, with case, diacritics and extra spaces ignored, and in "contains" mode with punctuation counted as a space (so "Mol.PetExpert" and "Dr.Max 382" are found, but "DOMOL" is not found by " MOL "). A text with no letters or digits is refused.
 - [ ] An amount condition matches money in and money out of the same size.
 - [ ] A transaction no rule matches goes to Nezaradené výdavky if money out, Nezaradené príjmy otherwise, with "no rule matched" as the reason; a zero amount goes to the second.
 - [ ] A transaction in an excluded category isn't counted in spending, and one in an income category never is.

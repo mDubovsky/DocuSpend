@@ -166,6 +166,26 @@ public class DefaultRulesTests
     public void Fees_and_their_reversals_go_to_fees_by_type() =>
         Assert.All([Fee(-6.90m), Fee(6.90m)], t => Assert.Equal("fees.fees", Decide(t)));
 
+    // Punctuation counts as a space, so names followed or preceded by a dot, comma or star are found.
+
+    [Theory]
+    [InlineData("Mol.Benzinka Nitra", "car.fuel")]
+    [InlineData("Dr.Max 123 Nitra", "health.other")]
+    [InlineData("GOOGLE*YouTubePremium", "online-shopping.web-services")]
+    [InlineData("Bistro.sk, s. r. o.", "food.restaurants")]
+    [InlineData("OBI,Nitra", "housing.equipment")]
+    [InlineData("(COOP)", "food.groceries")]
+    [InlineData("www.mall.sk", "electronics.electronics")]
+    public void Names_next_to_punctuation_are_found(string text, string target) =>
+        Assert.Equal(target, Decide(Card(text)));
+
+    [Theory]
+    [InlineData("DOMOL.BRATISLAVA")]
+    [InlineData("SCOOP.CAFE")]
+    [InlineData("KOBI.SKLAD")]
+    public void Short_names_still_do_not_match_inside_other_words_next_to_punctuation(string text) =>
+        Assert.Null(Decide(Card(text)));
+
     // Word edges: short names don't match inside other words.
 
     [Theory]

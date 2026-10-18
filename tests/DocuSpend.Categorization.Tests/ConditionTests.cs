@@ -49,8 +49,14 @@ public class ConditionTests
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public void A_text_condition_needs_text(string text) =>
+    [InlineData("...")]
+    [InlineData(" * , ")]
+    public void A_text_condition_needs_text_with_letters_or_digits(string text) =>
         Assert.Equal(RefusalKind.EmptyText, new TextCondition(text, TextMode.Contains).Validate()!.Kind);
+
+    [Fact]
+    public void A_text_condition_matches_through_punctuation_in_contains_mode() =>
+        Assert.True(new TextCondition("mol", TextMode.Contains).Matches(Transfer(description: "MOL.BENZINKA")));
 
     // Counterparty name
 
