@@ -11,6 +11,8 @@ Shared terms. Use them consistently in docs, specs, and code.
 - **Counterparty:** the other party in a transaction (merchant, payer, or payee).
 - **Category:** a named group of transactions shown in the spending chart, e.g. Bývanie. Every category has sub-categories, including one called Ostatné ("other").
 - **Sub-category:** the second level, e.g. Úvery na bývanie under Bývanie. Every transaction is in exactly one sub-category. Two levels only.
+- **Role:** what a category's transactions mean for the totals: *spending*, *income* (incoming payments, never spending) or *excluded* (not spending). Applies to everything under the category.
+- **Balance:** the sum of a category's (or sub-category's) transactions' signed amounts, negative for money going out. A category's spending is the negative of its balance, so money that came back into it reduces it.
 - **Uncategorized:** the buckets for transactions that match no rule: one for money out (Nezaradené výdavky) and one for money in. They have no sub-categories.
 - **Rule:** one condition plus a target sub-category. Matching transactions are assigned to that sub-category.
 - **Default rule:** a rule built into the product.

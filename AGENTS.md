@@ -35,6 +35,6 @@ Run from the repo root:
 - Build: `dotnet build`
 - Test: `dotnet test`
 - Regenerate test samples: `dotnet run --project tools/DocuSpend.SampleGenerator -- generate` (see [samples/README.md](samples/README.md); never edit samples by hand)
-- Check the reader on real statements (maintainer, locally, only with the human's go-ahead): `dotnet run --project tools/DocuSpend.StatementCheck` (reads `samples/private/`; prints counts or a rejection, never content)
+- Check the reader on real statements (maintainer, locally, only with the human's go-ahead): `dotnet run --project tools/DocuSpend.StatementCheck` (reads `samples/private/`; prints counts or a rejection, never content). Add `--categorize` to also print how many transactions each built-in category got (counts only).
 
 Layout: `src/` for application code (`DocuSpend.Statements`: reading statements into transactions; `DocuSpend.Categorization`: sorting transactions into categories), `tools/` for developer tooling, `tests/` for test projects.
