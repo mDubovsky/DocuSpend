@@ -115,7 +115,7 @@ Because each transaction is in exactly one sub-category, **nothing is lost**: th
 
 ### Default rules
 
-A first set, listed in priority order (first match wins). Rows are lists of alternatives, and each alternative is its own rule with its own consecutive priority number, in the order shown. All text conditions are "contains" and, like every text condition, ignore case and diacritics; a trailing space in a text, as in "MOL ", is part of it. The list is built from common Slovak merchants and services and will grow; adding a rule only changes the result for transactions it matches.
+A first set, listed in priority order (first match wins). Rows are lists of alternatives, and each alternative is its own rule with its own consecutive priority number, in the order shown. All text conditions are "contains" and, like every text condition, ignore case and diacritics. A space at either end of a text marks a word edge, also at the very start or end of the transaction's text: " MOL " matches "MOL Bratislava" and "Platba MOL" but not "DOMOL", and " COOP" matches "COOP Jednota" but not "SCOOP". The list is built from common Slovak merchants and services and will grow; adding a rule only changes the result for transactions it matches.
 
 | Condition | Target |
 |---|---|
@@ -123,32 +123,32 @@ A first set, listed in priority order (first match wins). Rows are lists of alte
 | Text "SPORIACI UCET" (savings account) | Prevody medzi vlastnými účtami › Ostatné |
 | Text "NAJOM" (nájom, nájomné) | Bývanie › Nájom |
 | Text "HYPOTEK" (hypotéka, hypotekárny) | Bývanie › Úvery na bývanie |
-| Text "OBI ", "IKEA", "JYSK", "HORNBACH" | Bývanie › Vybavenie a doplnky |
-| Text "ENERGETIK" (energetika, energetické), "SPP ", "ZSE ", "VODARENS" (energy and water suppliers) | Bývanie › Ostatné |
+| Text " OBI ", "IKEA", "JYSK", "HORNBACH" | Bývanie › Vybavenie a doplnky |
+| Text "ENERGETIK" (energetika, energetické), " SPP ", " ZSE ", "VODARENS" (energy and water suppliers) | Bývanie › Ostatné |
 | Text "MZD" (mzda, mzdy) | Príjmy › Mzda |
 | Counterparty name "URAD PRACE", "SOCIALNA POISTOVNA" | Príjmy › Dávky a prídavky |
 | Text "NETFLIX", "SPOTIFY", "DISNEY", "HBO MAX", "YOUTUBE PREMIUM", "YOUTUBEPREMIUM" | Nákupy online › Webové služby |
-| Text "ALIEXPRESS", "ALLEGRO", "TEMU", "GOPAY", "PAYPAL", "PACKETA", "DPD ", "SHOPTET", "POSTA SK" | Nákupy online › Ostatné |
-| Text "TESCO", "LIDL", "KAUFLAND", "BILLA", "COOP", "TERNO", "MINIMARKET", "POTRAVINY", "PEKAREN" | Stravovanie › Potraviny |
-| Text "MCDONALD", "KFC", "STARBUCKS", "BISTRO", "RESTAURACIA", "KAVIAREN", "PIZZ", "WOLT", "FOODORA" | Stravovanie › Reštaurácie a kaviarne |
-| Text "SLOVNAFT", "SHELL", "OMV", "ORLEN", "MOL ", "CERPACIA STANICA" | Auto-moto › Pohonné hmoty |
+| Text "ALIEXPRESS", "ALLEGRO", " TEMU", "GOPAY", "PAYPAL", "PACKETA", " DPD ", "SHOPTET", "POSTA SK" | Nákupy online › Ostatné |
+| Text "TESCO", "LIDL", "KAUFLAND", "BILLA", " COOP", "TERNO", "MINIMARKET", "POTRAVINY", "PEKAREN" | Stravovanie › Potraviny |
+| Text "MCDONALD", " KFC ", "STARBUCKS", "BISTRO", "RESTAURACIA", "KAVIAREN", "PIZZ", "WOLT", "FOODORA" | Stravovanie › Reštaurácie a kaviarne |
+| Text "SLOVNAFT", "SHELL", " OMV ", "ORLEN", " MOL ", "CERPACIA STANICA" | Auto-moto › Pohonné hmoty |
 | Text "CARWASH", "AUTOSERVIS", "PNEUSERVIS", "AUTOUMYVAREN" | Auto-moto › Servis |
 | Text "ORANGE", "SLOVAK TELEKOM", "O2 SLOVAKIA", "MOJEO2" | Elektronika, komunikácia a médiá › Účty za telefón |
-| Text "ALZA", "DATART", "ELEKTRO", "MALL.SK" | Elektronika, komunikácia a médiá › Elektronika |
+| Text " ALZA", "DATART", "ELEKTRO", "MALL.SK" | Elektronika, komunikácia a médiá › Elektronika |
 | Text "MAGNETA", "SLOVANET" | Elektronika, komunikácia a médiá › Ostatné |
-| Text "DM DROGERIE", "DROGERIA", "TETA", "ROSSMANN" | Zdravie a osobná starostlivosť › Drogéria |
+| Text "DM DROGERIE", "DROGERIA", " TETA", "ROSSMANN" | Zdravie a osobná starostlivosť › Drogéria |
 | Text "SYNLAB", "NEMOCNIC", "POLIKLINIK" | Zdravie a osobná starostlivosť › Lekári a nemocnice |
-| Text "LEKAREN", "DR.MAX", "BENU", "OPTIKA" | Zdravie a osobná starostlivosť › Ostatné |
-| Text "BOLT", "UBER", "TAXI" | Doprava › Taxi |
-| Text "ZSSK", "REGIOJET", "FLIXBUS", "SLOVAK LINES", "MHD" | Doprava › Verejná doprava |
+| Text "LEKAREN", "DR.MAX", " BENU", "OPTIKA" | Zdravie a osobná starostlivosť › Ostatné |
+| Text " BOLT", " UBER", "TAXI" | Doprava › Taxi |
+| Text "ZSSK", "REGIOJET", "FLIXBUS", "SLOVAK LINES", " MHD " | Doprava › Verejná doprava |
 | Text "POISTOVNA", "POISTENIE", "UNIQA", "GENERALI", "ALLIANZ", "KOOPERATIVA" | Ostatné výdavky › Platby poistného |
 | Text "OKRESNY URAD", "MESTSKY URAD", "MINISTERSTVO" (state and municipal payments) | Ostatné výdavky › Ostatné |
 | Text "SKOLNE", "SKOLK" (škôlka, škôlku), "MATERSKA SKOLA" | Vzdelanie › Škola a škôlka |
 | Text "KNIHKUPECTVO", "PAPIERNICTVO", "KNIHY" | Vzdelanie › Školské potreby |
 | Text "DOUCOVANIE", "JAZYKOVA SKOLA" | Vzdelanie › Kurzy a doučovanie |
-| Text "STEAM", "PLAYSTATION", "NINTENDO", "XBOX", "GOG SP" | Zábava a oddych › Hry a hračky |
-| Text "KINO", "CINEMAX", "DECATHLON", "SKIPAS", "SKI RESORT" | Zábava a oddych › Ostatné |
-| Text "XTB", "TRADING 212", "FINAX", "INTERACTIVE BROKERS" | Investície › Ostatné |
+| Text "STEAM", "PLAYSTATION", "NINTENDO", " XBOX", "GOG SP" | Zábava a oddych › Hry a hračky |
+| Text " KINO", "CINEMAX", "DECATHLON", "SKIPAS", "SKI RESORT" | Zábava a oddych › Ostatné |
+| Text " XTB ", "TRADING 212", "FINAX", "INTERACTIVE BROKERS" | Investície › Ostatné |
 
 Most rules for moving money between the user's own accounts can't be built in, since they depend on the user's accounts; the user creates them, for example on the counterparty account. The savings-account rule above catches only transfers that say so in their text.
 
