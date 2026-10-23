@@ -14,4 +14,17 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
+  <!--
+    dependency-vulnerabilities: a package with a known vulnerability of moderate severity or higher, direct or
+    indirect, fails the build. NU1900 (the vulnerability data couldn't be fetched) stays a warning so an offline
+    build still works; the dependency-vulnerabilities job in CI makes it an error.
+  -->
+  <PropertyGroup>
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>moderate</NuGetAuditLevel>
+    <WarningsAsErrors>$(WarningsAsErrors);NU1902;NU1903;NU1904</WarningsAsErrors>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1900</WarningsNotAsErrors>
+  </PropertyGroup>
+
 </Project>
