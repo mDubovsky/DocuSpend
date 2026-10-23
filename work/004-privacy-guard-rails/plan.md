@@ -28,7 +28,7 @@ A new test project, `tests/DocuSpend.Privacy.Tests`, holds all privacy tests tha
 - **Findings** name the assembly, the type or import, and the path through the dependency graph from our assembly to it. A finding passes only if `privacy/allowed-dependencies.json` has an entry for that assembly and version range with a reason and a reviewer. The list is empty today; the user-interface item will add its first entries.
 - **Denied packages:** `privacy/denied-packages.txt` lists telemetry, analytics and crash-reporting packages by name pattern (for example Application Insights, Sentry, App Center, Segment, Mixpanel, Amplitude, OpenTelemetry exporters). The inspector reads each project's `obj/project.assets.json`, so indirect packages are covered.
 - **Native libraries** (not managed code, so not inspectable) are found by file, listed, and checked against `privacy/native-libraries.json`; a new one fails until reviewed. None exist today.
-- The old `NoNetworkTests` in the statements tests (which loads assemblies by name, now banned) is replaced by this.
+- The old `NoNetworkTests` in the statements tests loaded assemblies by name, which the ban forbids, so step 1 removed it; this inspector replaces it.
 
 ### 3. The real-data check (`privacy-no-real-data`)
 - **A pure policy function** takes a list of tracked paths and applies the rule: no PDF, spreadsheet, CSV or bank-export formats (xls, xlsx, ods, csv, ofx, qif, mt940, camt) except under `samples/public`, nothing under `samples/private`. It is unit-tested on made-up lists.
@@ -73,8 +73,8 @@ PRIVACY.md                at the root
 
 ## Steps
 Test-first throughout; one commit per step group, each after the human's approval.
-1. `privacy/` folder with the ban list, the analyzer wiring in `Directory.Build.props`, and the exceptions mechanism. Confirm the current repository builds clean. Tests: the ban catches each kind of violation (checked by compiling small snippets with the real analyzer and ban list inside a test), the file-name guard, suppression scan, exceptions agreement and limits.
-2. `DocuSpend.Privacy.Tests`: the metadata inspector, allowlist, denied packages, native-library listing, built and tested on small assemblies compiled in the test (one using networking, one clean, one importing a networking library), then run on the real build outputs. Replace the old no-network test.
+1. `privacy/` folder with the ban list, the analyzer wiring in `Directory.Build.props` and `Directory.Build.targets` (with a build guard that fails if the ban is missing or switched off in a project), and the exceptions mechanism. Confirm the current repository builds clean; the old no-network test loads assemblies by name and is removed. Tests, in a new `DocuSpend.Privacy.Tests` (using Roslyn, `Microsoft.CodeAnalysis.CSharp`, to compile snippets): the ban catches each kind of violation (checked by compiling small snippets with the real analyzer and ban list inside a test), every ban entry names a real symbol and overload families are complete, the file-name guard, suppression scan, exceptions agreement and limits.
+2. In `DocuSpend.Privacy.Tests`: the metadata inspector, allowlist, denied packages, native-library listing, built and tested on small assemblies compiled in the test (one using networking, one clean, one importing a networking library), then run on the real build outputs.
 3. The real-data policy function and its tests, then the LibGit2Sharp reader and the check on the real repository.
 4. `StatementCheck --verify` and its tests.
 5. The workflows, `dependabot.yml`, and the contributor-facing instructions for repository settings. A local dry run of each command the workflows use.

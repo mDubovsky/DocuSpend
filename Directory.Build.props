@@ -5,4 +5,11 @@
     <Deterministic>true</Deterministic>
   </PropertyGroup>
 
+  <!-- The privacy rules (decision 0006); the ban itself is wired up in Directory.Build.targets. -->
+  <PropertyGroup>
+    <PrivacyDir>$(MSBuildThisFileDirectory)privacy\</PrivacyDir>
+    <PrivacyBannedSymbols>$(PrivacyDir)BannedSymbols.txt</PrivacyBannedSymbols>
+    <PrivacyBanAnalyzerVersion>5.6.0</PrivacyBanAnalyzerVersion>
+  </PropertyGroup>
+
 </Project>
