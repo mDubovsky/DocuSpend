@@ -2,6 +2,8 @@
 
 DocuSpend's rule is [decision 0006](../docs/decisions/0006-privacy-approach-and-network-boundary.md): **no code that can see a statement may use the network**. The files in this folder are what the build and the tests enforce. Changing them is a normal, reviewed change. Weakening them is a change to decision 0006.
 
+For an overview of all the checks, including the network-off run and the scanners, see [CONTRIBUTING.md](../CONTRIBUTING.md#privacy-checks); for users, see [PRIVACY.md](../PRIVACY.md).
+
 | File | What it is |
 |---|---|
 | [BannedSymbols.txt](BannedSymbols.txt) | What counts as networking in our own code: HTTP, sockets, web sockets, mail, DNS, ping, secure streams and pipes; starting other programs; calling operating-system libraries or COM directly; and loading types or assemblies by name, which would get around the rest. |
