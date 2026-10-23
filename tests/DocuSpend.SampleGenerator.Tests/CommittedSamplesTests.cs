@@ -5,7 +5,8 @@ using DocuSpend.SampleGenerator.Scenarios;
 namespace DocuSpend.SampleGenerator.Tests;
 
 /// <summary>
-/// The files committed in samples/public must be exactly what the generator produces, so they can't drift.
+/// The files committed in samples/public must be exactly what the generator produces, so they can't drift. PDFs are
+/// compared with their compressed streams decompressed, because the compressor's output differs between platforms.
 /// After a deliberate change, regenerate with: dotnet run --project tools/DocuSpend.SampleGenerator -- generate
 /// </summary>
 [Trait("Check", "privacy-no-real-data")]
@@ -34,7 +35,7 @@ public class CommittedSamplesTests
     {
         var scenario = ValidSamples.All().Single(s => s.Name == name);
 
-        Assert.Equal(VubStatementRenderer.Render(scenario), File.ReadAllBytes(Path.Combine(Dir, name + ".pdf")));
+        AssertSamePdf(VubStatementRenderer.Render(scenario), File.ReadAllBytes(Path.Combine(Dir, name + ".pdf")));
         Assert.Equal(RecordWriter.Serialize(ExpectedRecord.ForValid(scenario)), File.ReadAllText(Path.Combine(Dir, name + ".expected.json")));
     }
 
@@ -43,8 +44,19 @@ public class CommittedSamplesTests
     public void Committed_invalid_sample_matches_the_generator(string name)
     {
         var sample = InvalidSamples.All().Single(s => s.Name == name);
+        var committed = File.ReadAllBytes(Path.Combine(Dir, name + ".pdf"));
 
-        Assert.Equal(sample.Content, File.ReadAllBytes(Path.Combine(Dir, name + ".pdf")));
+        if (name == "08-corrupted-statement")
+        {
+            // Cut from the typical month. A cut through compressed data can't be decompressed, so it is compared,
+            // byte for byte, with the same cut of the committed typical month, which is checked against the generator.
+            var typical = File.ReadAllBytes(Path.Combine(Dir, "01-typical-month.pdf"));
+            Assert.Equal(InvalidSamples.Truncated(typical), committed);
+        }
+        else
+        {
+            AssertSamePdf(sample.Content, committed);
+        }
         Assert.Equal(RecordWriter.Serialize(sample.Record), File.ReadAllText(Path.Combine(Dir, name + ".expected.json")));
     }
 
@@ -58,6 +70,15 @@ public class CommittedSamplesTests
         Assert.Equal("parse", record.Expectation);
         Assert.Contains(VubFormat.Amount(record.Statement!.ClosingBalance), words);
         Assert.All(record.Transactions!, t => Assert.Contains(VubFormat.Amount(t.FeeAmount ?? t.Amount), words));
+    }
+
+    /// <summary>
+    /// The same file, byte for byte, except for how compressed streams are encoded, which differs between platforms
+    /// (see PdfCanonical). Where the platform's compressor matches the one that made the samples, the bytes match too.
+    /// </summary>
+    private static void AssertSamePdf(byte[] generated, byte[] committed)
+    {
+        Assert.Equal(PdfCanonical.Form(generated), PdfCanonical.Form(committed));
     }
 
     private static string FindSamplesDir()

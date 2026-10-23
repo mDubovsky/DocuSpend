@@ -63,9 +63,15 @@ public static class OutputInspection
             || name.Contains(".so.", StringComparison.Ordinal) || file.Contains("/native/", StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>The SDK's launcher (apphost) for an executable project: DocuSpend.X.exe, or DocuSpend.X on Linux and macOS.</summary>
-    private static bool IsLauncher(string file, string rootAssembly) =>
-        file == rootAssembly + ".exe" || file == rootAssembly;
+    /// <summary>
+    /// The SDK's launcher (apphost) for an executable project: DocuSpend.X.exe, or DocuSpend.X on Linux and macOS, also
+    /// in a platform folder such as win-x64/ that a platform-specific build leaves in the output.
+    /// </summary>
+    private static bool IsLauncher(string file, string rootAssembly)
+    {
+        var name = file[(file.LastIndexOf('/') + 1)..];
+        return name == rootAssembly + ".exe" || name == rootAssembly;
+    }
 
     /// <summary>For each assembly reachable from the root, the shortest chain of references that leads to it.</summary>
     private static Dictionary<string, IReadOnlyList<string>> ShortestPaths(string root, IReadOnlyList<InspectedAssembly> assemblies)

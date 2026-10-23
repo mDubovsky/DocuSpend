@@ -47,7 +47,7 @@ Every check has a stable name, so it can later be marked as required for merging
 
 #### privacy-no-real-data
 - No PDF, spreadsheet or CSV file is tracked anywhere except under `samples/public`, and nothing under `samples/private` is tracked.
-- Every file under `samples/public` is one the generator produces, byte for byte, which is already tested. A PDF without the synthetic marking, or an extra file, fails.
+- Every file under `samples/public` is one the generator produces, byte for byte, which is already tested. Compressed streams in a PDF are compared decompressed, since the compressor's output differs between platforms. A PDF without the synthetic marking, or an extra file, fails.
 - The check explains why, and how to use `samples/private` for real statements.
 
 #### code-scanning, dependency-vulnerabilities, secret-scanning

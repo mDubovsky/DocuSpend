@@ -24,5 +24,5 @@ public static class InvalidSamples
     ];
 
     /// <summary>The first 40% of the file, so the PDF's structure at the end is missing.</summary>
-    private static byte[] Truncated(byte[] pdf) => pdf[..(pdf.Length * 2 / 5)];
+    public static byte[] Truncated(byte[] pdf) => pdf[..(pdf.Length * 2 / 5)];
 }
