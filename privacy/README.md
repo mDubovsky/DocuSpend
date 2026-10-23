@@ -44,6 +44,18 @@ Reviewed findings still pass with a line in the test output, so they stay visibl
 
 `versions` is a range of assembly versions: `[a, b)` includes `a` and excludes `b`; a bare version means exactly that one. Keep the range narrow, so that an update is reviewed again. Native files work the same way in `native-libraries.json`, with the file's path in the output, a reason and a reviewer. The check can list native code but can't prove what it does.
 
+## No real data (`privacy-no-real-data`)
+
+Real statements must never be committed. The check fails when:
+
+- a statement-like file (PDF, spreadsheet, CSV, or a bank-export format such as OFX, QIF, MT940 or CAMT) is tracked anywhere except `samples/public`;
+- anything at all under `samples/private` is tracked, even when forced past `.gitignore`;
+- a file in `samples/public` isn't one the sample generator produces, byte for byte (the existing `CommittedSamplesTests`, which run under the same check name).
+
+The tracked files are read from git's index, so a file that is staged but not yet committed is caught too. The tests read the index with [LibGit2Sharp](https://github.com/libgit2/libgit2sharp) because running `git` would mean starting a program, which the networking ban forbids in tests as well. LibGit2Sharp brings native binaries; it is used only by the test project, which doesn't ship.
+
+Real statements belong in `samples/private`, which git ignores. Tests use the synthetic samples in `samples/public`; see [samples/README.md](../samples/README.md).
+
 ## Requesting an exception
 
 An exception exists for one reason: the optional online-rules module that decision 0006 foresees, which must never see a statement. To request one:

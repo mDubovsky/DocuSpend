@@ -8,6 +8,7 @@ namespace DocuSpend.SampleGenerator.Tests;
 /// The files committed in samples/public must be exactly what the generator produces, so they can't drift.
 /// After a deliberate change, regenerate with: dotnet run --project tools/DocuSpend.SampleGenerator -- generate
 /// </summary>
+[Trait("Check", "privacy-no-real-data")]
 public class CommittedSamplesTests
 {
     private static readonly string Dir = FindSamplesDir();
