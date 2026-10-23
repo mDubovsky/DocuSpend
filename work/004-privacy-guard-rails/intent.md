@@ -1,5 +1,5 @@
 ---
-status: specced
+status: planned
 issue: 4
 ---
 
