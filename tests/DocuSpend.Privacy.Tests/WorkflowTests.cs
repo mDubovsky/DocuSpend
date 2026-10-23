@@ -54,6 +54,18 @@ public partial class WorkflowTests
     }
 
     [Fact]
+    public void The_contributor_documentation_lists_exactly_these_checks()
+    {
+        var text = File.ReadAllText(Repo.PathOf("CONTRIBUTING.md")).ReplaceLineEndings("\n");
+        var section = text[text.IndexOf("## Privacy checks", StringComparison.Ordinal)..];
+        section = section[..section.IndexOf("\n## ", 3, StringComparison.Ordinal)];
+
+        var documented = DocumentedCheck().Matches(section).Select(m => m.Groups["name"].Value);
+
+        Assert.Equal(CheckNames.Order(StringComparer.Ordinal), documented.Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
     public void No_step_is_allowed_to_fail_quietly()
     {
         Assert.All(Workflows(), w => Assert.DoesNotMatch(ContinueOnError(), w.Text));
@@ -94,6 +106,9 @@ public partial class WorkflowTests
 
     [GeneratedRegex(@"^permissions:", RegexOptions.Multiline)]
     private static partial Regex TopLevelPermissions();
+
+    [GeneratedRegex(@"^\| `(?<name>[a-z-]+)` \|", RegexOptions.Multiline)]
+    private static partial Regex DocumentedCheck();
 
     [GeneratedRegex(@"^\s*(- )?continue-on-error:", RegexOptions.Multiline)]
     private static partial Regex ContinueOnError();

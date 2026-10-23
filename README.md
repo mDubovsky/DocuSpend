@@ -6,6 +6,7 @@ Give DocuSpend a statement (PDF, spreadsheet, CSV, …) and get charts showing w
 
 **Status:** idea stage. Nothing is built yet; we are defining the product first.
 
+- Privacy: your statement never leaves your computer, and the build proves it: [PRIVACY.md](PRIVACY.md)
 - What and why: [docs/product.md](docs/product.md)
 - How we work (AI-assisted development): [docs/sdlc.md](docs/sdlc.md)
 - Backlog and work items: [work/](work/)
