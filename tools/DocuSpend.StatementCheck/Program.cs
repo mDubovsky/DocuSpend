@@ -6,6 +6,21 @@ using UglyToad.PdfPig;
 // or the rejection; never names, amounts or any other content. Rejection messages never contain content either.
 // With --categorize it also prints how many transactions each built-in category got: counts only, no amounts,
 // no merchant or counterparty text. The category names are the product's own.
+// With --verify <directory> it instead checks synthetic samples against their .expected.json records (see
+// SampleVerifier); CI runs this with the network switched off.
+
+if (args is ["--verify", var samples])
+{
+    var report = DocuSpend.StatementCheck.SampleVerifier.Verify(samples);
+    foreach (var line in report.Lines)
+        Console.WriteLine(line);
+    return report.Success ? 0 : 1;
+}
+if (args.Contains("--verify"))
+{
+    Console.Error.WriteLine("Usage: StatementCheck --verify <samples directory>");
+    return 2;
+}
 
 var categorize = args.Contains("--categorize");
 var paths = args.Where(a => a != "--categorize").ToList();
