@@ -6,6 +6,10 @@ DocuSpend's rule is [decision 0006](../docs/decisions/0006-privacy-approach-and-
 |---|---|
 | [BannedSymbols.txt](BannedSymbols.txt) | What counts as networking in our own code: HTTP, sockets, web sockets, mail, DNS, ping, secure streams and pipes; starting other programs; calling operating-system libraries or COM directly; and loading types or assemblies by name, which would get around the rest. |
 | [exceptions.json](exceptions.json) | Projects allowed to use networking. Empty. |
+| [native-networking.txt](native-networking.txt) | Native networking libraries and functions that a shipped assembly must not import. |
+| [denied-packages.txt](denied-packages.txt) | Telemetry, analytics, crash-reporting, remote-logging and auto-update packages, denied by name. |
+| [allowed-dependencies.json](allowed-dependencies.json) | Third-party assemblies whose networking references were reviewed and accepted, with the reason and the reviewer. |
+| [native-libraries.json](native-libraries.json) | Native files in what ships, reviewed. Empty. |
 
 ## The ban on networking in our own code (`privacy-no-networking-code`)
 
@@ -18,6 +22,27 @@ error RS0030: The symbol 'HttpClient' is banned in this project: privacy-no-netw
 The build also fails if the ban is switched off: if the analyzer or the list is missing from a project, or analyzers are disabled. The tests in `tests/DocuSpend.Privacy.Tests` fail if the warning is suppressed in code (`#pragma warning disable`, `SuppressMessage`) or lowered in an `.editorconfig`, `.globalconfig` or project file.
 
 If you hit the ban, the usual answer is to do the work without the network: DocuSpend reads files the user chooses, and nothing else.
+
+## Networking in what ships (`privacy-dependencies`)
+
+Our own code is covered by the ban; the packages we use are not, so the tests in `tests/DocuSpend.Privacy.Tests` inspect every project that ships (everything under `src/` and `tools/`) in its build output. Every assembly there is read with `System.Reflection.Metadata`, so nothing is loaded or run. The check fails when:
+
+- an assembly references, defines or forwards a type in a networking namespace or type of `BannedSymbols.txt` (the `System.Net` entries; reflection and `Process` are banned only in our own code, because libraries use them legitimately), or imports something from `native-networking.txt`, unless `allowed-dependencies.json` covers that assembly and version. The failure names the assembly, what it uses, and the path of references from our assembly to it;
+- a package matching `denied-packages.txt` is anywhere in a project's dependency tree, read from its `obj/project.assets.json`, even when it doesn't reference networking itself;
+- a native file (anything that holds code but isn't a managed assembly) is in an output and not in `native-libraries.json`;
+- a file a package provides is missing from an output, which would make the inspection incomplete. Every project copies its packages to its output for this (`CopyLocalLockFileAssemblies` in `Directory.Build.props`);
+- a review in `allowed-dependencies.json` or `native-libraries.json` matches nothing any more, so it can't quietly allow the same thing back later.
+
+Reviewed findings still pass with a line in the test output, so they stay visible. Test frameworks and other things that don't ship are out of scope; our test code is still under the ban.
+
+**Asking for a review.** If a dependency references networking it never uses (for example a toolkit that can load images from web addresses, which DocuSpend never does), add an entry to `allowed-dependencies.json` in the same pull request:
+
+```json
+{ "assembly": "PdfSharp.Quality", "versions": "[6.2.4, 6.3)",
+  "reason": "Why the networking is never reached.", "reviewer": "Who reviewed it" }
+```
+
+`versions` is a range of assembly versions: `[a, b)` includes `a` and excludes `b`; a bare version means exactly that one. Keep the range narrow, so that an update is reviewed again. Native files work the same way in `native-libraries.json`, with the file's path in the output, a reason and a reviewer. The check can list native code but can't prove what it does.
 
 ## Requesting an exception
 

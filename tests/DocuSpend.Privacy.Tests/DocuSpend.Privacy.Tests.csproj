@@ -21,4 +21,12 @@
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
   </ItemGroup>
 
+  <!-- The dependency check inspects every shipping project's build output: build them first, without referencing them. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\*\*.csproj;..\..\tools\*\*.csproj" ReferenceOutputAssembly="false" Private="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="Configuration" Value="$(Configuration)" />
+  </ItemGroup>
+
 </Project>

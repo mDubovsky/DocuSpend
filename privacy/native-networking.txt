@@ -1,0 +1,76 @@
+# Native networking that a shipped assembly must not import (decision 0006).
+#
+# The dependency check (privacy-dependencies) reads every P/Invoke declaration in everything that ships and
+# fails on an import from one of these libraries, or of one of these functions from any library (on Linux and
+# macOS, sockets live in the C library itself). Adding an entry is a normal change; removing one is a change
+# to docs/decisions/0006-privacy-approach-and-network-boundary.md. See privacy/README.md.
+#
+# Format: "library <name>" or "function <name>", one per line. Library names are matched ignoring case, file
+# extension (.dll, .so, .dylib) and a "lib" prefix. Function names are matched ignoring case.
+
+# Windows networking libraries
+library ws2_32
+library wsock32
+library mswsock
+library wininet
+library winhttp
+library urlmon
+library dnsapi
+library iphlpapi
+library httpapi
+library webio
+library websocket
+library fwpuclnt
+
+# Cross-platform networking and TLS libraries
+library curl
+library ssl
+library gnutls
+library nss3
+library ssh2
+library zmq
+
+# Socket and name-resolution functions, wherever they are imported from
+function socket
+function connect
+function bind
+function listen
+function accept
+function accept4
+function send
+function sendto
+function sendmsg
+function recv
+function recvfrom
+function recvmsg
+function getaddrinfo
+function gethostbyname
+function gethostbyaddr
+function getnameinfo
+function WSAStartup
+function WSASocketA
+function WSASocketW
+function WSAConnect
+function WSASend
+function WSASendTo
+function GetAddrInfoW
+function GetAddrInfoExW
+function InternetOpenA
+function InternetOpenW
+function InternetOpenUrlA
+function InternetOpenUrlW
+function InternetConnectA
+function InternetConnectW
+function HttpOpenRequestA
+function HttpOpenRequestW
+function HttpSendRequestA
+function HttpSendRequestW
+function WinHttpOpen
+function WinHttpConnect
+function WinHttpSendRequest
+function URLDownloadToFileA
+function URLDownloadToFileW
+function URLOpenStreamA
+function URLOpenStreamW
+function curl_easy_init
+function curl_easy_perform

@@ -1,0 +1,61 @@
+# Packages that are denied by name, wherever they appear in the dependency tree (decision 0006).
+#
+# Telemetry, analytics, crash reporting, remote logging and auto-update have no place in DocuSpend, even
+# when a package doesn't reference networking directly. The dependency check (privacy-dependencies) reads
+# every package each shipped project resolves, including indirect ones, from its obj/project.assets.json.
+# Adding an entry is a normal change; removing one is a change to decision 0006. See privacy/README.md.
+#
+# Format: one package ID pattern per line, matched ignoring case; * matches any run of characters.
+
+# Telemetry and analytics
+*ApplicationInsights*
+Microsoft.AppCenter*
+OpenTelemetry.Exporter.*
+Segment.Analytics*
+Analytics.NET*
+Mixpanel*
+Amplitude*
+PostHog*
+Countly*
+GoogleAnalytics*
+Plausible*
+Matomo*
+Aptabase*
+
+# Crash and error reporting
+Sentry*
+Bugsnag*
+Raygun*
+Mindscape.Raygun4Net*
+Rollbar*
+Exceptionless*
+Honeybadger*
+Airbrake*
+SharpRaven*
+CrashReporter.NET*
+
+# Monitoring agents and remote log sinks
+Datadog.Trace*
+NewRelic.Agent*
+Elastic.Apm*
+Honeycomb*
+Serilog.Sinks.Seq*
+Serilog.Sinks.Http*
+Serilog.Sinks.Elasticsearch*
+Serilog.Sinks.Datadog*
+Serilog.Sinks.Loggly*
+Serilog.Sinks.Sentry*
+NLog.Targets.Seq*
+NLog.Targets.Http*
+loggly-csharp*
+Seq.Extensions.Logging*
+
+# Auto-update
+Squirrel.Windows*
+Clowd.Squirrel*
+Velopack*
+NetSparkle*
+NetSparkleUpdater*
+Autoupdater.NET*
+Onova*
+WinSparkle*
