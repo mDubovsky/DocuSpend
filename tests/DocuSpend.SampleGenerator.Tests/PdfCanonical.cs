@@ -8,8 +8,9 @@ namespace DocuSpend.SampleGenerator.Tests;
 /// A PDF with its compressed streams decompressed, so two files can be compared exactly regardless of how the
 /// compressor encoded them. PDFsharp compresses with .NET's DeflateStream, whose output differs between platforms
 /// (the committed samples are made on Windows, CI also runs on Linux) while the decompressed content is identical.
-/// Everything else is kept byte for byte, except what follows from the compressed sizes: stream /Length values and
-/// the cross-reference offsets.
+/// Everything else is kept byte for byte, except what follows from the compressed sizes (stream /Length values and
+/// the cross-reference offsets) and line endings: PDFsharp ends some lines with the platform's own (\r\n on
+/// Windows, \n on Linux), for example in the font's character map, so \r\n counts as \n.
 /// </summary>
 public static partial class PdfCanonical
 {
@@ -30,16 +31,20 @@ public static partial class PdfCanonical
 
             result.Append(Mask(text[at..dataStart]));
             result.Append(dictionary.Contains("/FlateDecode", StringComparison.Ordinal)
-                ? $"[inflated:{Convert.ToHexString(Inflate(data))}]"
-                : $"[raw:{Convert.ToHexString(data)}]");
+                ? $"[inflated:{Content(Inflate(data))}]"
+                : $"[raw:{Content(data)}]");
             at = dataStart + length;
         }
         result.Append(Mask(text[at..]));
         return result.ToString();
     }
 
+    /// <summary>A stream's content with line endings made uniform, as Latin-1 text so a difference is readable.</summary>
+    private static string Content(byte[] data) => Encoding.Latin1.GetString(data).Replace("\r\n", "\n");
+
     private static string Mask(string text)
     {
+        text = text.Replace("\r\n", "\n");
         text = Length().Replace(text, "/Length ?");
         text = CrossReference().Replace(text, "xref ? trailer");
         return StartXref().Replace(text, "startxref ?");

@@ -34,6 +34,18 @@ public class PdfCanonicalTests
     }
 
     [Fact]
+    public void Platform_line_endings_inside_a_stream_give_the_same_form()
+    {
+        var windows = RewriteFirstStream(Pdf, content => Encoding.Latin1.GetBytes(
+            Encoding.Latin1.GetString(content).Replace("\r\n", "\n").Replace("\n", "\r\n")), CompressionLevel.Optimal);
+        var linux = RewriteFirstStream(Pdf, content => Encoding.Latin1.GetBytes(
+            Encoding.Latin1.GetString(content).Replace("\r\n", "\n")), CompressionLevel.Optimal);
+
+        Assert.NotEqual(windows, linux);
+        Assert.Equal(PdfCanonical.Form(windows), PdfCanonical.Form(linux));
+    }
+
+    [Fact]
     public void A_change_inside_a_compressed_stream_gives_a_different_form()
     {
         var changed = RewriteFirstStream(Pdf, content => { content[^2] ^= 1; return content; }, CompressionLevel.Optimal);
