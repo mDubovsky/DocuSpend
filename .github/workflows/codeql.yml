@@ -1,0 +1,57 @@
+# Code scanning of the C# code with CodeQL, on every change and weekly.
+#
+# Free only for public repositories: while the repository is private, the code-scanning job is skipped.
+# Whether a finding fails a pull request is a repository setting (see CONTRIBUTING.md, "Repository settings").
+
+name: Code scanning
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+
+jobs:
+  visibility:
+    name: repository-visibility
+    runs-on: ubuntu-latest
+    outputs:
+      public: ${{ steps.visibility.outputs.public }}
+    steps:
+      - id: visibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          public=$(gh api "repos/${{ github.repository }}" --jq '.private == false')
+          echo "public=$public" >> "$GITHUB_OUTPUT"
+
+  code-scanning:
+    name: code-scanning
+    needs: visibility
+    if: needs.visibility.outputs.public == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          languages: csharp
+          build-mode: manual
+          queries: security-and-quality
+      - run: dotnet build -c Release
+      - uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          category: csharp

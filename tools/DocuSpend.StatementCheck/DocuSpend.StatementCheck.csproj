@@ -12,4 +12,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="DocuSpend.StatementCheck.Tests" />
+  </ItemGroup>
+
 </Project>

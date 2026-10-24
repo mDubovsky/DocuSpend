@@ -1,0 +1,43 @@
+<Project>
+
+  <!--
+    privacy-no-networking-code (decision 0006): every project is compiled with the banned-API analyzer
+    and privacy/BannedSymbols.txt, so using networking fails the build. Only a project that sets
+    PrivacyException, and is listed in privacy/exceptions.json, is built without it. See privacy/README.md.
+  -->
+  <PropertyGroup Condition="'$(PrivacyException)' != 'true'">
+    <WarningsAsErrors>$(WarningsAsErrors);RS0030</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(PrivacyException)' != 'true'">
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="$(PrivacyBanAnalyzerVersion)" PrivateAssets="all" IncludeAssets="analyzers" />
+    <AdditionalFiles Include="$(PrivacyBannedSymbols)" />
+  </ItemGroup>
+
+  <!-- The privacy tests run the same analyzer on snippets of code, so they also reference it as a library. -->
+  <PropertyGroup Condition="'$(PrivacyAnalyzerAsLibrary)' == 'true'">
+    <_PrivacyAnalyzerDir>$(NuGetPackageRoot)microsoft.codeanalysis.bannedapianalyzers\$(PrivacyBanAnalyzerVersion)\analyzers\dotnet\cs\</_PrivacyAnalyzerDir>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(PrivacyAnalyzerAsLibrary)' == 'true'">
+    <Reference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" HintPath="$(_PrivacyAnalyzerDir)Microsoft.CodeAnalysis.BannedApiAnalyzers.dll" />
+    <Reference Include="Microsoft.CodeAnalysis.CSharp.BannedApiAnalyzers" HintPath="$(_PrivacyAnalyzerDir)Microsoft.CodeAnalysis.CSharp.BannedApiAnalyzers.dll" />
+  </ItemGroup>
+
+  <!-- The ban fails closed: if anything has switched it off for this project, the build fails. -->
+  <Target Name="PrivacyBanGuard" BeforeTargets="CoreCompile" Condition="'$(PrivacyException)' != 'true'">
+    <PropertyGroup>
+      <_PrivacyBanFile>$([MSBuild]::NormalizePath('$(PrivacyBannedSymbols)'))</_PrivacyBanFile>
+      <_PrivacyRule>privacy-no-networking-code: no code that can see a statement may use the network (decision 0006, docs/decisions/0006-privacy-approach-and-network-boundary.md). See privacy/README.md.</_PrivacyRule>
+    </PropertyGroup>
+    <ItemGroup>
+      <_PrivacyBanAnalyzer Include="@(Analyzer)" Condition="'%(Filename)%(Extension)' == 'Microsoft.CodeAnalysis.CSharp.BannedApiAnalyzers.dll'" />
+      <_PrivacyBanList Include="@(AdditionalFiles)" Condition="'%(FullPath)' == '$(_PrivacyBanFile)'" />
+    </ItemGroup>
+    <Error Code="PRIVACY001" Condition="!Exists('$(_PrivacyBanFile)')" Text="The networking ban list $(_PrivacyBanFile) is missing. $(_PrivacyRule)" />
+    <Error Code="PRIVACY001" Condition="'@(_PrivacyBanAnalyzer)' == ''" Text="The banned-API analyzer is not active in $(MSBuildProjectName). $(_PrivacyRule)" />
+    <Error Code="PRIVACY001" Condition="'@(_PrivacyBanList)' == ''" Text="The networking ban list is not passed to the analyzer in $(MSBuildProjectName). $(_PrivacyRule)" />
+    <Error Code="PRIVACY001" Condition="'$(RunAnalyzers)' == 'false' or '$(RunAnalyzersDuringBuild)' == 'false'" Text="Analyzers are switched off in $(MSBuildProjectName), which switches off the networking ban. $(_PrivacyRule)" />
+    <Error Code="PRIVACY001" Condition="$(NoWarn.Contains('RS0030')) or $(WarningsNotAsErrors.Contains('RS0030'))" Text="The networking ban (RS0030) is silenced in $(MSBuildProjectName). $(_PrivacyRule)" />
+  </Target>
+
+</Project>

@@ -1,0 +1,16 @@
+{
+  "allowed": [
+    {
+      "assembly": "PdfSharp.Cryptography",
+      "versions": "[6.2.4, 6.3)",
+      "reason": "Part of the PDFsharp package used by the sample generator. It uses HTTP to fetch timestamps when digitally signing a PDF, which the generator never does, and nothing we ship references this assembly.",
+      "reviewer": "Michal Dubovský"
+    },
+    {
+      "assembly": "PdfSharp.Quality",
+      "versions": "[6.2.4, 6.3)",
+      "reason": "Part of the PDFsharp package used by the sample generator: PDFsharp's own test helpers, which use HTTP and start programs. Nothing we ship references this assembly.",
+      "reviewer": "Michal Dubovský"
+    }
+  ]
+}

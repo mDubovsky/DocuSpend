@@ -1,0 +1,19 @@
+# Proposed updates for NuGet packages and for the workflows' actions. Each proposal is a pull request that goes
+# through the same checks, so an update that brings networking or a vulnerability fails like any other change.
+# The cooldown waits until a release is two weeks old before proposing it.
+
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directories: ["/src/*", "/tools/*", "/tests/*"]
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14

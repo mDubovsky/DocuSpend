@@ -1,0 +1,76 @@
+# Release builds (decision 0006): made only here, never on a developer's machine.
+#
+# For each command-line tool and platform: a zip archive and a list of its contents (a CycloneDX software bill of
+# materials). While the repository is public, a signed build-provenance record of the commit and workflow that
+# made them is added, which anyone can verify with the command in PRIVACY.md. While it is private, that step is
+# skipped. For now this is a rehearsal: the files are kept as workflow artifacts and no release is published.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  CYCLONEDX_VERSION: "6.2.0"
+
+jobs:
+  visibility:
+    name: repository-visibility
+    runs-on: ubuntu-latest
+    outputs:
+      public: ${{ steps.visibility.outputs.public }}
+    steps:
+      - id: visibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          public=$(gh api "repos/${{ github.repository }}" --jq '.private == false')
+          echo "public=$public" >> "$GITHUB_OUTPUT"
+
+  release-provenance:
+    name: release-provenance
+    needs: visibility
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      # A release is built only from a commit that passes every test, the privacy checks included.
+      - run: dotnet build -c Release
+      - run: dotnet test -c Release --no-build
+      - run: dotnet tool install --global CycloneDX --version "$CYCLONEDX_VERSION"
+      - name: Publish, archive and list the contents of each tool
+        run: |
+          mkdir -p dist
+          for tool in DocuSpend.StatementCheck DocuSpend.SampleGenerator; do
+            for rid in win-x64 linux-x64; do
+              dotnet publish "tools/$tool/$tool.csproj" -c Release -r "$rid" --self-contained false -o "publish/$tool-$rid"
+              (cd publish && zip -r -X "../dist/$tool-$rid.zip" "$tool-$rid")
+              dotnet-CycloneDX "tools/$tool/$tool.csproj" --recursive --include-project-references --exclude-dev \
+                --runtime "$rid" --output dist --filename "$tool-$rid.cdx.json" --output-format Json \
+                --set-name "$tool" --set-version "0.0.0-${GITHUB_SHA::12}"
+            done
+          done
+          ls -l dist
+      - name: Signed record of origin
+        if: needs.visibility.outputs.public == 'true'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/*
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: docuspend-tools-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error

@@ -1,0 +1,145 @@
+# Build, test and the privacy checks (decision 0006), on every change.
+#
+# Each job's name is a check name from CONTRIBUTING.md ("Privacy checks"). The names are an interface: a check
+# marked as required for merging is found by its name, so renaming a job is a documented change.
+# No step may use continue-on-error: a check that can't run fails.
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+
+jobs:
+  build-and-test:
+    name: build-and-test (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows is the application's main platform; Linux is where the network-off run works.
+          - platform: windows
+            os: windows-latest
+          - platform: linux
+            os: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - run: dotnet build -c Release
+      - run: dotnet test -c Release --no-build
+
+  privacy-no-networking-code:
+    name: privacy-no-networking-code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      # Every project is compiled with the networking ban; a violation is a build error (RS0030 or PRIVACY001).
+      - run: dotnet build -c Release
+      # The ban's own guards: the list, its wiring, suppressions and exceptions.
+      - run: dotnet test --project tests/DocuSpend.Privacy.Tests -c Release --no-build --filter-trait "Check=privacy-no-networking-code"
+
+  privacy-dependencies:
+    name: privacy-dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - run: dotnet build -c Release
+      # Inspects every shipping project's Release output, with all its dependencies.
+      - run: dotnet test --project tests/DocuSpend.Privacy.Tests -c Release --no-build --filter-trait "Check=privacy-dependencies"
+
+  privacy-no-real-data:
+    name: privacy-no-real-data
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - run: dotnet build -c Release
+      # Tracked files (read from the git index) and the committed samples, byte for byte.
+      - run: dotnet test --project tests/DocuSpend.Privacy.Tests -c Release --no-build --filter-trait "Check=privacy-no-real-data"
+      - run: dotnet test --project tests/DocuSpend.SampleGenerator.Tests -c Release --no-build --filter-trait "Check=privacy-no-real-data"
+
+  privacy-no-network-run:
+    name: privacy-no-network-run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      # Everything that needs the network happens here, before the sandbox.
+      - run: dotnet build -c Release
+      - run: dotnet test --project tests/DocuSpend.StatementCheck.Tests -c Release --no-build --filter-trait "Check=privacy-no-network-run"
+      - name: The sandbox can be created
+        run: sudo unshare --net -- true
+      - name: "Canary, positive control: a connection works outside the sandbox"
+        run: curl --silent --show-error --fail --max-time 20 --output /dev/null https://api.nuget.org/v3/index.json
+      - name: "Canary: the same connection fails inside the sandbox"
+        run: |
+          if sudo unshare --net -- curl --silent --max-time 20 --output /dev/null https://api.nuget.org/v3/index.json; then
+            echo "::error::privacy-no-network-run: the canary connected from inside the sandbox, so the sandbox doesn't remove the network and this run proves nothing."
+            exit 1
+          fi
+          if sudo unshare --net -- bash -c 'exec 3<>/dev/tcp/1.1.1.1/443'; then
+            echo "::error::privacy-no-network-run: the canary reached 1.1.1.1 from inside the sandbox."
+            exit 1
+          fi
+          echo "The canary could not connect from inside the sandbox, as required."
+      - name: Read and categorize the samples with the network removed
+        run: sudo unshare --net -- env DOTNET_CLI_TELEMETRY_OPTOUT=1 "$(command -v dotnet)" tools/DocuSpend.StatementCheck/bin/Release/net10.0/DocuSpend.StatementCheck.dll --verify samples/public
+
+  dependency-vulnerabilities:
+    name: dependency-vulnerabilities
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      # NuGet audit (Directory.Build.props): moderate severity or higher, direct and indirect packages, as errors.
+      # Here, vulnerability data that can't be fetched (NU1900) is an error too.
+      - run: dotnet restore --force-evaluate -warnaserror:NU1900
+      - name: No package with a known vulnerability of moderate severity or higher
+        run: |
+          dotnet package list --vulnerable --include-transitive --format json > vulnerable.json
+          jq -e '.problems == null' vulnerable.json > /dev/null || { echo "::error::The vulnerability check could not run:"; jq '.problems' vulnerable.json; exit 1; }
+          found=$(jq '[.projects[].frameworks[]? | (.topLevelPackages[]?, .transitivePackages[]?) | select(any(.vulnerabilities[]?; .severity != "Low"))] | length' vulnerable.json)
+          if [ "$found" != "0" ]; then
+            echo "::error::dependency-vulnerabilities: $found package(s) with a known vulnerability of moderate severity or higher."
+            jq '.projects[] | {path, frameworks}' vulnerable.json
+            exit 1
+          fi
+      # Dependency review needs GitHub's dependency graph, which is free only for public repositories.
+      # The visibility is looked up here, not in a separate job: if that job failed, this one would be skipped,
+      # and a skipped check counts as passed.
+      - name: Repository visibility
+        id: visibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          public=$(gh api "repos/${{ github.repository }}" --jq '.private == false')
+          echo "public=$public" >> "$GITHUB_OUTPUT"
+      - name: Dependency review of the change
+        if: github.event_name == 'pull_request' && steps.visibility.outputs.public == 'true'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
