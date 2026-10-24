@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using Avalonia.Controls;
 using DocuSpend.Categorization.Model;
+using DocuSpend.Desktop.Look;
 using DocuSpend.Presentation;
+using DocuSpend.Presentation.Look;
 using LiveChartsCore;
 using LiveChartsCore.Kernel;
 using LiveChartsCore.Kernel.Sketches;
@@ -21,12 +23,15 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = _model = model;
 
-        BalanceLine.XAxes = Charts.DateAxis();
-        BalanceLine.YAxes = Charts.AmountAxis();
         SpendingPie.DataPointerDown += OnSliceClicked;
         model.Statement.PropertyChanged += OnStatementChanged;
+        // The charts draw their own colours, so a change of look (the switch, or Windows) redraws them.
+        ActualThemeVariantChanged += (_, _) => DrawCharts();
         DrawCharts();
     }
+
+    /// <summary>The palette of the look the window shows now.</summary>
+    internal Palette Palette => LookResources.For(ActualThemeVariant);
 
     private void OnStatementChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -36,10 +41,18 @@ public partial class MainWindow : Window
 
     private void DrawCharts()
     {
-        var (series, categories) = Charts.Pie(_model.Statement.Slices);
+        var palette = Palette;
+        var (ring, categories) = Charts.Ring(_model.Statement.Slices, palette);
         _sliceCategories = categories;
-        SpendingPie.Series = series;
-        BalanceLine.Series = Charts.Balance(_model.Statement.BalancePoints);
+        SpendingPie.Series = ring;
+
+        BalanceLine.XAxes = Charts.DateAxis(palette);
+        BalanceLine.YAxes = Charts.AmountAxis(palette);
+        BalanceLine.Series = Charts.Balance(_model.Statement.BalancePoints, palette);
+
+        var (background, text) = Charts.Tooltip(palette);
+        SpendingPie.TooltipBackgroundPaint = BalanceLine.TooltipBackgroundPaint = background;
+        SpendingPie.TooltipTextPaint = BalanceLine.TooltipTextPaint = text;
     }
 
     private void OnSliceClicked(IChartView chart, IEnumerable<ChartPoint>? points)

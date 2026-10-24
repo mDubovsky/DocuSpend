@@ -24,8 +24,9 @@ The screens keep what they show and how they work. What changes is how they look
 - Money coming in is shown in a calm positive colour (a green); money going out in the normal text colour, not in red, because spending is the normal case, not an alarm.
 
 ### Charts
-- **The spending chart** is a ring (a pie with a hole), with the spending total in its centre. Each slice has its own colour from a palette of distinct colours that work in both looks; the colours are the same in both looks, so a category keeps its colour. Hovering a slice shows the category, the amount and the share in a small card in the look's style. Clicking a slice selects the category, as now.
-- **The balance chart** is a line in the accent colour with a soft fill fading downwards from it. It still steps from day to day: the balance changes on booking dates and holds in between, and a smoothed curve would show balances that never existed. The point under the pointer is highlighted, with a small card showing the date and the balance.
+- **The spending chart** is a ring (a pie with a hole), with the spending total in its centre. The ring has a fixed space of its own, so it keeps its size however many categories a month has. Each slice has its own colour from a palette of distinct colours that work in both looks; the colours are the same in both looks, so a category keeps its colour. Hovering a slice shows the category, the amount and the share in a small card in the look's style. Clicking a slice selects the category, as now.
+- **The legend** is beside the ring, not inside the chart: one row per category with its colour, name, share and amount. It scrolls when there are more rows than fit, and a long name is shortened, with the full name shown on hover. Clicking a row selects the category, like clicking its slice.
+- **The balance chart** is a line in the accent colour with a soft fill fading downwards from it, without point markers. It still steps from day to day: the balance changes on booking dates and holds in between, and a smoothed curve would show balances that never existed. Hovering shows a small card with the date and the balance.
 - Grid lines are faint, axis labels muted, and there is no chart border.
 
 ### Lists and forms
@@ -58,8 +59,9 @@ The screens keep what they show and how they work. What changes is how they look
 - [ ] Given each look, every pair of text and background the look defines meets 4.5 to 1, and every large text, accent, chart line and slice colour meets 3 to 1 against its card, checked automatically.
 - [ ] Given each look, the header shows the spending total, the opening and the closing balance as large key figures, with muted labels.
 - [ ] Given a statement with income, incoming amounts are shown in the positive colour and outgoing ones in the normal text colour.
-- [ ] The spending chart is a ring with the spending total in its centre; each category has the same colour in both looks; hovering shows the category, amount and share; clicking selects the category.
-- [ ] The balance chart is a stepped line in the accent colour with a fading fill, and hovering shows the date and the balance.
+- [ ] The spending chart is a ring with the spending total in its centre, in a fixed space that a long legend doesn't shrink; each category has the same colour in both looks; hovering shows the category, amount and share; clicking selects the category.
+- [ ] The legend beside the ring lists every slice with its colour, name, share and amount, and clicking a row selects its category.
+- [ ] The balance chart is a stepped line in the accent colour with a fading fill and no point markers, and hovering shows the date and the balance.
 - [ ] The selected category row is marked with the accent colour; the primary button is the only filled button.
 - [ ] Error and confirmation messages in the rule form are styled and readable in both looks.
 - [ ] Given "Podľa systému", when Windows switches between light and dark while DocuSpend runs, the whole window including both charts follows.

@@ -46,7 +46,7 @@ internal static class Screens
         {
             var model = new MainViewModel(SampleCatalog.Available(SamplesFolder()), new SpikeRuleStore(rules));
             // Tall enough that nothing needs scrolling, so the whole window is in one picture.
-            var window = new MainWindow(model) { Width = 1280, Height = 1340 };
+            var window = new MainWindow(model) { Width = 1280, Height = 1660 };
             window.Show();
             screen.Arrange(model);
             Settle();

@@ -139,6 +139,32 @@ public class StatementViewModelTests
     }
 
     [Fact]
+    public void A_row_of_the_charts_legend_selects_its_category()
+    {
+        var view = Show("01-typical-month");
+        var slice = view.Slices[2];
+
+        view.SelectCategoryCommand.Execute(slice.Category);
+
+        Assert.Equal(slice.Category, view.SelectedCategory);
+        Assert.Equal(slice.Category, view.SelectedRow?.Category);
+    }
+
+    [Fact]
+    public void Money_coming_in_is_marked_so_it_can_be_shown_in_the_positive_colour()
+    {
+        var view = Show("01-typical-month");
+
+        Assert.All(view.Categories, row => Assert.Equal(row.Amount > 0, row.IsIncoming));
+        Assert.Contains(view.Categories, row => row.IsIncoming);
+        foreach (var row in view.Categories)
+        {
+            view.SelectedCategory = row.Category;
+            Assert.All(view.Transactions, t => Assert.Equal(t.Transaction.Amount > 0, t.IsIncoming));
+        }
+    }
+
+    [Fact]
     public void Nothing_is_selected_at_first()
     {
         var view = Show("01-typical-month");

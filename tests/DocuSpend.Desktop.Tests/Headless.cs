@@ -1,5 +1,7 @@
+using System.Runtime.ExceptionServices;
 using Avalonia;
 using Avalonia.Headless;
+using Avalonia.Threading;
 
 namespace DocuSpend.Desktop.Tests;
 
@@ -18,5 +20,27 @@ internal static class Headless
 {
     private static readonly HeadlessUnitTestSession Session = HeadlessUnitTestSession.StartNew(typeof(TestApp));
 
-    public static void Run(Action test) => Session.Dispatch(test, CancellationToken.None).GetAwaiter().GetResult();
+    /// <summary>
+    /// Runs the test on the session's UI thread, then finishes whatever it left queued while the application still
+    /// exists. The session tears its isolated application down right after, and work still queued then (a layout
+    /// pass) fails with a font error that would hide the test's own failure, so that failure is kept and rethrown.
+    /// </summary>
+    public static void Run(Action test)
+    {
+        ExceptionDispatchInfo? failure = null;
+        Session.Dispatch(() =>
+        {
+            try
+            {
+                test();
+            }
+            catch (Exception e)
+            {
+                failure = ExceptionDispatchInfo.Capture(e);
+            }
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            Dispatcher.UIThread.RunJobs();
+        }, CancellationToken.None).GetAwaiter().GetResult();
+        failure?.Throw();
+    }
 }
