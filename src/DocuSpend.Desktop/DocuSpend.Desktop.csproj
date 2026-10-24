@@ -11,7 +11,11 @@
       native files the published build ships, and the dependency check inspects those.
     -->
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <!--
+      A self-contained publish (the CI build) adds the whole .NET runtime; it builds into a win-x64 subfolder, so it
+      never mixes the runtime's own assemblies into the folder the dependency check inspects.
+    -->
+    <AppendRuntimeIdentifierToOutputPath Condition="'$(SelfContained)' != 'true'">false</AppendRuntimeIdentifierToOutputPath>
     <!-- A binding mistake fails the build, and no binding needs reflection. -->
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>

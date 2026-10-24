@@ -42,6 +42,29 @@ jobs:
       - run: dotnet build -c Release
       - run: dotnet test -c Release --no-build
 
+  # The desktop application for Windows, kept as a downloadable artifact of the run. Not a release and not a check
+  # name: no installer, no code signing. Self-contained, so the target machine needs no .NET installed. No trimming,
+  # single file or ahead-of-time compilation yet (work/005-avalonia-spike/plan.md).
+  desktop-build:
+    name: desktop-build (windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - run: dotnet publish src/DocuSpend.Desktop -c Release -r win-x64 --self-contained -o publish/DocuSpend
+      - name: Size of the build
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem -Recurse -File publish/DocuSpend
+          "{0} files, {1:N1} MB" -f $files.Count, (($files | Measure-Object Length -Sum).Sum / 1MB)
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: DocuSpend-win-x64
+          path: publish/
+          if-no-files-found: error
+
   privacy-no-networking-code:
     name: privacy-no-networking-code
     runs-on: ubuntu-latest
