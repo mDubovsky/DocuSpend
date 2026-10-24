@@ -7,7 +7,7 @@ using DocuSpend.Statements.Model;
 namespace DocuSpend.Presentation;
 
 /// <summary>A slice of the spending pie: a spending category with spending above zero.</summary>
-public sealed record PieSlice(CategoryId Category, string Name, decimal Spending, decimal Share)
+public sealed record PieSlice(CategoryId Category, string Name, decimal Spending, decimal Share, string Color)
 {
     public string AmountText => SlovakFormat.Amount(Spending);
     public string ShareText => SlovakFormat.Share(Share);
@@ -117,7 +117,8 @@ public sealed partial class StatementViewModel : ObservableObject
         var total = spending.Sum(c => c.Spending!.Value);
         Slices = spending
             .OrderByDescending(c => c.Spending)
-            .Select(c => new PieSlice(c.Category.Id, c.Category.Name, c.Spending!.Value, c.Spending!.Value / total))
+            .Select(c => new PieSlice(c.Category.Id, c.Category.Name, c.Spending!.Value, c.Spending!.Value / total,
+                Look.SliceColors.For(Config.Catalog, c.Category.Id)))
             .ToList();
         HasSpending = Slices.Count > 0;
 
