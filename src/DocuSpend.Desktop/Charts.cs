@@ -18,8 +18,14 @@ internal static class Charts
     /// Chart texts are drawn by SkiaSharp, not by Avalonia, with a typeface SkiaSharp picks unless told otherwise.
     /// Segoe UI, Windows' own font, has every Slovak letter.
     /// </summary>
-    public static void Configure() =>
-        LiveCharts.Configure(config => config.HasTextSettings(new TextSettings { DefaultTypeface = SKTypeface.FromFamilyName("Segoe UI") }));
+    /// <param name="animate">False for screenshots, so a chart is complete the moment it is drawn.</param>
+    public static void Configure(bool animate = true) =>
+        LiveCharts.Configure(config =>
+        {
+            config.HasTextSettings(new TextSettings { DefaultTypeface = SKTypeface.FromFamilyName("Segoe UI") });
+            if (!animate)
+                config.WithAnimationsSpeed(TimeSpan.Zero);
+        });
 
     /// <summary>One series per slice, so a click on a slice tells which category it is.</summary>
     public static (ISeries[] Series, IReadOnlyDictionary<ISeries, CategoryId> Categories) Pie(IReadOnlyList<PieSlice> slices)

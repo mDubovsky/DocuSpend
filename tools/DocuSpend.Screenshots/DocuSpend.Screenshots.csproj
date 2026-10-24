@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Renders the desktop application's screens in both looks to PNG files, without a screen, from the synthetic
+    samples (work/011-modern-look/plan.md). Built for Windows like the application, so it carries the same reviewed
+    native files and nothing else.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <AppendRuntimeIdentifierToOutputPath Condition="'$(SelfContained)' != 'true'">false</AppendRuntimeIdentifierToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DocuSpend.Desktop\DocuSpend.Desktop.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless" Version="$(AvaloniaVersion)" />
+  </ItemGroup>
+
+  <!-- Avalonia's previewer support uses sockets and isn't needed here either (privacy/README.md). -->
+  <ItemGroup>
+    <PrivacyRemovedFromOutput Include="Avalonia.DesignerSupport.dll" />
+  </ItemGroup>
+
+</Project>

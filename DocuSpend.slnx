@@ -16,6 +16,7 @@
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/DocuSpend.SampleGenerator/DocuSpend.SampleGenerator.csproj" />
+    <Project Path="tools/DocuSpend.Screenshots/DocuSpend.Screenshots.csproj" />
     <Project Path="tools/DocuSpend.StatementCheck/DocuSpend.StatementCheck.csproj" />
   </Folder>
 </Solution>
