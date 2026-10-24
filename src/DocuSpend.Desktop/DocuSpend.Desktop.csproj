@@ -36,4 +36,18 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
   </ItemGroup>
 
+  <!--
+    The valid synthetic samples travel with the program, so the build can be tried on a clean machine. They are
+    already public. Samples 06 to 09 are not statements and stay out.
+  -->
+  <ItemGroup>
+    <None Include="..\..\samples\public\01-typical-month.pdf;..\..\samples\public\02-busy-month.pdf;..\..\samples\public\03-awkward-month.pdf;..\..\samples\public\04-empty-month.pdf;..\..\samples\public\05-single-transaction-month.pdf"
+          Link="samples\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- The charts. 2.0.5 is the newest stable release and supports Avalonia 11 only (plan: versions). -->
+  <ItemGroup>
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.5" />
+  </ItemGroup>
+
 </Project>

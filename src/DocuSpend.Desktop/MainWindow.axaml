@@ -1,6 +1,129 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:DocuSpend.Presentation"
+        xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
         x:Class="DocuSpend.Desktop.MainWindow"
-        Title="DocuSpend"
-        Width="1200" Height="800">
+        x:DataType="vm:MainViewModel"
+        Title="{x:Static vm:Texts.AppTitle}"
+        Width="1280" Height="880" MinWidth="720" MinHeight="520">
+
+  <Window.Styles>
+    <Style Selector="TextBlock.heading">
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,0,0,6" />
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="Foreground" Value="#5F6368" />
+    </Style>
+    <Style Selector="Border.card">
+      <Setter Property="BorderBrush" Value="#DADCE0" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="12" />
+      <Setter Property="Margin" Value="6" />
+    </Style>
+  </Window.Styles>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*" Margin="10" MinWidth="700">
+
+      <!-- Which sample, and the header -->
+      <Border Classes="card" Grid.ColumnSpan="2">
+        <StackPanel Spacing="10">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="{x:Static vm:Texts.Sample}" VerticalAlignment="Center" />
+            <ComboBox ItemsSource="{Binding Samples}" SelectedItem="{Binding SelectedSample}" MinWidth="260">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:SampleItem">
+                  <TextBlock Text="{Binding Title}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Text="{Binding Error}" Foreground="Firebrick" VerticalAlignment="Center" />
+          </StackPanel>
+          <WrapPanel>
+            <StackPanel Margin="0,0,32,0">
+              <TextBlock Classes="label" Text="{x:Static vm:Texts.Period}" />
+              <TextBlock Text="{Binding Statement.Period}" FontSize="15" />
+            </StackPanel>
+            <StackPanel Margin="0,0,32,0">
+              <TextBlock Classes="label" Text="{x:Static vm:Texts.OpeningBalance}" />
+              <TextBlock Text="{Binding Statement.OpeningBalance}" FontSize="15" />
+            </StackPanel>
+            <StackPanel Margin="0,0,32,0">
+              <TextBlock Classes="label" Text="{x:Static vm:Texts.ClosingBalance}" />
+              <TextBlock Text="{Binding Statement.ClosingBalance}" FontSize="15" />
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Classes="label" Text="{x:Static vm:Texts.SpendingTotal}" />
+              <TextBlock Text="{Binding Statement.SpendingTotal}" FontSize="15" FontWeight="SemiBold" />
+            </StackPanel>
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- The two charts -->
+      <Border Classes="card" Grid.Row="1" Grid.Column="0">
+        <DockPanel>
+          <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.SpendingChart}" />
+          <Panel Height="320">
+            <lvc:PieChart x:Name="SpendingPie" IsVisible="{Binding Statement.HasSpending}" LegendPosition="Right" />
+            <TextBlock Text="{x:Static vm:Texts.NoSpending}" IsVisible="{Binding !Statement.HasSpending}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Panel>
+        </DockPanel>
+      </Border>
+      <Border Classes="card" Grid.Row="1" Grid.Column="1">
+        <DockPanel>
+          <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.BalanceChart}" />
+          <lvc:CartesianChart x:Name="BalanceLine" Height="320" />
+        </DockPanel>
+      </Border>
+
+      <!-- Categories and the selected category's transactions -->
+      <Border Classes="card" Grid.Row="2" Grid.Column="0">
+        <DockPanel>
+          <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.Categories}" />
+          <ListBox ItemsSource="{Binding Statement.Categories}" SelectedItem="{Binding Statement.SelectedRow}" MinHeight="200" MaxHeight="420">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:CategoryRow">
+                <Grid ColumnDefinitions="*,Auto,120">
+                  <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Grid.Column="1" Text="{Binding Count}" Classes="label" Margin="12,0" />
+                  <TextBlock Grid.Column="2" Text="{Binding Total}" HorizontalAlignment="Right" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+      </Border>
+      <Border Classes="card" Grid.Row="2" Grid.Column="1">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8">
+            <TextBlock Classes="heading" Text="{x:Static vm:Texts.Transactions}" />
+            <TextBlock Classes="heading" Text="{Binding Statement.SelectedRow.Name, FallbackValue=''}" />
+          </StackPanel>
+          <Panel>
+            <TextBlock Classes="label" Text="{x:Static vm:Texts.NoCategorySelected}"
+                       IsVisible="{Binding Statement.SelectedRow, Converter={x:Static ObjectConverters.IsNull}}" />
+            <ListBox ItemsSource="{Binding Statement.Transactions}" MinHeight="200" MaxHeight="420"
+                     IsVisible="{Binding Statement.SelectedRow, Converter={x:Static ObjectConverters.IsNotNull}}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:TransactionRow">
+                  <Grid ColumnDefinitions="90,*,*,110">
+                    <TextBlock Text="{Binding Date}" />
+                    <TextBlock Grid.Column="1" Text="{Binding Description}" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                    <TextBlock Grid.Column="2" Text="{Binding Subcategory}" Classes="label" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="3" Text="{Binding Amount}" HorizontalAlignment="Right" />
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Panel>
+        </DockPanel>
+      </Border>
+
+    </Grid>
+  </ScrollViewer>
 </Window>
