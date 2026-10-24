@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using DocuSpend.Categorization;
 using DocuSpend.Categorization.Model;
 using DocuSpend.Categorization.Results;
@@ -7,7 +8,7 @@ using DocuSpend.Statements.Model;
 namespace DocuSpend.Presentation;
 
 /// <summary>A slice of the spending pie: a spending category with spending above zero.</summary>
-public sealed record PieSlice(CategoryId Category, string Name, decimal Spending, decimal Share)
+public sealed record PieSlice(CategoryId Category, string Name, decimal Spending, decimal Share, string Color)
 {
     public string AmountText => SlovakFormat.Amount(Spending);
     public string ShareText => SlovakFormat.Share(Share);
@@ -17,10 +18,18 @@ public sealed record PieSlice(CategoryId Category, string Name, decimal Spending
 public sealed record BalancePoint(DateOnly Date, decimal Balance);
 
 /// <summary>A category in the list: every category with transactions this month, whatever its role.</summary>
-public sealed record CategoryRow(CategoryId Category, string Name, int Count, string Total);
+public sealed record CategoryRow(CategoryId Category, string Name, int Count, decimal Amount, string Total)
+{
+    /// <summary>More money came in than went out, shown in the positive colour (spec: numbers first).</summary>
+    public bool IsIncoming => Amount > 0;
+}
 
 /// <summary>A transaction in the selected category's list.</summary>
-public sealed record TransactionRow(Transaction Transaction, string Date, string Description, string Subcategory, string Amount);
+public sealed record TransactionRow(Transaction Transaction, string Date, string Description, string Subcategory, string Amount)
+{
+    /// <summary>Money coming in, shown in the positive colour; money going out is the normal case and isn't marked.</summary>
+    public bool IsIncoming => Transaction.Amount > 0;
+}
 
 /// <summary>
 /// What the statement view shows: one statement, categorized with the current configuration, as plain data the
@@ -86,6 +95,10 @@ public sealed partial class StatementViewModel : ObservableObject
         Refresh();
     }
 
+    /// <summary>Selects a category from the chart's legend, as clicking its slice does.</summary>
+    [RelayCommand]
+    private void SelectCategory(CategoryId category) => SelectedCategory = category;
+
     partial void OnConfigChanged(CategorizationConfig value) => Refresh();
 
     partial void OnSelectedCategoryChanged(CategoryId? value)
@@ -117,14 +130,15 @@ public sealed partial class StatementViewModel : ObservableObject
         var total = spending.Sum(c => c.Spending!.Value);
         Slices = spending
             .OrderByDescending(c => c.Spending)
-            .Select(c => new PieSlice(c.Category.Id, c.Category.Name, c.Spending!.Value, c.Spending!.Value / total))
+            .Select(c => new PieSlice(c.Category.Id, c.Category.Name, c.Spending!.Value, c.Spending!.Value / total,
+                Look.SliceColors.For(Config.Catalog, c.Category.Id)))
             .ToList();
         HasSpending = Slices.Count > 0;
 
         BalancePoints = Balances(statement);
         Categories = categorized.Categories
             .Where(c => c.Total.Count > 0)
-            .Select(c => new CategoryRow(c.Category.Id, c.Category.Name, c.Total.Count, SlovakFormat.Amount(c.Total.Amount)))
+            .Select(c => new CategoryRow(c.Category.Id, c.Category.Name, c.Total.Count, c.Total.Amount, SlovakFormat.Amount(c.Total.Amount)))
             .ToList();
 
         if (SelectedCategory is { } selected && Categories.All(c => c.Category != selected))

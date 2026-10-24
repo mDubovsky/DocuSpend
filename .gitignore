@@ -19,3 +19,6 @@ samples/private/
 /*.xls
 /*.xlsx
 /*.csv
+
+# Screenshots and other generated files (tools/DocuSpend.Screenshots)
+/artifacts/

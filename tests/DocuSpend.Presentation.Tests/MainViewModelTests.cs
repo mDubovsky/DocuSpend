@@ -206,6 +206,42 @@ public sealed class MainViewModelTests : IDisposable
         Assert.Equal("Suma do 20,00 €", MainViewModel.Describe(new AmountCondition(null, 20m)).Replace(' ', ' '));
     }
 
+    [Fact]
+    public void The_look_offers_three_choices_in_slovak_and_follows_windows_at_first()
+    {
+        var main = Start();
+
+        Assert.Equal([Look.LookChoice.System, Look.LookChoice.Light, Look.LookChoice.Dark], main.Looks.Select(l => l.Choice));
+        Assert.Equal(["Podľa systému", "Svetlý", "Tmavý"], main.Looks.Select(l => l.Label));
+        Assert.Equal(Look.LookChoice.System, main.Look);
+    }
+
+    [Fact]
+    public void A_chosen_look_is_saved_and_in_effect_after_a_restart()
+    {
+        var settings = Path.Combine(_folder, "settings.json");
+        var main = new MainViewModel(SampleCatalog.Available(Samples.Dir), new SpikeRuleStore(RulesFile), new Look.SettingsStore(settings));
+
+        main.SelectedLook = main.Looks.Single(l => l.Choice == Look.LookChoice.Dark);
+
+        var restarted = new MainViewModel(SampleCatalog.Available(Samples.Dir), new SpikeRuleStore(RulesFile), new Look.SettingsStore(settings));
+        Assert.Equal(Look.LookChoice.Dark, restarted.Look);
+        Assert.Equal(Look.LookChoice.Dark, restarted.SelectedLook.Choice);
+    }
+
+    [Fact]
+    public void Changing_the_look_keeps_what_the_user_was_doing()
+    {
+        var main = Start();
+        main.Statement.SelectedCategory = new CategoryId("housing");
+        main.RuleForm.Text = "rozpísané";
+
+        main.SelectedLook = main.Looks.Single(l => l.Choice == Look.LookChoice.Light);
+
+        Assert.Equal(new CategoryId("housing"), main.Statement.SelectedCategory);
+        Assert.Equal("rozpísané", main.RuleForm.Text);
+    }
+
     [Theory]
     [InlineData(1, "Pravidlo zaradilo 1 transakciu.")]
     [InlineData(3, "Pravidlo zaradilo 3 transakcie.")]

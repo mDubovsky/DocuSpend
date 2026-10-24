@@ -89,6 +89,22 @@ public class OutputInspectionTests
     }
 
     [Fact]
+    public void The_launcher_of_one_of_our_own_programs_in_the_output_is_not_a_native_file()
+    {
+        // A tool that references the desktop application gets the application's launcher copied along.
+        using var output = new FixtureOutput();
+        output.Add("Desktop", "public static class D { }");
+        output.Add("App", "public static class App { }", ["Desktop"]);
+        output.Write("Desktop.exe", [0x4D, 0x5A, 0, 0]);
+        output.Write("Stranger.exe", [0x4D, 0x5A, 0, 0]);
+
+        var report = OutputInspection.Inspect(output.Dir, "App", NetworkingList.Repository.Value, ownPrograms: ["Desktop", "Stranger"]);
+
+        // Stranger.exe has no assembly of ours beside it, so it is listed like any other native file.
+        Assert.Equal(["Stranger.exe"], report.NativeFiles);
+    }
+
+    [Fact]
     public void A_missing_output_or_a_missing_root_assembly_fails_rather_than_passing_empty()
     {
         using var output = new FixtureOutput();

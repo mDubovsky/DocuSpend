@@ -70,7 +70,7 @@ public sealed class MainWindowTests : IDisposable
             form.Categories.Single(c => c.Name == "Zábava a oddych");
         Dispatcher.UIThread.RunJobs();
         boxes.Single(b => ReferenceEquals(b.ItemsSource, form.Subcategories)).SelectedIndex = 0;
-        All<Button>(window).Single(b => (string?)b.Content == Texts.AddRule).Command!.Execute(null);
+        All<Button>(window).Single(b => b.Content is string text && text == Texts.AddRule).Command!.Execute(null);
         Dispatcher.UIThread.RunJobs();
 
         Assert.Null(form.Error);
@@ -79,7 +79,7 @@ public sealed class MainWindowTests : IDisposable
         window.Close();
     });
 
-    private static string SamplesDir()
+    internal static string SamplesDir()
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
         {

@@ -24,17 +24,28 @@ public sealed record OutputReport(string Root, IReadOnlyList<string> ManagedFile
 /// </summary>
 public static class OutputInspection
 {
-    public static OutputReport Inspect(string outputDir, string rootAssembly, NetworkingList networking)
+    /// <param name="ownPrograms">
+    /// The repository's own project names. A program that references another of ours (the screenshot tool references
+    /// the desktop application) gets that program's launcher copied along; it is skipped like the root's own launcher,
+    /// but only when that project's assembly is in the output too.
+    /// </param>
+    public static OutputReport Inspect(string outputDir, string rootAssembly, NetworkingList networking,
+        IReadOnlyCollection<string>? ownPrograms = null)
     {
         if (!Directory.Exists(outputDir))
             throw new DirectoryNotFoundException($"No build output at {outputDir}. Build the solution first (dotnet build).");
 
+        var files = Directory.EnumerateFiles(outputDir, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal)
+            .Select(path => (Path: path, File: System.IO.Path.GetRelativePath(outputDir, path).Replace('\\', '/')))
+            .ToList();
+        var present = files.Select(f => f.File).ToHashSet(StringComparer.Ordinal);
+        var launchers = (ownPrograms ?? []).Where(p => present.Contains(p + ".dll")).Append(rootAssembly).ToList();
+
         var managed = new List<(string File, InspectedAssembly Assembly)>();
         var native = new List<string>();
-        foreach (var path in Directory.EnumerateFiles(outputDir, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
+        foreach (var (path, file) in files)
         {
-            var file = System.IO.Path.GetRelativePath(outputDir, path).Replace('\\', '/');
-            if (!MayBeCode(file) || IsLauncher(file, rootAssembly))
+            if (!MayBeCode(file) || launchers.Any(l => IsLauncher(file, l)))
                 continue;
             if (AssemblyInspector.Inspect(File.ReadAllBytes(path), networking) is { } assembly)
                 managed.Add((file, assembly));

@@ -80,7 +80,8 @@ public class ShippedDependenciesTests(ITestOutputHelper log)
         var assets = File.ReadAllText(Path.Combine(projectDir, "obj", "project.assets.json"));
         var removed = xml.Descendants("PrivacyRemovedFromOutput").Select(e => (string)e.Attribute("Include")!).ToList();
 
-        var output = OutputInspection.Inspect(outputDir, name, NetworkingList.Repository.Value);
+        var ownPrograms = ShippingProjects().Select(p => Path.GetFileNameWithoutExtension(p)).ToList();
+        var output = OutputInspection.Inspect(outputDir, name, NetworkingList.Repository.Value, ownPrograms);
         var present = Directory.EnumerateFiles(outputDir, "*", SearchOption.AllDirectories)
             .Select(f => Path.GetRelativePath(outputDir, f).Replace('\\', '/'))
             .ToHashSet(StringComparer.Ordinal);

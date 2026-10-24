@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="DocuSpend.Desktop.Tests" />
+    <InternalsVisibleTo Include="DocuSpend.Screenshots" />
   </ItemGroup>
 
   <!--
