@@ -1,6 +1,12 @@
 {
   "allowed": [
     {
+      "assembly": "Avalonia.Remote.Protocol",
+      "versions": "[11.3.22, 11.4)",
+      "reason": "Avalonia's protocol for its design-time previewer, referenced by Avalonia.Controls. Avalonia.Controls uses only its message types and connection interface; the networking is in BsonTcpTransport and TcpTransportBase, which only the previewer creates, and the previewer's own support assembly isn't shipped (PrivacyRemovedFromOutput). Our code is banned from the whole namespace (BannedSymbols.txt).",
+      "reviewer": "Michal Dubovský"
+    },
+    {
       "assembly": "PdfSharp.Cryptography",
       "versions": "[6.2.4, 6.3)",
       "reason": "Part of the PDFsharp package used by the sample generator. It uses HTTP to fetch timestamps when digitally signing a PDF, which the generator never does, and nothing we ship references this assembly.",

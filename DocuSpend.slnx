@@ -1,10 +1,14 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/DocuSpend.Categorization/DocuSpend.Categorization.csproj" />
+    <Project Path="src/DocuSpend.Desktop/DocuSpend.Desktop.csproj" />
+    <Project Path="src/DocuSpend.Presentation/DocuSpend.Presentation.csproj" />
     <Project Path="src/DocuSpend.Statements/DocuSpend.Statements.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/DocuSpend.Categorization.Tests/DocuSpend.Categorization.Tests.csproj" />
+    <Project Path="tests/DocuSpend.Desktop.Tests/DocuSpend.Desktop.Tests.csproj" />
+    <Project Path="tests/DocuSpend.Presentation.Tests/DocuSpend.Presentation.Tests.csproj" />
     <Project Path="tests/DocuSpend.Privacy.Tests/DocuSpend.Privacy.Tests.csproj" />
     <Project Path="tests/DocuSpend.SampleGenerator.Tests/DocuSpend.SampleGenerator.Tests.csproj" />
     <Project Path="tests/DocuSpend.StatementCheck.Tests/DocuSpend.StatementCheck.Tests.csproj" />

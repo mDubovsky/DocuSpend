@@ -30,6 +30,10 @@ T:System.Net.HttpListener;privacy-no-networking-code: listening for network conn
 T:System.Net.ServicePointManager;privacy-no-networking-code: network connection settings are not allowed in DocuSpend code (decision 0006, docs/decisions/0006-privacy-approach-and-network-boundary.md). To request an exception, see privacy/README.md.
 T:System.Net.ServicePoint;privacy-no-networking-code: network connection settings are not allowed in DocuSpend code (decision 0006, docs/decisions/0006-privacy-approach-and-network-boundary.md). To request an exception, see privacy/README.md.
 
+// Networking in libraries we ship, reviewed in privacy/allowed-dependencies.json on the grounds that our code never
+// reaches it. Banning it here makes that hold: Avalonia's previewer protocol, whose transports use sockets.
+N:Avalonia.Remote.Protocol;privacy-no-networking-code: Avalonia's previewer protocol uses sockets and is not allowed in DocuSpend code (decision 0006, docs/decisions/0006-privacy-approach-and-network-boundary.md). To request an exception, see privacy/README.md.
+
 // Pipes: a named pipe can connect to another computer, and any pipe can hand data to a program that sends it.
 N:System.IO.Pipes;privacy-no-networking-code: pipes are not allowed in DocuSpend code (decision 0006, docs/decisions/0006-privacy-approach-and-network-boundary.md). To request an exception, see privacy/README.md.
 

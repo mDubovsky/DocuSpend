@@ -71,10 +71,24 @@ public static class DependencyCheck
         return new DependencyCheckResult(failures, reported, usedAllowances, usedNative);
     }
 
-    /// <summary>Package files the output should contain but doesn't: without them the inspection would be incomplete.</summary>
-    public static IReadOnlyList<string> MissingFromOutput(string root, IReadOnlyList<string> expected, IReadOnlyCollection<string> present) =>
-        expected.Where(f => !present.Contains(f))
+    /// <summary>
+    /// Package files the output should contain but doesn't: without them the inspection would be incomplete. A project
+    /// may remove a package file from what it ships, declared with PrivacyRemovedFromOutput in its project file (see
+    /// Directory.Build.targets); that file must then really be gone, and some package must still provide it.
+    /// </summary>
+    public static IReadOnlyList<string> MissingFromOutput(string root, IReadOnlyList<string> expected,
+        IReadOnlyCollection<string> present, IReadOnlyCollection<string>? removed = null)
+    {
+        removed ??= [];
+        var missing = expected.Where(f => !present.Contains(f) && !removed.Contains(f))
             .Select(f => $"{Rule}: {root}'s build output lacks {f}, which its packages provide, so the inspection would miss it. "
-                + "Every project must copy its packages to its output (CopyLocalLockFileAssemblies, set in Directory.Build.props).")
-            .ToList();
+                + "Every project must copy its packages to its output (CopyLocalLockFileAssemblies, set in Directory.Build.props).");
+        var stillThere = removed.Where(present.Contains)
+            .Select(f => $"{Rule}: {root} declares {f} as removed from its output (PrivacyRemovedFromOutput), but it is still there. "
+                + "See privacy/README.md.");
+        var stale = removed.Where(f => !expected.Contains(f))
+            .Select(f => $"{Rule}: {root} declares {f} as removed from its output (PrivacyRemovedFromOutput), but no package provides it "
+                + "any more. Remove the declaration. See privacy/README.md.");
+        return [.. missing, .. stillThere, .. stale];
+    }
 }

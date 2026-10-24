@@ -46,6 +46,42 @@ public class PackageAssetsTests
             PackageAssets.OutputFiles(Assets));
     }
 
+    /// <summary>
+    /// A project built for one platform (a runtime identifier) has a second target for it, in which NuGet has already
+    /// picked that platform's files; the platform-neutral target still lists every platform's.
+    /// </summary>
+    private const string PlatformAssets = """
+        {
+          "version": 3,
+          "targets": {
+            "net10.0": {
+              "Skia/2.0.0": {
+                "type": "package",
+                "runtime": { "lib/net8.0/Skia.dll": {} },
+                "runtimeTargets": {
+                  "runtimes/win-x64/native/libskia.dll": { "assetType": "native", "rid": "win-x64" },
+                  "runtimes/osx/native/libskia.dylib": { "assetType": "native", "rid": "osx" }
+                }
+              }
+            },
+            "net10.0/win-x64": {
+              "Skia/2.0.0": {
+                "type": "package",
+                "runtime": { "lib/net8.0/Skia.dll": {} },
+                "native": { "runtimes/win-x64/native/libskia.dll": {} }
+              }
+            }
+          },
+          "projectFileDependencyGroups": { "net10.0": [ "Skia >= 2.0.0" ] }
+        }
+        """;
+
+    [Fact]
+    public void A_project_built_for_one_platform_expects_only_that_platforms_files()
+    {
+        Assert.Equal(["Skia.dll", "libskia.dll"], PackageAssets.OutputFiles(PlatformAssets));
+    }
+
     [Fact]
     public void A_denied_indirect_package_fails_the_check()
     {

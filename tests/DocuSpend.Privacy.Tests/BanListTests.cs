@@ -10,7 +10,12 @@ namespace DocuSpend.Privacy.Tests;
 [Trait("Check", "privacy-no-networking-code")]
 public class BanListTests
 {
-    private static readonly Compilation Runtime = BanCompiler.Compile("");
+    /// <summary>
+    /// The .NET runtime, plus the libraries whose networking the list also bans in our code (Avalonia's previewer
+    /// protocol), taken from the application's build output, which this test project builds first.
+    /// </summary>
+    private static readonly Compilation Runtime = BanCompiler.Compile("", extraReferences:
+        [Path.Combine(ShippedDependenciesTests.OutputDirOf("src/DocuSpend.Desktop/DocuSpend.Desktop.csproj"), "Avalonia.Remote.Protocol.dll")]);
 
     private static readonly IReadOnlyList<(string Id, string Message)> Entries = File.ReadLines(BanCompiler.BanFile)
         .Select(line => line.Trim())
@@ -119,14 +124,14 @@ public class BanListTests
         Assert.Equal(@"$(MSBuildThisFileDirectory)privacy\", Single(props, "PrivacyDir").Value);
         Assert.True(File.Exists(BanCompiler.BanFile));
 
-        var analyzer = Single(targets, "PackageReference");
-        Assert.Equal("Microsoft.CodeAnalysis.BannedApiAnalyzers", (string?)analyzer.Attribute("Include"));
+        // The file holds other package references and targets too (Avalonia's build telemetry), so find these by name.
+        Assert.Single(targets.Descendants("PackageReference"),
+            r => (string?)r.Attribute("Include") == "Microsoft.CodeAnalysis.BannedApiAnalyzers");
         Assert.Equal("$(PrivacyBannedSymbols)", (string?)Single(targets, "AdditionalFiles").Attribute("Include"));
         Assert.Contains(BanCompiler.RuleId, Single(targets, "WarningsAsErrors").Value);
 
         // The guard that fails the build when the ban is missing or switched off in a project.
-        var guard = Single(targets, "Target");
-        Assert.Equal("PrivacyBanGuard", (string?)guard.Attribute("Name"));
+        var guard = Assert.Single(targets.Descendants("Target"), t => (string?)t.Attribute("Name") == "PrivacyBanGuard");
         Assert.Equal("CoreCompile", (string?)guard.Attribute("BeforeTargets"));
         Assert.Equal(5, guard.Elements("Error").Count());
     }

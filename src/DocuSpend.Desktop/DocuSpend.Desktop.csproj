@@ -1,0 +1,61 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The Avalonia desktop application (decision 0005). Windows first. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!--
+      Built for Windows only, into the usual output folder, so the build output holds exactly the assemblies and
+      native files the published build ships, and the dependency check inspects those.
+    -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <!--
+      A self-contained publish (the CI build) adds the whole .NET runtime; it builds into a win-x64 subfolder, so it
+      never mixes the runtime's own assemblies into the folder the dependency check inspects.
+    -->
+    <AppendRuntimeIdentifierToOutputPath Condition="'$(SelfContained)' != 'true'">false</AppendRuntimeIdentifierToOutputPath>
+    <!-- A binding mistake fails the build, and no binding needs reflection. -->
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DocuSpend.Presentation\DocuSpend.Presentation.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DocuSpend.Desktop.Tests" />
+  </ItemGroup>
+
+  <!--
+    Avalonia's support for the IDE's design-time previewer uses sockets, and nothing in the application references it;
+    the previewer loads it from outside. It isn't shipped, so the live XAML preview doesn't work (privacy/README.md).
+  -->
+  <ItemGroup>
+    <PrivacyRemovedFromOutput Include="Avalonia.DesignerSupport.dll" />
+  </ItemGroup>
+
+  <!-- Only the Windows platform, not Avalonia.Desktop, which also brings the macOS and Linux backends. -->
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Win32" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Skia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+  </ItemGroup>
+
+  <!--
+    The valid synthetic samples travel with the program, so the build can be tried on a clean machine. They are
+    already public. Samples 06 to 09 are not statements and stay out.
+  -->
+  <ItemGroup>
+    <None Include="..\..\samples\public\01-typical-month.pdf;..\..\samples\public\02-busy-month.pdf;..\..\samples\public\03-awkward-month.pdf;..\..\samples\public\04-empty-month.pdf;..\..\samples\public\05-single-transaction-month.pdf"
+          Link="samples\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- The charts. 2.0.5 is the newest stable release and supports Avalonia 11 only (plan: versions). -->
+  <ItemGroup>
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.5" />
+  </ItemGroup>
+
+</Project>

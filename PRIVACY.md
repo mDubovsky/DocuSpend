@@ -53,7 +53,7 @@ It prints the exact commit and build the file came from, or an error if the file
 
 We'd rather tell you the limits than overstate the guarantee.
 
-- **Compiled native components.** Some libraries include pre-compiled machine code. The checks can list it, and it must be reviewed, but they can't prove what it does. DocuSpend includes none today.
+- **Compiled native components.** Some libraries include pre-compiled machine code. The checks can list it, and it must be reviewed, but they can't prove what it does. The desktop application includes three, all open source, for drawing: Skia (graphics), HarfBuzz (text) and ANGLE (graphics on Windows). None of them imports a networking library, which is what the review looked at; [privacy/native-libraries.json](privacy/native-libraries.json) lists them.
 - **Your operating system.** Windows or Linux may connect to the internet on their own, for updates or for features like cloud-synced folders. That is outside DocuSpend.
 - **Files in network locations.** If you open a statement stored on a network drive or in a synced cloud folder, your computer fetches it over the network. DocuSpend only reads what it's given.
 - **Certification.** The checks don't certify DocuSpend against any privacy standard. Scanners find classes of problems, not every possible one; the strongest guarantees are the ones the build enforces on every change.

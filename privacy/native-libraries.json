@@ -1,3 +1,19 @@
 {
-  "native": []
+  "native": [
+    {
+      "file": "libSkiaSharp.dll",
+      "reason": "Skia, Google's open-source 2D graphics library (SkiaSharp 2.88.9), which Avalonia and the charts draw with. Its import table names no networking library (kernel32, user32, ole32, fontsub).",
+      "reviewer": "Michal Dubovský"
+    },
+    {
+      "file": "libHarfBuzzSharp.dll",
+      "reason": "HarfBuzz, the open-source text shaping library (HarfBuzzSharp 8.3.1.1), which lays out text for Avalonia. Its import table names no networking library (kernel32 only).",
+      "reviewer": "Michal Dubovský"
+    },
+    {
+      "file": "av_libglesv2.dll",
+      "reason": "ANGLE, Google's open-source OpenGL ES implementation on Direct3D (Avalonia.Angle.Windows.Natives 2.1.25547.20250602), which Avalonia renders through on Windows. Its import table names no networking library (kernel32, user32, dxgi).",
+      "reviewer": "Michal Dubovský"
+    }
+  ]
 }

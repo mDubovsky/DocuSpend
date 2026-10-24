@@ -11,7 +11,7 @@ For an overview of all the checks, including the network-off run and the scanner
 | [native-networking.txt](native-networking.txt) | Native networking libraries and functions that a shipped assembly must not import. |
 | [denied-packages.txt](denied-packages.txt) | Telemetry, analytics, crash-reporting, remote-logging and auto-update packages, denied by name. |
 | [allowed-dependencies.json](allowed-dependencies.json) | Third-party assemblies whose networking references were reviewed and accepted, with the reason and the reviewer. |
-| [native-libraries.json](native-libraries.json) | Native files in what ships, reviewed. Empty. |
+| [native-libraries.json](native-libraries.json) | Native files in what ships, reviewed: the graphics and text libraries the desktop application draws with. |
 
 ## The ban on networking in our own code (`privacy-no-networking-code`)
 
@@ -32,10 +32,25 @@ Our own code is covered by the ban; the packages we use are not, so the tests in
 - an assembly references, defines or forwards a type in a networking namespace or type of `BannedSymbols.txt` (the `System.Net` entries; reflection and `Process` are banned only in our own code, because libraries use them legitimately), or imports something from `native-networking.txt`, unless `allowed-dependencies.json` covers that assembly and version. The failure names the assembly, what it uses, and the path of references from our assembly to it;
 - a package matching `denied-packages.txt` is anywhere in a project's dependency tree, read from its `obj/project.assets.json`, even when it doesn't reference networking itself;
 - a native file (anything that holds code but isn't a managed assembly) is in an output and not in `native-libraries.json`;
-- a file a package provides is missing from an output, which would make the inspection incomplete. Every project copies its packages to its output for this (`CopyLocalLockFileAssemblies` in `Directory.Build.props`);
-- a review in `allowed-dependencies.json` or `native-libraries.json` matches nothing any more, so it can't quietly allow the same thing back later.
+- a file a package provides is missing from an output, which would make the inspection incomplete. Every project copies its packages to its output for this (`CopyLocalLockFileAssemblies` in `Directory.Build.props`). A project built for one platform (the desktop application is built for `win-x64`) is expected to hold only that platform's files;
+- a review in `allowed-dependencies.json` or `native-libraries.json` matches nothing any more, so it can't quietly allow the same thing back later;
+- a project resolves Avalonia's build telemetry with its build step included (see below).
 
 Reviewed findings still pass with a line in the test output, so they stay visible. Test frameworks and other things that don't ship are out of scope; our test code is still under the ban.
+
+**Keeping a package file out of what ships.** When a package brings a file with networking that the application doesn't need at all, the better answer than a review is not to ship it. The project declares `<PrivacyRemovedFromOutput Include="file.dll" />`; `Directory.Build.targets` then leaves it out of the output and the dependency manifest, and the check requires it to be absent instead of reporting it missing, and fails if no package provides it any more. The desktop application does this for `Avalonia.DesignerSupport.dll`, Avalonia's hook for the IDE's design-time previewer, which uses sockets; the cost is that the live XAML preview doesn't work.
+
+**Networking a review relies on our code never reaching** is added to `BannedSymbols.txt` too, so that "never reached" is enforced rather than claimed: Avalonia's previewer protocol (`Avalonia.Remote.Protocol`) is reviewed in `allowed-dependencies.json` and banned in our code.
+
+### Avalonia's build telemetry is off
+
+The `Avalonia` package always brings `Avalonia.BuildServices`, whose build step sends anonymous usage data to the Avalonia team on every build: hashed project and machine names, a machine identifier, versions, the operating system and whether it runs in CI. It never ships in the application, but it would send data from every contributor's machine and from CI, so it is switched off for everyone, in three layers:
+
+- `Directory.Build.targets` references it in every project with all its assets excluded, so its build step is never imported, and defines an empty `AvaloniaStats` target in case it gets in some other way;
+- the workflows set `AVALONIA_TELEMETRY_OPTOUT=1`, Avalonia's own opt-out;
+- a test under `privacy-dependencies` reads every restored project's `obj/project.assets.json` and fails if any resolves the package with its build files.
+
+Don't remove any of these. Setting `AVALONIA_TELEMETRY_OPTOUT=1` in your own environment as well does no harm.
 
 **Asking for a review.** If a dependency references networking it never uses (for example a toolkit that can load images from web addresses, which DocuSpend never does), add an entry to `allowed-dependencies.json` in the same pull request:
 
