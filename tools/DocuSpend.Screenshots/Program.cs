@@ -28,7 +28,8 @@ session.Dispatch(() =>
             written.Add(Screens.Capture(screen, choice, look, output));
     }
 }, CancellationToken.None).GetAwaiter().GetResult();
-session.Dispose();
+// The session isn't disposed: Avalonia's HeadlessUnitTestSession.Dispose() can throw while shutting down (it failed
+// a CI run after every screenshot was written), and the process ends here anyway.
 
 foreach (var file in written)
     Console.WriteLine(Path.GetRelativePath(Directory.GetCurrentDirectory(), file));
