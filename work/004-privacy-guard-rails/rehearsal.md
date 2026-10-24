@@ -28,9 +28,16 @@ Each branch is `004-privacy-guard-rails` plus one commit that breaks one rule. O
 | Run | Result |
 |---|---|
 | Release, private repository, from tag `v0.0.0-rehearsal.1` at `c6880f6` ([run 39955895925](https://github.com/mDubovsky/DocuSpend/actions/runs/39955895925)) | Passed. Build and all tests ran first; "Signed record of origin" was skipped (private). One artifact with four archives (`DocuSpend.StatementCheck` and `DocuSpend.SampleGenerator`, `win-x64` and `linux-x64`) and a `.cdx.json` list of contents for each. The downloaded `DocuSpend.StatementCheck-win-x64` ran `--verify samples/public` locally: all 9 samples agree; its list of contents names `PdfPig 0.1.16`. |
-| Release, public repository: `gh attestation verify <archive> --repo mDubovsky/DocuSpend` (command from PRIVACY.md) accepts the archive | Open until the repository is public; see the settings checklist in CONTRIBUTING.md. |
+| Release, public repository: `gh attestation verify <archive> --repo mDubovsky/DocuSpend` (command from PRIVACY.md) accepts the archive | Passed, recorded on 2026-10-24 (#9). Started by hand on `main` at `0552c8e` ([run 40131199809](https://github.com/mDubovsky/DocuSpend/actions/runs/40131199809)); "Signed record of origin" ran. All four downloaded archives verify, and the record names `release.yml@refs/heads/main` and this run. A copy of `DocuSpend.StatementCheck-win-x64.zip` with one byte appended fails (no record for its digest). |
 
-The Release workflow can be started by hand only once `release.yml` is on `main`; until then a `v*` tag runs it, as here.
+The Release workflow can be started by hand only once `release.yml` is on `main`; until then a `v*` tag runs it, as in the first run.
+
+## After going public (#9)
+
+| Check | Result |
+|---|---|
+| Code scanning on `main` at `0552c8e` ([run 40130437737](https://github.com/mDubovsky/DocuSpend/actions/runs/40130437737), re-run) | `code-scanning` ran instead of being skipped. No security alerts; the rest are notes and warnings (mostly `cs/path-combine`), below the failure threshold. |
+| CI on Dependabot's pull request #8 ([run 40123738077](https://github.com/mDubovsky/DocuSpend/actions/runs/40123738077), re-run) | "Dependency review of the change" ran and passed. |
 
 ## Checked locally, before pushing
 
