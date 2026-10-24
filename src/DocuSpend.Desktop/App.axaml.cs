@@ -16,7 +16,7 @@ public partial class App : Application
         {
             // The synthetic samples travel with the program, in a folder next to it.
             var samples = SampleCatalog.Available(Path.Combine(AppContext.BaseDirectory, "samples"));
-            desktop.MainWindow = new MainWindow(new MainViewModel(samples, CategorizationConfig.Default));
+            desktop.MainWindow = new MainWindow(new MainViewModel(samples, new SpikeRuleStore(SpikeRuleStore.DefaultPath)));
         }
         base.OnFrameworkInitializationCompleted();
     }

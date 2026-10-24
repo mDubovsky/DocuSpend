@@ -34,6 +34,35 @@ public static class Texts
     public const string Amount = "Suma";
     public const string Count = "Počet";
 
+    // The rule form
+    public const string NewRule = "Nové pravidlo";
+    public const string Condition = "Podmienka";
+    public const string KindText = "Text v popise";
+    public const string KindAmount = "Suma";
+    public const string KindType = "Typ transakcie";
+    public const string ModeContains = "obsahuje";
+    public const string ModeEqualTo = "rovná sa";
+    public const string AmountFrom = "Od";
+    public const string AmountTo = "Do";
+    public const string TargetCategory = "Kategória";
+    public const string TargetSubcategory = "Podkategória";
+    public const string AddRule = "Pridať pravidlo";
+    public const string Rules = "Moje pravidlá";
+    public const string NoRules = "Zatiaľ žiadne pravidlá.";
+    public const string AmountNotANumber = "Suma musí byť číslo, napríklad 12,50.";
+    public const string RuleMatchedNothing = "Pravidlo je uložené, ale v tomto výpise mu nezodpovedá žiadna transakcia.";
+    public const string RulesFileUnreadable = "Súbor s pravidlami sa nepodarilo prečítať, preto sa nepoužije. Kým sa to nevyrieši, nové pravidlá nemožno ukladať.";
+    public const string RulesCannotBeSaved = "Pravidlo nemožno uložiť, lebo súbor s pravidlami sa nepodarilo prečítať.";
+    public const string RuleNotSaved = "Pravidlo sa nepodarilo uložiť.";
+
+    /// <summary>"Pravidlo zaradilo 1 transakciu / 3 transakcie / 5 transakcií."</summary>
+    public static string RuleMatched(int count) => count switch
+    {
+        1 => "Pravidlo zaradilo 1 transakciu.",
+        >= 2 and <= 4 => $"Pravidlo zaradilo {count} transakcie.",
+        _ => $"Pravidlo zaradilo {count} transakcií.",
+    };
+
     // Titles of the samples that travel with the application
     public const string SampleTypicalMonth = "Bežný mesiac";
     public const string SampleBusyMonth = "Rušný mesiac";
