@@ -7,6 +7,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/DocuSpend.Categorization.Tests/DocuSpend.Categorization.Tests.csproj" />
+    <Project Path="tests/DocuSpend.Desktop.Tests/DocuSpend.Desktop.Tests.csproj" />
     <Project Path="tests/DocuSpend.Presentation.Tests/DocuSpend.Presentation.Tests.csproj" />
     <Project Path="tests/DocuSpend.Privacy.Tests/DocuSpend.Privacy.Tests.csproj" />
     <Project Path="tests/DocuSpend.SampleGenerator.Tests/DocuSpend.SampleGenerator.Tests.csproj" />

@@ -20,6 +20,10 @@
     <ProjectReference Include="..\DocuSpend.Presentation\DocuSpend.Presentation.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="DocuSpend.Desktop.Tests" />
+  </ItemGroup>
+
   <!--
     Avalonia's support for the IDE's design-time previewer uses sockets, and nothing in the application references it;
     the previewer loads it from outside. It isn't shipped, so the live XAML preview doesn't work (privacy/README.md).
