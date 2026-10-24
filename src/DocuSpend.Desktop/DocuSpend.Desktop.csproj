@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The Avalonia desktop application (decision 0005). Windows first. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!--
+      Built for Windows only, into the usual output folder, so the build output holds exactly the assemblies and
+      native files the published build ships, and the dependency check inspects those.
+    -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <!-- A binding mistake fails the build, and no binding needs reflection. -->
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DocuSpend.Presentation\DocuSpend.Presentation.csproj" />
+  </ItemGroup>
+
+  <!--
+    Avalonia's support for the IDE's design-time previewer uses sockets, and nothing in the application references it;
+    the previewer loads it from outside. It isn't shipped, so the live XAML preview doesn't work (privacy/README.md).
+  -->
+  <ItemGroup>
+    <PrivacyRemovedFromOutput Include="Avalonia.DesignerSupport.dll" />
+  </ItemGroup>
+
+  <!-- Only the Windows platform, not Avalonia.Desktop, which also brings the macOS and Linux backends. -->
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Win32" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Skia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+  </ItemGroup>
+
+</Project>

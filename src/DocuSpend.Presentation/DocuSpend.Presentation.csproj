@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Screen logic for the interface, with no dependency on the toolkit, so it is tested like the rest of the code. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DocuSpend.Categorization\DocuSpend.Categorization.csproj" />
+    <ProjectReference Include="..\DocuSpend.Statements\DocuSpend.Statements.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DocuSpend.Presentation.Tests" />
+  </ItemGroup>
+
+</Project>

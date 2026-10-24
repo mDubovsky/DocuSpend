@@ -33,7 +33,8 @@ To run one privacy check's tests on its own: `dotnet test --project tests/DocuSp
 **When a check fails**, its message names the rule, where it was broken, and what to do. Usually the answer is to do the work without the network, the package or the file. If you believe a change is justified:
 
 - **Networking in our own code** needs an exception: a change to decision 0006, `PrivacyException` in the project, and an entry in `privacy/exceptions.json`. An excepted project can never reach the statement code. See [privacy/README.md](privacy/README.md#requesting-an-exception).
-- **A package that references networking it never uses** needs a review: an entry in `privacy/allowed-dependencies.json` with the version range, the reason and the reviewer, in the same pull request. Native files go in `privacy/native-libraries.json` the same way. See [privacy/README.md](privacy/README.md#networking-in-what-ships-privacy-dependencies).
+- **A package that references networking it never uses** needs a review: an entry in `privacy/allowed-dependencies.json` with the version range, the reason and the reviewer, in the same pull request. Native files go in `privacy/native-libraries.json` the same way. If the application doesn't need the file at all, leave it out of what ships instead (`PrivacyRemovedFromOutput`). See [privacy/README.md](privacy/README.md#networking-in-what-ships-privacy-dependencies).
+- **Avalonia's build telemetry** is switched off in the build, and a check fails if it comes back. See [privacy/README.md](privacy/README.md#avalonias-build-telemetry-is-off).
 - **Real statements** belong in `samples/private`, which git ignores; tests use the synthetic samples in `samples/public`.
 
 The lists in `privacy/` are reviewed like code. Adding to a ban list is a normal change; removing from one, or loosening a check, is a change to decision 0006.

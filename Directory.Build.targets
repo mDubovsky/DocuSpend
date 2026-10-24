@@ -23,6 +23,30 @@
     <Reference Include="Microsoft.CodeAnalysis.CSharp.BannedApiAnalyzers" HintPath="$(_PrivacyAnalyzerDir)Microsoft.CodeAnalysis.CSharp.BannedApiAnalyzers.dll" />
   </ItemGroup>
 
+  <!--
+    Avalonia's build telemetry is off (decision 0006; privacy/README.md). Avalonia brings Avalonia.BuildServices,
+    whose build task sends usage data to the Avalonia team on every build. Every project references it here with
+    all its assets excluded, which also covers projects that get Avalonia indirectly, so its task is never imported.
+    The empty AvaloniaStats target is a second layer, should the task's target get in some other way. A test under
+    privacy-dependencies fails if any project resolves the package with its build assets.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Avalonia.BuildServices" Version="$(AvaloniaBuildServicesVersion)" ExcludeAssets="all" PrivateAssets="all" />
+  </ItemGroup>
+  <Target Name="AvaloniaStats" />
+
+  <!--
+    A project can keep a package file out of what it ships by declaring <PrivacyRemovedFromOutput Include="file" />,
+    as the desktop application does for Avalonia's previewer support, which uses sockets. The dependency check reads
+    the same declaration: it then requires the file to be absent, instead of reporting it missing. See privacy/README.md.
+  -->
+  <Target Name="PrivacyRemoveFromOutput" AfterTargets="ResolvePackageAssets" Condition="'@(PrivacyRemovedFromOutput)' != ''">
+    <ItemGroup>
+      <_PrivacyRemoved Include="@(PrivacyRemovedFromOutput)" DestinationSubPath="%(Identity)" />
+      <RuntimeCopyLocalItems Remove="@(_PrivacyRemoved)" MatchOnMetadata="DestinationSubPath" />
+    </ItemGroup>
+  </Target>
+
   <!-- The ban fails closed: if anything has switched it off for this project, the build fails. -->
   <Target Name="PrivacyBanGuard" BeforeTargets="CoreCompile" Condition="'$(PrivacyException)' != 'true'">
     <PropertyGroup>

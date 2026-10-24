@@ -1,6 +1,8 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/DocuSpend.Categorization/DocuSpend.Categorization.csproj" />
+    <Project Path="src/DocuSpend.Desktop/DocuSpend.Desktop.csproj" />
+    <Project Path="src/DocuSpend.Presentation/DocuSpend.Presentation.csproj" />
     <Project Path="src/DocuSpend.Statements/DocuSpend.Statements.csproj" />
   </Folder>
   <Folder Name="/tests/">

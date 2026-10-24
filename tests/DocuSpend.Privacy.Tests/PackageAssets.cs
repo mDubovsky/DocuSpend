@@ -51,13 +51,16 @@ public static class PackageAssets
     /// <summary>
     /// The files packages contribute to the build output, as paths relative to it: managed and native libraries
     /// at the top, platform-specific ones under runtimes/. If one is missing, the output isn't complete enough to
-    /// inspect.
+    /// inspect. A project built for one platform (a runtime identifier, such as the Windows application) ships only
+    /// that platform's files, with native ones at the top, so only its platform target counts.
     /// </summary>
     public static IReadOnlyList<string> OutputFiles(string assetsJson)
     {
         using var doc = JsonDocument.Parse(assetsJson);
+        var allTargets = doc.RootElement.GetProperty("targets").EnumerateObject().ToList();
+        var platformTargets = allTargets.Where(t => t.Name.Contains('/', StringComparison.Ordinal)).ToList();
         var files = new SortedSet<string>(StringComparer.Ordinal);
-        foreach (var library in Targets(doc.RootElement).SelectMany(t => t.EnumerateObject()))
+        foreach (var library in (platformTargets.Count > 0 ? platformTargets : allTargets).SelectMany(t => t.Value.EnumerateObject()))
         {
             if (library.Value.GetProperty("type").GetString() != "package")
                 continue;

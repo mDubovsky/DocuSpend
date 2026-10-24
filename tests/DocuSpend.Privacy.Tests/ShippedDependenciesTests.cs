@@ -63,20 +63,28 @@ public class ShippedDependenciesTests(ITestOutputHelper log)
         Assert.Empty(Native.Where(n => !results.Any(r => r.UsedNativeEntries.Contains(n.File))).Select(n => n.File));
     }
 
+    /// <summary>A shipping project's build output, for the configuration this test was built in.</summary>
+    public static string OutputDirOf(string project)
+    {
+        var xml = XDocument.Load(Repo.PathOf(project));
+        var framework = xml.Descendants("TargetFramework").Single().Value;
+        return Path.Combine(Path.GetDirectoryName(Repo.PathOf(project))!, "bin", Configuration, framework);
+    }
+
     private static DependencyCheckResult CheckProject(string project)
     {
         var xml = XDocument.Load(Repo.PathOf(project));
         var name = xml.Descendants("AssemblyName").SingleOrDefault()?.Value ?? Path.GetFileNameWithoutExtension(project);
-        var framework = xml.Descendants("TargetFramework").Single().Value;
         var projectDir = Path.GetDirectoryName(Repo.PathOf(project))!;
-        var outputDir = Path.Combine(projectDir, "bin", Configuration, framework);
+        var outputDir = OutputDirOf(project);
         var assets = File.ReadAllText(Path.Combine(projectDir, "obj", "project.assets.json"));
+        var removed = xml.Descendants("PrivacyRemovedFromOutput").Select(e => (string)e.Attribute("Include")!).ToList();
 
         var output = OutputInspection.Inspect(outputDir, name, NetworkingList.Repository.Value);
         var present = Directory.EnumerateFiles(outputDir, "*", SearchOption.AllDirectories)
             .Select(f => Path.GetRelativePath(outputDir, f).Replace('\\', '/'))
             .ToHashSet(StringComparer.Ordinal);
-        var missing = DependencyCheck.MissingFromOutput(name, PackageAssets.OutputFiles(assets), present);
+        var missing = DependencyCheck.MissingFromOutput(name, PackageAssets.OutputFiles(assets), present, removed);
 
         var result = DependencyCheck.Evaluate(output, Allowed, Native, PackageAssets.Packages(name, assets), DeniedPackages.Repository.Value);
         return result with { Failures = [.. missing, .. result.Failures] };

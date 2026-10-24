@@ -126,5 +126,16 @@ public class NetworkingBanTests
         Assert.Empty(BanCompiler.Violations(InClass(member), banFileName: "NetworkingBan.txt"));
     }
 
+    [Fact]
+    public void Avalonias_previewer_transport_is_banned_in_our_code()
+    {
+        // Its networking is allowed in what ships only because our code can never reach it (allowed-dependencies.json).
+        string[] avalonia = [Path.Combine(ShippedDependenciesTests.OutputDirOf("src/DocuSpend.Desktop/DocuSpend.Desktop.csproj"), "Avalonia.Remote.Protocol.dll")];
+
+        var violations = BanCompiler.Violations(InClass("object M() => new Avalonia.Remote.Protocol.BsonTcpTransport();"), extraReferences: avalonia);
+
+        Assert.Contains(violations, v => v.GetMessage().Contains("Avalonia's previewer protocol", StringComparison.Ordinal));
+    }
+
     private static string InClass(string members) => $"partial class C {{ {members}\n}}";
 }

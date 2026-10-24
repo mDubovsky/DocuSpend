@@ -17,6 +17,8 @@ permissions:
 
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  # Avalonia's build telemetry, as a third layer behind the exclusion in Directory.Build.targets (privacy/README.md).
+  AVALONIA_TELEMETRY_OPTOUT: "1"
   DOTNET_NOLOGO: "1"
   CYCLONEDX_VERSION: "6.2.0"
 

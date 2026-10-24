@@ -125,4 +125,30 @@ public class DependencyCheckTests
 
         Assert.Contains("lacks runtimes/win/lib/net10.0/B.dll", failure);
     }
+
+    [Fact]
+    public void A_package_file_the_project_removes_from_its_output_is_not_missing()
+    {
+        Assert.Empty(DependencyCheck.MissingFromOutput("App", ["A.dll", "Designer.dll"], ["A.dll", "App.dll"], removed: ["Designer.dll"]));
+    }
+
+    [Fact]
+    public void A_removed_file_that_is_still_in_the_output_fails()
+    {
+        var failure = Assert.Single(DependencyCheck.MissingFromOutput("App", ["A.dll", "Designer.dll"], ["A.dll", "Designer.dll"],
+            removed: ["Designer.dll"]));
+
+        Assert.Contains("Designer.dll", failure);
+        Assert.Contains("PrivacyRemovedFromOutput", failure);
+    }
+
+    [Fact]
+    public void Removing_a_file_no_package_provides_fails()
+    {
+        // A stale removal would read as a review that no longer means anything.
+        var failure = Assert.Single(DependencyCheck.MissingFromOutput("App", ["A.dll"], ["A.dll"], removed: ["Designer.dll"]));
+
+        Assert.Contains("Designer.dll", failure);
+        Assert.Contains("no package provides", failure);
+    }
 }
