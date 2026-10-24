@@ -1,6 +1,6 @@
 # 0005: Avalonia for the user interface
 
-Status: accepted. To be confirmed by the spike in [#5](https://github.com/mDubovsky/DocuSpend/issues/5); if it fails, this decision is revisited.
+Status: accepted, and confirmed by the spike in [#5](https://github.com/mDubovsky/DocuSpend/issues/5): go ([findings](../../work/005-avalonia-spike/findings.md)).
 
 ## Context
 The MVP needs charts (a spending pie and a balance line, with a category you can click into), lists, a rule editor with forms, and Slovak text ([decision 0003](0003-slovak-interface-english-code.md)). The users are not technical, the product's promise is that a statement never leaves the computer, and the code is in .NET ([decision 0001](0001-use-dotnet.md)).
@@ -9,9 +9,11 @@ Options considered: a Blazor WebAssembly website, Avalonia, WPF, Blazor Hybrid (
 
 ## Decision
 - The interface is a **native desktop application built with Avalonia**. **Windows first**; macOS and Linux stay possible later without a rewrite.
-- Charts are drawn with a library that runs on Avalonia (LiveCharts2 is the candidate; the choice is confirmed in the plan of the first interface item).
+- Charts are drawn with LiveCharts2, confirmed by the spike.
+- Avalonia 11.3 for now: LiveCharts2's stable release doesn't support Avalonia 12 yet. Moving to 12 is a separate item.
+- Only Avalonia's Windows packages, not its all-platform package, so the macOS and Linux native files stay out until they are needed.
 - The application is distributed as **builds produced by CI on GitHub**, not through the Microsoft Store.
-- No interface code is written until the spike (#5) has said go.
+- The spike (#5) said go; its findings give the project structure for the real screens.
 
 ## Why
 - **A website is rejected because of trust.** A user who knows nothing about development will not upload a bank statement to a web page, however local the processing really is, and cannot be expected to check.
@@ -22,6 +24,6 @@ Options considered: a Blazor WebAssembly website, Avalonia, WPF, Blazor Hybrid (
 ## Consequences
 - Distribution without the Microsoft Store means no operating-system-enforced "no internet" label. The proof of privacy rests on the public repository and the checks in decision 0006.
 - Unsigned downloads trigger Windows SmartScreen warnings. Code signing for open-source projects (there are free and low-cost options) is to be looked at when there is something to release.
-- The ecosystem is smaller than WPF's, and fewer examples exist; the spike is meant to expose the gaps early.
+- The ecosystem is smaller than WPF's, and fewer examples exist. The spike found few gaps; the real costs were privacy ones, now handled: Avalonia's build telemetry is switched off, its design-time previewer support isn't shipped, and its previewer protocol and three native graphics libraries are reviewed ([privacy/README.md](../../privacy/README.md)).
 - A later website, for example to browse shared rules, would be a separate small project and would not reuse the application's interface.
 - Interface code must keep user-visible texts and number formatting in one place so Slovak formatting ("1 349,87 €") comes from a culture setting, not from hand-built strings.
