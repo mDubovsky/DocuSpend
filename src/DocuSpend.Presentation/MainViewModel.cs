@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DocuSpend.Categorization;
 using DocuSpend.Categorization.Rules;
+using DocuSpend.Presentation.Look;
 using DocuSpend.Statements.Reading;
 
 namespace DocuSpend.Presentation;
@@ -14,17 +15,46 @@ public sealed partial class MainViewModel : ObservableObject
 {
     private readonly IStatementReader _reader = new VubStatementReader();
     private readonly SpikeRuleStore _store;
+    private readonly SettingsStore? _settings;
     private readonly List<RuleDraft> _drafts = [];
 
-    public MainViewModel(IReadOnlyList<SampleItem> samples, SpikeRuleStore store)
+    /// <param name="settings">Where the choice of look is remembered; without it, the choice lasts only this session.</param>
+    public MainViewModel(IReadOnlyList<SampleItem> samples, SpikeRuleStore store, SettingsStore? settings = null)
     {
         _store = store;
+        _settings = settings;
         Samples = samples;
         Statement = new StatementViewModel(LoadRules());
         RuleForm = new RuleFormViewModel(Statement.Config.Catalog);
         RulesError = store.IsAvailable ? null : Texts.RulesFileUnreadable;
         Rules = _drafts.Select(Row).ToList();
         SelectedSample = samples.FirstOrDefault();
+        var saved = settings?.LoadLook() ?? LookChoice.System;
+        _loadingLook = true;
+        SelectedLook = Looks.Single(l => l.Choice == saved);
+        _loadingLook = false;
+    }
+
+    private readonly bool _loadingLook;
+
+    public IReadOnlyList<LookOption> Looks { get; } =
+    [
+        new(LookChoice.System, Texts.LookSystem),
+        new(LookChoice.Light, Texts.LookLight),
+        new(LookChoice.Dark, Texts.LookDark),
+    ];
+
+    /// <summary>The look chosen in the header; saved as soon as it changes.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Look))]
+    public partial LookOption SelectedLook { get; set; }
+
+    public LookChoice Look => SelectedLook.Choice;
+
+    partial void OnSelectedLookChanged(LookOption value)
+    {
+        if (!_loadingLook)
+            _settings?.SaveLook(value.Choice);
     }
 
     public IReadOnlyList<SampleItem> Samples { get; }

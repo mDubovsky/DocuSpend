@@ -34,6 +34,12 @@ public static class Texts
     public const string Amount = "Suma";
     public const string Count = "Počet";
 
+    // The look
+    public const string Look = "Vzhľad";
+    public const string LookSystem = "Podľa systému";
+    public const string LookLight = "Svetlý";
+    public const string LookDark = "Tmavý";
+
     // The rule form
     public const string NewRule = "Nové pravidlo";
     public const string Condition = "Podmienka";

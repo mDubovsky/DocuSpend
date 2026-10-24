@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Avalonia.Controls;
+using Avalonia.Styling;
 using DocuSpend.Categorization.Model;
 using DocuSpend.Desktop.Look;
 using DocuSpend.Presentation;
@@ -25,9 +26,30 @@ public partial class MainWindow : Window
 
         SpendingPie.DataPointerDown += OnSliceClicked;
         model.Statement.PropertyChanged += OnStatementChanged;
+        model.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(MainViewModel.Look))
+                ApplyLook(model.Look);
+        };
+        ApplyLook(model.Look);
         // The charts draw their own colours, so a change of look (the switch, or Windows) redraws them.
         ActualThemeVariantChanged += (_, _) => DrawCharts();
         DrawCharts();
+    }
+
+    /// <summary>
+    /// "Podľa systému" hands the choice to Avalonia, which follows Windows, also when it changes while DocuSpend runs;
+    /// the other two fix it. The whole application changes at once, and the charts redraw on the change.
+    /// </summary>
+    internal static void ApplyLook(LookChoice choice)
+    {
+        if (Avalonia.Application.Current is { } app)
+            app.RequestedThemeVariant = choice switch
+            {
+                LookChoice.Light => ThemeVariant.Light,
+                LookChoice.Dark => ThemeVariant.Dark,
+                _ => ThemeVariant.Default,
+            };
     }
 
     /// <summary>The palette of the look the window shows now.</summary>

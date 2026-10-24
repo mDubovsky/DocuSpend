@@ -24,10 +24,10 @@ public sealed class LookTests : IDisposable
             Directory.Delete(_folder, recursive: true);
     }
 
-    private (MainWindow Window, MainViewModel Model) Open(ThemeVariant variant)
+    private (MainWindow Window, MainViewModel Model) Open(LookChoice choice)
     {
-        Application.Current!.RequestedThemeVariant = variant;
         var model = new MainViewModel(SampleCatalog.Available(MainWindowTests.SamplesDir()), new SpikeRuleStore(Path.Combine(_folder, "rules.json")));
+        model.SelectedLook = model.Looks.Single(l => l.Choice == choice);
         var window = new MainWindow(model);
         window.Show();
         Dispatcher.UIThread.RunJobs();
@@ -49,8 +49,8 @@ public sealed class LookTests : IDisposable
 
     public static TheoryData<string> Variants => new(["light", "dark"]);
 
-    private static (ThemeVariant Variant, Palette Palette) Of(string look) =>
-        look == "dark" ? (ThemeVariant.Dark, Palette.Dark) : (ThemeVariant.Light, Palette.Light);
+    private static (LookChoice Variant, Palette Palette) Of(string look) =>
+        look == "dark" ? (LookChoice.Dark, Palette.Dark) : (LookChoice.Light, Palette.Light);
 
     [Theory]
     [MemberData(nameof(Variants))]
@@ -83,11 +83,11 @@ public sealed class LookTests : IDisposable
     [Fact]
     public void Switching_the_look_recolours_everything_and_keeps_what_the_user_was_doing() => Headless.Run(() =>
     {
-        var (window, model) = Open(ThemeVariant.Light);
+        var (window, model) = Open(LookChoice.Light);
         model.Statement.SelectedCategory = new CategoryId("housing");
         model.RuleForm.Text = "rozpísané pravidlo";
 
-        Application.Current!.RequestedThemeVariant = ThemeVariant.Dark;
+        model.SelectedLook = model.Looks.Single(l => l.Choice == LookChoice.Dark);
         Dispatcher.UIThread.RunJobs();
 
         Assert.Equal(Palette.Dark.Card, Hex(CardBackground(window)));
@@ -100,10 +100,26 @@ public sealed class LookTests : IDisposable
         Finish(window);
     });
 
+    [Theory]
+    [InlineData(LookChoice.System, "Default")]
+    [InlineData(LookChoice.Light, "Light")]
+    [InlineData(LookChoice.Dark, "Dark")]
+    public void The_choice_in_the_header_sets_the_applications_look(LookChoice choice, string variant) => Headless.Run(() =>
+    {
+        var (window, model) = Open(LookChoice.Light);
+
+        window.LookSwitch.SelectedItem = model.Looks.Single(l => l.Choice == choice);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(choice, model.Look);
+        Assert.Equal(variant, Application.Current!.RequestedThemeVariant!.Key.ToString());
+        Finish(window);
+    });
+
     [Fact]
     public void A_row_of_the_legend_selects_its_category() => Headless.Run(() =>
     {
-        var (window, model) = Open(ThemeVariant.Light);
+        var (window, model) = Open(LookChoice.Light);
         var rows = window.Legend.GetLogicalDescendants().OfType<Button>().ToList();
 
         Assert.Equal(model.Statement.Slices.Count, rows.Count);

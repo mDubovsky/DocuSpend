@@ -4,6 +4,7 @@
         xmlns:cat="using:DocuSpend.Categorization.Model"
         xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
         xmlns:look="using:DocuSpend.Desktop.Look"
+        xmlns:lookvm="using:DocuSpend.Presentation.Look"
         x:Class="DocuSpend.Desktop.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="{x:Static vm:Texts.AppTitle}"
@@ -16,17 +17,35 @@
       <!-- Which sample, and the key figures -->
       <Border Classes="card" Grid.ColumnSpan="2">
         <StackPanel Spacing="{StaticResource Look.Space.Large}">
-          <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}">
-            <TextBlock Classes="muted" Text="{x:Static vm:Texts.Sample}" VerticalAlignment="Center" />
-            <ComboBox ItemsSource="{Binding Samples}" SelectedItem="{Binding SelectedSample}" MinWidth="260">
-              <ComboBox.ItemTemplate>
-                <DataTemplate x:DataType="vm:SampleItem">
-                  <TextBlock Text="{Binding Title}" />
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
-            <TextBlock Classes="muted" Text="{Binding Statement.Period}" VerticalAlignment="Center" />
-          </StackPanel>
+          <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}">
+              <TextBlock Classes="muted" Text="{x:Static vm:Texts.Sample}" VerticalAlignment="Center" />
+              <ComboBox ItemsSource="{Binding Samples}" SelectedItem="{Binding SelectedSample}" MinWidth="260">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:SampleItem">
+                    <TextBlock Text="{Binding Title}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <TextBlock Classes="muted" Text="{Binding Statement.Period}" VerticalAlignment="Center" />
+            </StackPanel>
+            <!-- Light or dark: follow Windows, or always one of them -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}">
+              <TextBlock Classes="muted" Text="{x:Static vm:Texts.Look}" VerticalAlignment="Center" />
+              <ListBox x:Name="LookSwitch" Classes="segmented" ItemsSource="{Binding Looks}" SelectedItem="{Binding SelectedLook}">
+                <ListBox.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="lookvm:LookOption">
+                    <TextBlock Text="{Binding Label}" />
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </StackPanel>
+          </Grid>
           <Border Classes="message error" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
             <TextBlock Text="{Binding Error}" TextWrapping="Wrap" />
           </Border>

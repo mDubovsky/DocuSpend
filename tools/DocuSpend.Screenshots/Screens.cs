@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using DocuSpend.Categorization.Model;
 using DocuSpend.Desktop;
 using DocuSpend.Presentation;
+using DocuSpend.Presentation.Look;
 
 /// <summary>The states of the screens the spec asks to see, each set up through the view models, as a user would.</summary>
 internal static class Screens
@@ -39,12 +40,13 @@ internal static class Screens
     ];
 
     /// <summary>Opens a fresh window in the state, renders it, and saves "&lt;name&gt;-&lt;look&gt;.png".</summary>
-    public static string Capture(Screen screen, string look, string output)
+    public static string Capture(Screen screen, LookChoice choice, string look, string output)
     {
         var rules = Path.Combine(Path.GetTempPath(), "docuspend-screenshots-" + Guid.NewGuid().ToString("N") + ".json");
         try
         {
             var model = new MainViewModel(SampleCatalog.Available(SamplesFolder()), new SpikeRuleStore(rules));
+            model.SelectedLook = model.Looks.Single(l => l.Choice == choice);
             // Tall enough that nothing needs scrolling, so the whole window is in one picture.
             var window = new MainWindow(model) { Width = 1280, Height = 1660 };
             window.Show();

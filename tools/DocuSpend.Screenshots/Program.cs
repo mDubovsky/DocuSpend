@@ -1,10 +1,10 @@
 using System.Globalization;
 using Avalonia;
 using Avalonia.Headless;
-using Avalonia.Styling;
 using Avalonia.Threading;
 using DocuSpend.Desktop;
 using DocuSpend.Presentation;
+using DocuSpend.Presentation.Look;
 
 // Renders every screen of the desktop application in both looks to PNG files, from the synthetic samples, without a
 // screen (work/011-modern-look/spec.md, "Screenshots for review"). Rules go to a temporary file, never the user's.
@@ -21,11 +21,11 @@ var session = HeadlessUnitTestSession.StartNew(typeof(ScreenshotApp));
 var written = new List<string>();
 session.Dispatch(() =>
 {
-    foreach (var (variant, look) in new[] { (ThemeVariant.Light, "light"), (ThemeVariant.Dark, "dark") })
+    // Chosen through the header's switch, as a user would, so the screenshots show the real path.
+    foreach (var (choice, look) in new[] { (LookChoice.Light, "light"), (LookChoice.Dark, "dark") })
     {
-        Application.Current!.RequestedThemeVariant = variant;
         foreach (var screen in Screens.All)
-            written.Add(Screens.Capture(screen, look, output));
+            written.Add(Screens.Capture(screen, choice, look, output));
     }
 }, CancellationToken.None).GetAwaiter().GetResult();
 session.Dispose();
