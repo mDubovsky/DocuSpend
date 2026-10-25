@@ -34,7 +34,8 @@ public static class Texts
     public const string ExampleLabel = "Ukážka s vymyslenými údajmi";
     public const string Reading = "Výpis sa číta…";
     public const string DropHere = "Pustite výpis sem";
-    public const string PickerPdfFiles = "Výpisy vo formáte PDF";
+    public const string PickerTitle = "Otvoriť výpis";
+    public const string PickerPdfFiles ="Výpisy vo formáte PDF";
     public const string PickerAllFiles = "Všetky súbory";
     public const string Close = "Zavrieť";
 

@@ -8,237 +8,272 @@
         x:Class="DocuSpend.Desktop.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="{x:Static vm:Texts.AppTitle}"
-        Width="1280" Height="880" MinWidth="720" MinHeight="520">
+        Width="1280" Height="880" MinWidth="720" MinHeight="520"
+        DragDrop.AllowDrop="True">
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenCommand}" />
+  </Window.KeyBindings>
 
   <!-- Only the arrangement lives here; every colour, size and spacing comes from Look/Look.axaml. -->
-  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*" Margin="{StaticResource Look.Margin.Window}" MinWidth="700">
+  <Panel>
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+      <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*" Margin="{StaticResource Look.Margin.Window}" MinWidth="700">
 
-      <!-- Which sample, and the key figures -->
-      <Border Classes="card" Grid.ColumnSpan="2">
-        <StackPanel Spacing="{StaticResource Look.Space.Large}">
-          <Grid ColumnDefinitions="*,Auto">
-            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}">
-              <TextBlock Classes="muted" Text="{Binding Statement.Period}" VerticalAlignment="Center" />
-            </StackPanel>
-            <!-- Light or dark: follow Windows, or always one of them -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}">
-              <TextBlock Classes="muted" Text="{x:Static vm:Texts.Look}" VerticalAlignment="Center" />
-              <ListBox x:Name="LookSwitch" Classes="segmented" ItemsSource="{Binding Looks}" SelectedItem="{Binding SelectedLook}">
-                <ListBox.ItemsPanel>
-                  <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" />
-                  </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-                <ListBox.ItemTemplate>
-                  <DataTemplate x:DataType="lookvm:LookOption">
-                    <TextBlock Text="{Binding Label}" />
-                  </DataTemplate>
-                </ListBox.ItemTemplate>
-              </ListBox>
-            </StackPanel>
-          </Grid>
-          <Border Classes="message error" IsVisible="{Binding OpenMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-            <TextBlock Text="{Binding OpenMessage}" TextWrapping="Wrap" />
-          </Border>
-          <WrapPanel>
-            <StackPanel Margin="{StaticResource Look.Margin.KeyFigure}">
-              <TextBlock Classes="label" Text="{x:Static vm:Texts.SpendingTotal}" />
-              <TextBlock Classes="keyNumber main" Text="{Binding Statement.SpendingTotal}" />
-            </StackPanel>
-            <StackPanel Margin="{StaticResource Look.Margin.KeyFigure}" VerticalAlignment="Bottom">
-              <TextBlock Classes="label" Text="{x:Static vm:Texts.OpeningBalance}" />
-              <TextBlock Classes="keyNumber" Text="{Binding Statement.OpeningBalance}" />
-            </StackPanel>
-            <StackPanel VerticalAlignment="Bottom">
-              <TextBlock Classes="label" Text="{x:Static vm:Texts.ClosingBalance}" />
-              <TextBlock Classes="keyNumber" Text="{Binding Statement.ClosingBalance}" />
-            </StackPanel>
-          </WrapPanel>
-        </StackPanel>
-      </Border>
-
-      <!-- The two charts -->
-      <Border Classes="card" Grid.Row="1" Grid.Column="0">
-        <DockPanel>
-          <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.SpendingChart}" />
-          <Panel Height="300">
-            <!-- The ring has a fixed square of its own, so a long legend never squeezes it. -->
-            <Grid ColumnDefinitions="260,*" IsVisible="{Binding Statement.HasSpending}">
-              <Panel Width="260" Height="260" VerticalAlignment="Center">
-                <lvc:PieChart x:Name="SpendingPie" LegendPosition="Hidden" />
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
-                  <TextBlock Classes="label" Text="{x:Static vm:Texts.SpendingTotal}" HorizontalAlignment="Center" />
-                  <TextBlock Classes="ringTotal" Text="{Binding Statement.SpendingTotal}" HorizontalAlignment="Center" />
-                </StackPanel>
-              </Panel>
-              <ScrollViewer Grid.Column="1" Margin="{StaticResource Look.Margin.Legend}" VerticalAlignment="Center" MaxHeight="300">
-                <ItemsControl x:Name="Legend" ItemsSource="{Binding Statement.Slices}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:PieSlice">
-                      <Button Classes="legend" CommandParameter="{Binding Category}" ToolTip.Tip="{Binding Name}"
-                              Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).Statement.SelectCategoryCommand}">
-                        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                          <Ellipse Classes="dot" Fill="{Binding Color, Converter={x:Static look:HexBrush.Instance}}" VerticalAlignment="Center" />
-                          <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                          <TextBlock Grid.Column="2" Classes="label" Text="{Binding ShareText}" Margin="{StaticResource Look.Margin.Count}" VerticalAlignment="Center" />
-                          <TextBlock Grid.Column="3" Text="{Binding AmountText}" VerticalAlignment="Center" />
-                        </Grid>
-                      </Button>
+        <!-- Opening a statement, the message about one that wasn't opened, and the key figures -->
+        <Border Classes="card" Grid.ColumnSpan="2">
+          <StackPanel Spacing="{StaticResource Look.Space.Large}">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}">
+                <Button x:Name="OpenButton" Classes="secondary" Content="{x:Static vm:Texts.OpenStatement}" Command="{Binding OpenCommand}"
+                        IsVisible="{Binding HasStatement}" />
+                <TextBlock Classes="muted" Text="{Binding Statement.Period}" VerticalAlignment="Center" IsVisible="{Binding HasStatement}" />
+                <Border Classes="badge" IsVisible="{Binding IsExample}" VerticalAlignment="Center">
+                  <TextBlock Text="{x:Static vm:Texts.ExampleLabel}" />
+                </Border>
+                <TextBlock Classes="muted" Text="{x:Static vm:Texts.Reading}" VerticalAlignment="Center" IsVisible="{Binding IsReading}" />
+              </StackPanel>
+              <!-- Light or dark: follow Windows, or always one of them -->
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}">
+                <TextBlock Classes="muted" Text="{x:Static vm:Texts.Look}" VerticalAlignment="Center" />
+                <ListBox x:Name="LookSwitch" Classes="segmented" ItemsSource="{Binding Looks}" SelectedItem="{Binding SelectedLook}">
+                  <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                  </ListBox.ItemsPanel>
+                  <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="lookvm:LookOption">
+                      <TextBlock Text="{Binding Label}" />
                     </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </ScrollViewer>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+              </StackPanel>
             </Grid>
-            <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoSpending}" IsVisible="{Binding !Statement.HasSpending}" />
-          </Panel>
-        </DockPanel>
-      </Border>
-      <Border Classes="card" Grid.Row="1" Grid.Column="1">
-        <DockPanel>
-          <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.BalanceChart}" />
-          <lvc:CartesianChart x:Name="BalanceLine" Height="300" />
-        </DockPanel>
-      </Border>
-
-      <!-- Categories and the selected category's transactions -->
-      <Border Classes="card" Grid.Row="2" Grid.Column="0">
-        <DockPanel>
-          <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.Categories}" />
-          <ListBox ItemsSource="{Binding Statement.Categories}" SelectedItem="{Binding Statement.SelectedRow}" MinHeight="200" MaxHeight="440">
-            <ListBox.ItemTemplate>
-              <DataTemplate x:DataType="vm:CategoryRow">
-                <Grid ColumnDefinitions="*,Auto,120">
-                  <TextBlock Classes="name" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                  <TextBlock Grid.Column="1" Classes="label" Text="{Binding Count}" Margin="{StaticResource Look.Margin.Count}" VerticalAlignment="Center" />
-                  <TextBlock Grid.Column="2" Text="{Binding Total}" HorizontalAlignment="Right" Classes.incoming="{Binding IsIncoming}" />
-                </Grid>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
-        </DockPanel>
-      </Border>
-      <Border Classes="card" Grid.Row="2" Grid.Column="1">
-        <DockPanel>
-          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Small}">
-            <TextBlock Classes="heading" Text="{x:Static vm:Texts.Transactions}" />
-            <TextBlock Classes="heading muted" Text="{Binding Statement.SelectedRow.Name, FallbackValue=''}" />
+            <Border x:Name="OpenMessage" Classes="message error" IsVisible="{Binding OpenMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding OpenMessage}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Classes="close" Content="{x:Static vm:Texts.Close}" Command="{Binding CloseMessageCommand}" />
+              </Grid>
+            </Border>
+            <WrapPanel IsVisible="{Binding HasStatement}">
+              <StackPanel Margin="{StaticResource Look.Margin.KeyFigure}">
+                <TextBlock Classes="label" Text="{x:Static vm:Texts.SpendingTotal}" />
+                <TextBlock Classes="keyNumber main" Text="{Binding Statement.SpendingTotal}" />
+              </StackPanel>
+              <StackPanel Margin="{StaticResource Look.Margin.KeyFigure}" VerticalAlignment="Bottom">
+                <TextBlock Classes="label" Text="{x:Static vm:Texts.OpeningBalance}" />
+                <TextBlock Classes="keyNumber" Text="{Binding Statement.OpeningBalance}" />
+              </StackPanel>
+              <StackPanel VerticalAlignment="Bottom">
+                <TextBlock Classes="label" Text="{x:Static vm:Texts.ClosingBalance}" />
+                <TextBlock Classes="keyNumber" Text="{Binding Statement.ClosingBalance}" />
+              </StackPanel>
+            </WrapPanel>
           </StackPanel>
-          <Panel>
-            <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoCategorySelected}"
-                       IsVisible="{Binding Statement.SelectedRow, Converter={x:Static ObjectConverters.IsNull}}" />
-            <ListBox ItemsSource="{Binding Statement.Transactions}" MinHeight="200" MaxHeight="440"
-                     IsVisible="{Binding Statement.SelectedRow, Converter={x:Static ObjectConverters.IsNotNull}}">
+        </Border>
+
+        <!-- The start screen: what to do before any statement is open -->
+        <Border x:Name="StartScreen" Classes="card start" Grid.Row="1" Grid.ColumnSpan="2" IsVisible="{Binding !HasStatement}">
+          <StackPanel Spacing="{StaticResource Look.Space.Medium}" HorizontalAlignment="Center">
+            <TextBlock Classes="title" Text="{x:Static vm:Texts.StartHeading}" HorizontalAlignment="Center" />
+            <TextBlock Text="{x:Static vm:Texts.StartHint}" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
+            <TextBlock Classes="muted" Text="{x:Static vm:Texts.StartPrivacy}" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
+            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" HorizontalAlignment="Center"
+                        Margin="{StaticResource Look.Margin.StartButtons}">
+              <Button Classes="primary" Content="{x:Static vm:Texts.OpenStatement}" Command="{Binding OpenCommand}" />
+              <Button Classes="secondary" Content="{x:Static vm:Texts.TryExample}" Command="{Binding OpenExampleCommand}" IsVisible="{Binding HasExample}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- The two charts -->
+        <Border Classes="card" Grid.Row="1" Grid.Column="0" IsVisible="{Binding HasStatement}">
+          <DockPanel>
+            <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.SpendingChart}" />
+            <Panel Height="300">
+              <!-- The ring has a fixed square of its own, so a long legend never squeezes it. -->
+              <Grid ColumnDefinitions="260,*" IsVisible="{Binding Statement.HasSpending}">
+                <Panel Width="260" Height="260" VerticalAlignment="Center">
+                  <lvc:PieChart x:Name="SpendingPie" LegendPosition="Hidden" />
+                  <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                    <TextBlock Classes="label" Text="{x:Static vm:Texts.SpendingTotal}" HorizontalAlignment="Center" />
+                    <TextBlock Classes="ringTotal" Text="{Binding Statement.SpendingTotal}" HorizontalAlignment="Center" />
+                  </StackPanel>
+                </Panel>
+                <ScrollViewer Grid.Column="1" Margin="{StaticResource Look.Margin.Legend}" VerticalAlignment="Center" MaxHeight="300">
+                  <ItemsControl x:Name="Legend" ItemsSource="{Binding Statement.Slices}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:PieSlice">
+                        <Button Classes="legend" CommandParameter="{Binding Category}" ToolTip.Tip="{Binding Name}"
+                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).Statement.SelectCategoryCommand}">
+                          <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                            <Ellipse Classes="dot" Fill="{Binding Color, Converter={x:Static look:HexBrush.Instance}}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Classes="label" Text="{Binding ShareText}" Margin="{StaticResource Look.Margin.Count}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="3" Text="{Binding AmountText}" VerticalAlignment="Center" />
+                          </Grid>
+                        </Button>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </ScrollViewer>
+              </Grid>
+              <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoSpending}" IsVisible="{Binding !Statement.HasSpending}" />
+            </Panel>
+          </DockPanel>
+        </Border>
+        <Border Classes="card" Grid.Row="1" Grid.Column="1" IsVisible="{Binding HasStatement}">
+          <DockPanel>
+            <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.BalanceChart}" />
+            <lvc:CartesianChart x:Name="BalanceLine" Height="300" />
+          </DockPanel>
+        </Border>
+
+        <!-- Categories and the selected category's transactions -->
+        <Border Classes="card" Grid.Row="2" Grid.Column="0" IsVisible="{Binding HasStatement}">
+          <DockPanel>
+            <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.Categories}" />
+            <ListBox ItemsSource="{Binding Statement.Categories}" SelectedItem="{Binding Statement.SelectedRow}" MinHeight="200" MaxHeight="440">
               <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="vm:TransactionRow">
-                  <Grid ColumnDefinitions="90,*,*,110">
-                    <TextBlock Classes="muted" Text="{Binding Date}" />
-                    <TextBlock Grid.Column="1" Text="{Binding Description}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" />
-                    <TextBlock Grid.Column="2" Classes="muted" Text="{Binding Subcategory}" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Grid.Column="3" Text="{Binding Amount}" HorizontalAlignment="Right" Classes.incoming="{Binding IsIncoming}" />
+                <DataTemplate x:DataType="vm:CategoryRow">
+                  <Grid ColumnDefinitions="*,Auto,120">
+                    <TextBlock Classes="name" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="1" Classes="label" Text="{Binding Count}" Margin="{StaticResource Look.Margin.Count}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="{Binding Total}" HorizontalAlignment="Right" Classes.incoming="{Binding IsIncoming}" />
                   </Grid>
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>
-          </Panel>
-        </DockPanel>
-      </Border>
-
-      <!-- A new rule, and the saved ones -->
-      <Border Classes="card" Grid.Row="3" Grid.Column="0">
-        <StackPanel Spacing="{StaticResource Look.Space.Medium}">
-          <TextBlock Classes="heading" Text="{x:Static vm:Texts.NewRule}" />
-          <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="{StaticResource Look.Space.Medium}">
-            <TextBlock Classes="muted" Text="{x:Static vm:Texts.Condition}" VerticalAlignment="Center" />
-            <StackPanel Grid.Column="1" Spacing="{StaticResource Look.Space.Medium}">
-              <ComboBox ItemsSource="{Binding RuleForm.Kinds}" SelectedItem="{Binding RuleForm.SelectedKindOption}" MinWidth="200">
-                <ComboBox.ItemTemplate>
-                  <DataTemplate x:DataType="vm:KindOption">
-                    <TextBlock Text="{Binding Label}" />
+          </DockPanel>
+        </Border>
+        <Border Classes="card" Grid.Row="2" Grid.Column="1" IsVisible="{Binding HasStatement}">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Small}">
+              <TextBlock Classes="heading" Text="{x:Static vm:Texts.Transactions}" />
+              <TextBlock Classes="heading muted" Text="{Binding Statement.SelectedRow.Name, FallbackValue=''}" />
+            </StackPanel>
+            <Panel>
+              <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoCategorySelected}"
+                         IsVisible="{Binding Statement.SelectedRow, Converter={x:Static ObjectConverters.IsNull}}" />
+              <ListBox ItemsSource="{Binding Statement.Transactions}" MinHeight="200" MaxHeight="440"
+                       IsVisible="{Binding Statement.SelectedRow, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:TransactionRow">
+                    <Grid ColumnDefinitions="90,*,*,110">
+                      <TextBlock Classes="muted" Text="{Binding Date}" />
+                      <TextBlock Grid.Column="1" Text="{Binding Description}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" />
+                      <TextBlock Grid.Column="2" Classes="muted" Text="{Binding Subcategory}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Grid.Column="3" Text="{Binding Amount}" HorizontalAlignment="Right" Classes.incoming="{Binding IsIncoming}" />
+                    </Grid>
                   </DataTemplate>
-                </ComboBox.ItemTemplate>
-              </ComboBox>
-              <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding RuleForm.IsText}">
-                <ComboBox ItemsSource="{Binding RuleForm.TextModes}" SelectedItem="{Binding RuleForm.SelectedTextMode}" MinWidth="120">
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </Panel>
+          </DockPanel>
+        </Border>
+
+        <!-- A new rule, and the saved ones -->
+        <Border Classes="card" Grid.Row="3" Grid.Column="0" IsVisible="{Binding HasStatement}">
+          <StackPanel Spacing="{StaticResource Look.Space.Medium}">
+            <TextBlock Classes="heading" Text="{x:Static vm:Texts.NewRule}" />
+            <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="{StaticResource Look.Space.Medium}">
+              <TextBlock Classes="muted" Text="{x:Static vm:Texts.Condition}" VerticalAlignment="Center" />
+              <StackPanel Grid.Column="1" Spacing="{StaticResource Look.Space.Medium}">
+                <ComboBox ItemsSource="{Binding RuleForm.Kinds}" SelectedItem="{Binding RuleForm.SelectedKindOption}" MinWidth="200">
                   <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="vm:TextModeOption">
+                    <DataTemplate x:DataType="vm:KindOption">
                       <TextBlock Text="{Binding Label}" />
                     </DataTemplate>
                   </ComboBox.ItemTemplate>
                 </ComboBox>
-                <TextBox Text="{Binding RuleForm.Text}" MinWidth="240" />
+                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding RuleForm.IsText}">
+                  <ComboBox ItemsSource="{Binding RuleForm.TextModes}" SelectedItem="{Binding RuleForm.SelectedTextMode}" MinWidth="120">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:TextModeOption">
+                        <TextBlock Text="{Binding Label}" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                  <TextBox Text="{Binding RuleForm.Text}" MinWidth="240" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding RuleForm.IsAmount}">
+                  <TextBlock Classes="muted" Text="{x:Static vm:Texts.AmountFrom}" VerticalAlignment="Center" />
+                  <TextBox Text="{Binding RuleForm.AmountFrom}" Width="110" />
+                  <TextBlock Classes="muted" Text="{x:Static vm:Texts.AmountTo}" VerticalAlignment="Center" />
+                  <TextBox Text="{Binding RuleForm.AmountTo}" Width="110" />
+                  <TextBlock Classes="muted" Text="€" VerticalAlignment="Center" />
+                </StackPanel>
+                <ComboBox ItemsSource="{Binding RuleForm.Types}" SelectedItem="{Binding RuleForm.SelectedType}" MinWidth="240"
+                          IsVisible="{Binding RuleForm.IsType}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TypeOption">
+                      <TextBlock Text="{Binding Label}" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
               </StackPanel>
-              <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding RuleForm.IsAmount}">
-                <TextBlock Classes="muted" Text="{x:Static vm:Texts.AmountFrom}" VerticalAlignment="Center" />
-                <TextBox Text="{Binding RuleForm.AmountFrom}" Width="110" />
-                <TextBlock Classes="muted" Text="{x:Static vm:Texts.AmountTo}" VerticalAlignment="Center" />
-                <TextBox Text="{Binding RuleForm.AmountTo}" Width="110" />
-                <TextBlock Classes="muted" Text="€" VerticalAlignment="Center" />
-              </StackPanel>
-              <ComboBox ItemsSource="{Binding RuleForm.Types}" SelectedItem="{Binding RuleForm.SelectedType}" MinWidth="240"
-                        IsVisible="{Binding RuleForm.IsType}">
+
+              <TextBlock Grid.Row="1" Classes="muted" Text="{x:Static vm:Texts.TargetCategory}" VerticalAlignment="Center" />
+              <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding RuleForm.Categories}"
+                        SelectedItem="{Binding RuleForm.SelectedCategory}" MinWidth="300">
                 <ComboBox.ItemTemplate>
-                  <DataTemplate x:DataType="vm:TypeOption">
-                    <TextBlock Text="{Binding Label}" />
+                  <DataTemplate x:DataType="cat:Category">
+                    <TextBlock Text="{Binding Name}" />
                   </DataTemplate>
                 </ComboBox.ItemTemplate>
               </ComboBox>
-            </StackPanel>
 
-            <TextBlock Grid.Row="1" Classes="muted" Text="{x:Static vm:Texts.TargetCategory}" VerticalAlignment="Center" />
-            <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding RuleForm.Categories}"
-                      SelectedItem="{Binding RuleForm.SelectedCategory}" MinWidth="300">
-              <ComboBox.ItemTemplate>
-                <DataTemplate x:DataType="cat:Category">
-                  <TextBlock Text="{Binding Name}" />
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
+              <TextBlock Grid.Row="2" Classes="muted" Text="{x:Static vm:Texts.TargetSubcategory}" VerticalAlignment="Center" />
+              <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding RuleForm.Subcategories}"
+                        SelectedItem="{Binding RuleForm.SelectedSubcategory}" MinWidth="300">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="cat:Subcategory">
+                    <TextBlock Text="{Binding Name}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
 
-            <TextBlock Grid.Row="2" Classes="muted" Text="{x:Static vm:Texts.TargetSubcategory}" VerticalAlignment="Center" />
-            <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding RuleForm.Subcategories}"
-                      SelectedItem="{Binding RuleForm.SelectedSubcategory}" MinWidth="300">
-              <ComboBox.ItemTemplate>
-                <DataTemplate x:DataType="cat:Subcategory">
-                  <TextBlock Text="{Binding Name}" />
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
+              <Button Grid.Row="3" Grid.Column="1" Classes="primary" Content="{x:Static vm:Texts.AddRule}"
+                      Command="{Binding AddRuleCommand}" IsDefault="True" />
+            </Grid>
+            <Border Classes="message error" IsVisible="{Binding RuleForm.Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <TextBlock Text="{Binding RuleForm.Error}" TextWrapping="Wrap" />
+            </Border>
+            <Border Classes="message confirmation" IsVisible="{Binding RuleForm.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <TextBlock Text="{Binding RuleForm.Message}" TextWrapping="Wrap" />
+            </Border>
+          </StackPanel>
+        </Border>
+        <Border Classes="card" Grid.Row="3" Grid.Column="1" IsVisible="{Binding HasStatement}">
+          <DockPanel>
+            <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.Rules}" />
+            <Border Classes="message error" DockPanel.Dock="Top"
+                    IsVisible="{Binding RulesError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <TextBlock Text="{Binding RulesError}" TextWrapping="Wrap" />
+            </Border>
+            <Panel>
+              <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoRules}" IsVisible="{Binding !Rules.Count}" />
+              <ItemsControl ItemsSource="{Binding Rules}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:RuleRow">
+                    <Grid ColumnDefinitions="*,*" Margin="{StaticResource Look.Margin.Row}">
+                      <TextBlock Text="{Binding Condition}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" />
+                      <TextBlock Grid.Column="1" Classes="muted" Text="{Binding Target}" TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </Panel>
+          </DockPanel>
+        </Border>
 
-            <Button Grid.Row="3" Grid.Column="1" Classes="primary" Content="{x:Static vm:Texts.AddRule}"
-                    Command="{Binding AddRuleCommand}" IsDefault="True" />
-          </Grid>
-          <Border Classes="message error" IsVisible="{Binding RuleForm.Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-            <TextBlock Text="{Binding RuleForm.Error}" TextWrapping="Wrap" />
-          </Border>
-          <Border Classes="message confirmation" IsVisible="{Binding RuleForm.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-            <TextBlock Text="{Binding RuleForm.Message}" TextWrapping="Wrap" />
-          </Border>
-        </StackPanel>
-      </Border>
-      <Border Classes="card" Grid.Row="3" Grid.Column="1">
-        <DockPanel>
-          <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.Rules}" />
-          <Border Classes="message error" DockPanel.Dock="Top"
-                  IsVisible="{Binding RulesError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-            <TextBlock Text="{Binding RulesError}" TextWrapping="Wrap" />
-          </Border>
-          <Panel>
-            <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoRules}" IsVisible="{Binding !Rules.Count}" />
-            <ItemsControl ItemsSource="{Binding Rules}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="vm:RuleRow">
-                  <Grid ColumnDefinitions="*,*" Margin="{StaticResource Look.Margin.Row}">
-                    <TextBlock Text="{Binding Condition}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" />
-                    <TextBlock Grid.Column="1" Classes="muted" Text="{Binding Target}" TextTrimming="CharacterEllipsis" />
-                  </Grid>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-          </Panel>
-        </DockPanel>
-      </Border>
+      </Grid>
+    </ScrollViewer>
 
-    </Grid>
-  </ScrollViewer>
+    <!-- While a file is dragged over the window. It lets the drop through to the window. -->
+    <Border x:Name="DropOverlay" Classes="dropOverlay" IsVisible="{Binding IsDraggingOver}" IsHitTestVisible="False">
+      <TextBlock Classes="title" Text="{x:Static vm:Texts.DropHere}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+    </Border>
+  </Panel>
 </Window>

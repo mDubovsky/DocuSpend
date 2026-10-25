@@ -39,6 +39,11 @@
     <Thickness x:Key="Look.Margin.Row">0,2</Thickness>
     <Thickness x:Key="Look.Padding.Message">12,9</Thickness>
     <Thickness x:Key="Look.Padding.Button">22,10</Thickness>
+    <Thickness x:Key="Look.Padding.Start">48,56</Thickness>
+    <Thickness x:Key="Look.Margin.StartButtons">0,14,0,0</Thickness>
+    <Thickness x:Key="Look.Padding.Badge">10,3</Thickness>
+    <Thickness x:Key="Look.Padding.Close">10,4</Thickness>
+    <x:Double x:Key="Look.FontSize.Title">22</x:Double>
   </Styles.Resources>
 
   <!-- The window: background, and the body text everything inherits -->
@@ -209,6 +214,71 @@
   </Style>
   <Style Selector="Border.message.confirmation TextBlock">
     <Setter Property="Foreground" Value="{DynamicResource Look.Positive}" />
+  </Style>
+  <!-- Every other button: the same pill, outlined in the accent colour, so the primary one stays the only filled one -->
+  <Style Selector="Button.secondary">
+    <Setter Property="CornerRadius" Value="{StaticResource Look.Radius.Pill}" />
+    <Setter Property="Padding" Value="{StaticResource Look.Padding.Button}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Look.Accent}" />
+    <Setter Property="Foreground" Value="{DynamicResource Look.Accent}" />
+  </Style>
+  <Style Selector="Button.secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Look.Hover}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Look.Accent}" />
+    <Setter Property="Foreground" Value="{DynamicResource Look.Accent}" />
+  </Style>
+  <Style Selector="Button.secondary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Look.Hover}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Look.Accent}" />
+    <Setter Property="Foreground" Value="{DynamicResource Look.Accent}" />
+  </Style>
+
+  <!-- A message's close button: quiet, in the message's own colour -->
+  <Style Selector="Button.close">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="{StaticResource Look.Radius.Pill}" />
+    <Setter Property="Padding" Value="{StaticResource Look.Padding.Close}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="Button.close:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Look.Hover}" />
+  </Style>
+
+  <!-- The start screen: one card, centred, with a large title -->
+  <Style Selector="Border.card.start">
+    <Setter Property="Padding" Value="{StaticResource Look.Padding.Start}" />
+  </Style>
+  <Style Selector="TextBlock.title">
+    <Setter Property="FontSize" Value="{StaticResource Look.FontSize.Title}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <!-- The example's label in the header, so nobody takes it for their own account -->
+  <Style Selector="Border.badge">
+    <Setter Property="Background" Value="{DynamicResource Look.AccentTint}" />
+    <Setter Property="CornerRadius" Value="{StaticResource Look.Radius.Pill}" />
+    <Setter Property="Padding" Value="{StaticResource Look.Padding.Badge}" />
+  </Style>
+  <Style Selector="Border.badge TextBlock">
+    <Setter Property="FontSize" Value="{StaticResource Look.FontSize.Label}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <!-- While a file is dragged over the window -->
+  <Style Selector="Border.dropOverlay">
+    <Setter Property="Background" Value="{DynamicResource Look.Background}" />
+    <Setter Property="Opacity" Value="0.94" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Look.Accent}" />
+    <Setter Property="BorderThickness" Value="3" />
+    <Setter Property="CornerRadius" Value="{StaticResource Look.Radius.Card}" />
+    <Setter Property="Margin" Value="{StaticResource Look.Margin.Window}" />
+  </Style>
+  <Style Selector="Border.dropOverlay TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource Look.Accent}" />
   </Style>
 
 </Styles>
