@@ -10,7 +10,7 @@ Give DocuSpend a statement and get charts showing when and how you spent: how mu
 - the account balance through the month;
 - rules you add to sort transactions into categories.
 
-What works today: reading statements, sorting transactions into categories with built-in and user rules, and the charts, shown on synthetic sample statements. Opening your own statement ([#12](https://github.com/mDubovsky/DocuSpend/issues/12)) and keeping your rules between sessions ([#13](https://github.com/mDubovsky/DocuSpend/issues/13)) are next. What the first version includes: [docs/mvp.md](docs/mvp.md).
+What works today: opening your own statement, with a clear message for a file that can't be read; sorting transactions into categories with built-in and user rules; and the charts. Keeping your rules between sessions ([#13](https://github.com/mDubovsky/DocuSpend/issues/13)) is next. What the first version includes: [docs/mvp.md](docs/mvp.md).
 
 ## Privacy
 
@@ -26,7 +26,7 @@ dotnet test
 dotnet run --project src/DocuSpend.Desktop
 ```
 
-The application runs on Windows and shows the synthetic statements in [samples/public](samples/public). The tests, including the privacy checks, also run on Linux.
+The application runs on Windows. It opens a VÚB monthly statement you choose, by its open window or by dropping the file onto it, and offers one invented example statement to try it on; [samples/public](samples/public) has more synthetic statements to open. The tests, including the privacy checks, also run on Linux.
 
 ## More
 
