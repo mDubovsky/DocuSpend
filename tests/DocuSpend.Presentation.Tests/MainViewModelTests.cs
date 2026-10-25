@@ -12,7 +12,7 @@ public sealed class MainViewModelTests : IDisposable
 {
     private readonly string _folder = Path.Combine(Path.GetTempPath(), "docuspend-tests-" + Guid.NewGuid().ToString("N"));
 
-    private string RulesFile => Path.Combine(_folder, "spike-rules.json");
+    private string RulesFile => Path.Combine(_folder, "rules.json");
 
     public void Dispose()
     {
@@ -23,7 +23,7 @@ public sealed class MainViewModelTests : IDisposable
     /// <summary>A fresh start of the application, with the rules file of this test, and a sample opened.</summary>
     private async Task<MainViewModel> Start(string sample = "01-typical-month")
     {
-        var main = new MainViewModel(new SpikeRuleStore(RulesFile));
+        var main = new MainViewModel(new RuleStore(RulesFile));
         await main.OpenFileAsync(Samples.Path(sample));
         Assert.True(main.HasStatement);
         return main;
@@ -115,7 +115,7 @@ public sealed class MainViewModelTests : IDisposable
     {
         var description = AddRuleForAnUncategorizedPayment(await Start());
 
-        var restarted = new MainViewModel(new SpikeRuleStore(RulesFile));
+        var restarted = new MainViewModel(new RuleStore(RulesFile));
         Assert.Single(restarted.Rules);
         await restarted.OpenFileAsync(Samples.Path("01-typical-month"));
 
@@ -152,19 +152,235 @@ public sealed class MainViewModelTests : IDisposable
         Assert.False(File.Exists(RulesFile));
     }
 
+    // Keeping the rules (spec: starting; when the saved rules can't be used; when a change can't be saved).
+
+    private string[] FilesInFolder() =>
+        Directory.EnumerateFileSystemEntries(_folder).Select(Path.GetFileName).Order(StringComparer.Ordinal).ToArray()!;
+
     [Fact]
-    public async Task An_unreadable_rules_file_is_reported_and_never_overwritten()
+    public async Task Without_saved_rules_there_is_no_message_and_saving_is_on()
+    {
+        var main = await Start();
+
+        Assert.Null(main.RulesMessage);
+        Assert.False(main.RulesNotSaving);
+        Assert.Empty(main.Rules);
+        Assert.Same(CategorizationConfig.Default, main.Statement.Config);
+    }
+
+    [Fact]
+    public async Task A_rule_is_saved_before_its_confirmation_is_shown()
+    {
+        var main = await Start();
+        int? savedWhenConfirmed = null;
+        main.RuleForm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(RuleFormViewModel.Message) && main.RuleForm.Message is not null)
+                savedWhenConfirmed = new RuleStore(RulesFile).Load(CategorizationConfig.Default).Config.UserRules.Count;
+        };
+
+        AddRuleForAnUncategorizedPayment(main);
+
+        Assert.Equal(1, savedWhenConfirmed);
+    }
+
+    [Fact]
+    public async Task After_a_restart_the_rules_are_listed_in_the_same_order_and_categorize_the_same()
+    {
+        var main = await Start("02-busy-month");
+        main.RuleForm.SelectedKind = ConditionKind.Type;
+        main.RuleForm.SelectedType = main.RuleForm.Types[0];
+        Target(main.RuleForm, Games);
+        main.AddRuleCommand.Execute(null);
+        main.RuleForm.SelectedKind = ConditionKind.Amount;
+        main.RuleForm.AmountFrom = "20";
+        main.RuleForm.AmountTo = "60,50";
+        Target(main.RuleForm, new SubcategoryId("food.restaurants"));
+        main.AddRuleCommand.Execute(null);
+        AddRuleForAnUncategorizedPayment(main);
+
+        var restarted = await Start("02-busy-month");
+
+        Assert.Equal(3, restarted.Rules.Count);
+        Assert.Equal(main.Rules, restarted.Rules);
+        Assert.Equal(
+            main.Statement.Categorized!.Transactions.Select(t => (t.Placement, t.Rule)),
+            restarted.Statement.Categorized!.Transactions.Select(t => (t.Placement, t.Rule)));
+    }
+
+    [Fact]
+    public async Task A_damaged_file_is_reported_with_where_it_was_moved_and_new_rules_are_saved()
     {
         Directory.CreateDirectory(_folder);
         File.WriteAllText(RulesFile, "{ damaged");
 
         var main = await Start();
+
+        var moved = Assert.Single(FilesInFolder());
+        Assert.StartsWith("rules.damaged-", moved);
+        Assert.Equal(Texts.RulesDamaged(Path.Combine(_folder, moved)), main.RulesMessage);
+        Assert.False(main.RulesNotSaving);
+        Assert.Empty(main.Rules);
+
+        AddRuleForAnUncategorizedPayment(main);
+        Assert.Null(main.RuleForm.Error);
+        Assert.Single((await Start()).Rules);
+        Assert.Equal("{ damaged", File.ReadAllText(Path.Combine(_folder, moved)));
+    }
+
+    [Fact]
+    public async Task The_damaged_file_message_contains_nothing_from_the_file()
+    {
+        Directory.CreateDirectory(_folder);
+        File.WriteAllText(RulesFile, """{ "version": 1, "rules": [ "MINIMARKET U LIPY TRENCIN", "Katarína Vzorová" ] }""");
+
+        var main = await Start();
+
+        Assert.NotNull(main.RulesMessage);
+        Assert.DoesNotContain("MINIMARKET", main.RulesMessage);
+        Assert.DoesNotContain("Vzorová", main.RulesMessage);
+        Assert.DoesNotContain("version", main.RulesMessage);
+    }
+
+    [Fact]
+    public async Task A_file_that_cannot_be_opened_turns_saving_off_but_a_new_rule_still_applies()
+    {
+        AddRuleForAnUncategorizedPayment(await Start());
+        var before = File.ReadAllBytes(RulesFile);
+
+        MainViewModel main;
+        using (new FileStream(RulesFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            main = await Start();
+
+        Assert.Equal(Texts.RulesCannotOpen, main.RulesMessage);
+        Assert.True(main.RulesNotSaving);
+        Assert.Empty(main.Rules);
+
+        var description = AddRuleForAnUncategorizedPayment(main);
+
+        Assert.Single(main.Rules);
+        Assert.All(main.Statement.Categorized!.Transactions.Where(t => t.Transaction.Description == description),
+            t => Assert.Equal(Games, t.Placement.Subcategory));
+        Assert.StartsWith("Pravidlo zaradilo", main.RuleForm.Message);
+        Assert.Equal(Texts.RuleOnlyThisSession, main.RuleForm.Error);
+        Assert.Equal(before, File.ReadAllBytes(RulesFile));
+    }
+
+    [Fact]
+    public async Task A_file_from_a_newer_DocuSpend_turns_saving_off_and_is_left_untouched()
+    {
+        Directory.CreateDirectory(_folder);
+        const string Newer = """{ "version": 2, "rulePacks": [] }""";
+        File.WriteAllText(RulesFile, Newer);
+
+        var main = await Start();
+        main.RuleForm.SelectedKind = ConditionKind.Text;
+        main.RuleForm.Text = "nič také tu nie je";
+        Target(main.RuleForm, Games);
+        main.AddRuleCommand.Execute(null);
+
+        Assert.Equal(Texts.RulesNewer, main.RulesMessage);
+        Assert.True(main.RulesNotSaving);
+        Assert.Equal(Texts.RuleMatchedNothingUnsaved, main.RuleForm.Message);
+        Assert.Equal(Texts.RuleOnlyThisSession, main.RuleForm.Error);
+        Assert.Equal(Newer, File.ReadAllText(RulesFile));
+        Assert.Equal(["rules.json"], FilesInFolder());
+    }
+
+    [Fact]
+    public async Task A_rule_that_cannot_be_saved_applies_and_says_so_and_the_next_save_keeps_both()
+    {
+        // A file where the folder should be: the folder can't be created, so nothing can be written.
+        var folder = Path.Combine(_folder, "DocuSpend");
+        Directory.CreateDirectory(_folder);
+        File.WriteAllText(folder, "");
+        var file = Path.Combine(folder, "rules.json");
+        var main = new MainViewModel(new RuleStore(file));
+        await main.OpenFileAsync(Samples.Path("01-typical-month"));
+
         AddRuleForAnUncategorizedPayment(main);
 
-        Assert.Equal(Texts.RulesFileUnreadable, main.RulesError);
-        Assert.Equal(Texts.RulesCannotBeSaved, main.RuleForm.Error);
+        Assert.Single(main.Rules);
+        Assert.StartsWith("Pravidlo zaradilo", main.RuleForm.Message);
+        Assert.Equal(Texts.RuleSaveFailed, main.RuleForm.Error);
+        Assert.False(main.RulesNotSaving);
+
+        File.Delete(folder);
+        main.RuleForm.SelectedKind = ConditionKind.Amount;
+        main.RuleForm.AmountFrom = "1000";
+        Target(main.RuleForm, Games);
+        main.AddRuleCommand.Execute(null);
+
+        Assert.Null(main.RuleForm.Error);
+        Assert.Equal(2, new MainViewModel(new RuleStore(file)).Rules.Count);
+    }
+
+    [Fact]
+    public async Task The_rules_message_can_be_closed_and_shows_beside_a_message_about_a_statement()
+    {
+        Directory.CreateDirectory(_folder);
+        File.WriteAllText(RulesFile, "{ damaged");
+        var main = await Start();
+
+        await main.OpenFileAsync(Samples.Path("07-not-a-statement"));
+
+        Assert.NotNull(main.OpenMessage);
+        Assert.NotNull(main.RulesMessage);
+        main.CloseRulesMessageCommand.Execute(null);
+        Assert.Null(main.RulesMessage);
+        Assert.NotNull(main.OpenMessage);
+    }
+
+    [Fact]
+    public void The_rules_message_shows_on_the_start_screen_before_any_statement()
+    {
+        Directory.CreateDirectory(_folder);
+        File.WriteAllText(RulesFile, "{ damaged");
+
+        var main = new MainViewModel(new RuleStore(RulesFile));
+
+        Assert.False(main.HasStatement);
+        Assert.NotNull(main.RulesMessage);
+    }
+
+    [Fact]
+    public async Task The_spikes_rules_file_is_ignored_and_left_as_it_is()
+    {
+        Directory.CreateDirectory(_folder);
+        var spike = Path.Combine(_folder, "spike-rules.json");
+        const string Old = """{ "version": 1, "rules": [ { "kind": "text", "text": "MINIMARKET", "mode": "Contains", "target": "leisure.games" } ] }""";
+        File.WriteAllText(spike, Old);
+
+        var main = await Start();
+
         Assert.Empty(main.Rules);
-        Assert.Equal("{ damaged", File.ReadAllText(RulesFile));
+        Assert.Null(main.RulesMessage);
+        Assert.Equal(Old, File.ReadAllText(spike));
+    }
+
+    [Fact]
+    public void Every_kind_of_rule_is_described_in_slovak()
+    {
+        Assert.Equal("Protistrana obsahuje „vzor“", MainViewModel.Describe(new CounterpartyNameCondition("vzor", TextMode.Contains)));
+        Assert.Equal("Protistrana sa rovná „Pavol Vzor“", MainViewModel.Describe(new CounterpartyNameCondition("Pavol Vzor", TextMode.EqualTo)));
+        Assert.Equal("Účet protistrany: SK57 1100", MainViewModel.Describe(new CounterpartyAccountCondition("SK57 1100")));
+        Assert.Equal("Variabilný symbol: 0326", MainViewModel.Describe(new VariableSymbolCondition("0326")));
+        Assert.Equal("Typ: Prevod, Okamžitý prevod", MainViewModel.Describe(
+            new TypeCondition([Statements.Model.TransactionType.InstantTransfer, Statements.Model.TransactionType.Transfer])));
+    }
+
+    [Fact]
+    public void Rules_of_every_kind_loaded_from_the_file_are_listed()
+    {
+        var config = CategorizationConfig.Default;
+        config = config.AddUserRule(new CounterpartyNameCondition("vzor", TextMode.Contains), Games, 1).Value!;
+        config = config.AddUserRule(new CounterpartyAccountCondition("SK57 1100"), Games, 1).Value!;
+        config = config.AddUserRule(new VariableSymbolCondition("0326"), Games, 1).Value!;
+        Assert.True(new RuleStore(RulesFile).Save(config));
+
+        var main = new MainViewModel(new RuleStore(RulesFile));
+
+        Assert.Equal(["Protistrana obsahuje „vzor“", "Účet protistrany: SK57 1100", "Variabilný symbol: 0326"], main.Rules.Select(r => r.Condition));
     }
 
     [Fact]
@@ -182,7 +398,7 @@ public sealed class MainViewModelTests : IDisposable
     [Fact]
     public void The_look_offers_three_choices_in_slovak_and_follows_windows_at_first()
     {
-        var main = new MainViewModel(new SpikeRuleStore(RulesFile));
+        var main = new MainViewModel(new RuleStore(RulesFile));
 
         Assert.Equal([Look.LookChoice.System, Look.LookChoice.Light, Look.LookChoice.Dark], main.Looks.Select(l => l.Choice));
         Assert.Equal(["Podľa systému", "Svetlý", "Tmavý"], main.Looks.Select(l => l.Label));
@@ -193,11 +409,11 @@ public sealed class MainViewModelTests : IDisposable
     public void A_chosen_look_is_saved_and_in_effect_after_a_restart()
     {
         var settings = Path.Combine(_folder, "settings.json");
-        var main = new MainViewModel(new SpikeRuleStore(RulesFile), new Look.SettingsStore(settings));
+        var main = new MainViewModel(new RuleStore(RulesFile), new Look.SettingsStore(settings));
 
         main.SelectedLook = main.Looks.Single(l => l.Choice == Look.LookChoice.Dark);
 
-        var restarted = new MainViewModel(new SpikeRuleStore(RulesFile), new Look.SettingsStore(settings));
+        var restarted = new MainViewModel(new RuleStore(RulesFile), new Look.SettingsStore(settings));
         Assert.Equal(Look.LookChoice.Dark, restarted.Look);
         Assert.Equal(Look.LookChoice.Dark, restarted.SelectedLook.Choice);
     }

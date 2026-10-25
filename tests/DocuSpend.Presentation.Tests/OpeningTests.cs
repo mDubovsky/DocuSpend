@@ -13,7 +13,7 @@ public sealed class OpeningTests : IDisposable
     public void Dispose() => Directory.Delete(_folder, recursive: true);
 
     private MainViewModel Start(string? example = null) =>
-        new(new SpikeRuleStore(Path.Combine(_folder, "rules.json")), example: example);
+        new(new RuleStore(Path.Combine(_folder, "rules.json")), example: example);
 
     private async Task<MainViewModel> StartWith(string sample)
     {

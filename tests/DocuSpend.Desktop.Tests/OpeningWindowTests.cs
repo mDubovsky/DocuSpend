@@ -26,7 +26,7 @@ public sealed class OpeningWindowTests : IDisposable
 
     private (MainWindow Window, MainViewModel Model) Start()
     {
-        var model = new MainViewModel(new SpikeRuleStore(Path.Combine(_folder, "rules.json")),
+        var model = new MainViewModel(new RuleStore(Path.Combine(_folder, "rules.json")),
             example: MainWindowTests.Sample("01-typical-month"));
         var window = new MainWindow(model);
         window.Show();

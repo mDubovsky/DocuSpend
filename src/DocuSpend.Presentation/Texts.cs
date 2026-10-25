@@ -94,9 +94,28 @@ public static class Texts
     public const string NoRules = "Zatiaľ žiadne pravidlá.";
     public const string AmountNotANumber = "Suma musí byť číslo, napríklad 12,50.";
     public const string RuleMatchedNothing = "Pravidlo je uložené, ale v tomto výpise mu nezodpovedá žiadna transakcia.";
-    public const string RulesFileUnreadable = "Súbor s pravidlami sa nepodarilo prečítať, preto sa nepoužije. Kým sa to nevyrieši, nové pravidlá nemožno ukladať.";
-    public const string RulesCannotBeSaved = "Pravidlo nemožno uložiť, lebo súbor s pravidlami sa nepodarilo prečítať.";
-    public const string RuleNotSaved = "Pravidlo sa nepodarilo uložiť.";
+    public const string RuleMatchedNothingUnsaved = "V tomto výpise pravidlu nezodpovedá žiadna transakcia.";
+
+    // Keeping the rules (spec: when the saved rules can't be used; when a change can't be saved)
+    public const string RulesCannotOpen = "Uložené pravidlá sa teraz nedajú otvoriť, možno ich používa iný program. DocuSpend začína bez nich a kým ho nezavriete, zmeny pravidiel neuloží. Súbor zostáva nedotknutý.";
+    public const string RulesNewer = "Pravidlá uložila novšia verzia DocuSpend a táto verzia ich nevie použiť. Aby ste o ne neprišli, DocuSpend začína bez nich a zmeny pravidiel neuloží. Otvorte novšiu verziu DocuSpend.";
+    public const string RulesNotSaving = "Zmeny pravidiel sa teraz neukladajú.";
+    public const string RuleOnlyThisSession = "Pravidlo platí len do zatvorenia DocuSpend.";
+    public const string RuleSaveFailed = "Pravidlo sa nepodarilo uložiť, preto po zatvorení DocuSpend zmizne. Pri ďalšej zmene sa DocuSpend pokúsi uložiť znova.";
+
+    /// <summary>The damaged-file message, with the full path of the moved file so the user can find it.</summary>
+    public static string RulesDamaged(string movedTo) =>
+        $"Uložené pravidlá boli poškodené, preto DocuSpend začína bez nich. Poškodený súbor je odložený tu: {movedTo}";
+
+    /// <summary>The startup message for a problem with the saved rules, or null when there is none.</summary>
+    public static string? RulesProblemMessage(RulesProblem problem, string? movedTo) => problem switch
+    {
+        RulesProblem.None => null,
+        RulesProblem.Damaged => RulesDamaged(movedTo!),
+        RulesProblem.CannotOpen => RulesCannotOpen,
+        RulesProblem.Newer => RulesNewer,
+        _ => throw new ArgumentOutOfRangeException(nameof(problem), problem, null),
+    };
 
     /// <summary>"Pravidlo zaradilo 1 transakciu / 3 transakcie / 5 transakcií."</summary>
     public static string RuleMatched(int count) => count switch

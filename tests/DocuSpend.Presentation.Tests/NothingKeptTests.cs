@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using DocuSpend.Categorization.Model;
 using DocuSpend.Presentation.Look;
@@ -18,7 +19,7 @@ public sealed partial class NothingKeptTests : IDisposable
     private static readonly string[] Writers =
     [
         "src/DocuSpend.Presentation/Look/SettingsStore.cs",
-        "src/DocuSpend.Presentation/SpikeRuleStore.cs",
+        "src/DocuSpend.Presentation/RuleStore.cs",
     ];
 
     [GeneratedRegex(
@@ -63,7 +64,11 @@ public sealed partial class NothingKeptTests : IDisposable
     {
         var settingsFile = Path.Combine(_appData, "DocuSpend", "settings.json");
         var rulesFile = Path.Combine(_appData, "DocuSpend", "rules.json");
-        var main = new MainViewModel(new SpikeRuleStore(rulesFile), new SettingsStore(settingsFile), Samples.Path("01-typical-month"));
+        // A damaged rules file from before, so the moved-aside copy is checked too.
+        Directory.CreateDirectory(Path.GetDirectoryName(rulesFile)!);
+        File.WriteAllText(rulesFile, "{ damaged");
+        var main = new MainViewModel(new RuleStore(rulesFile), new SettingsStore(settingsFile), Samples.Path("01-typical-month"));
+        var movedAside = Directory.EnumerateFiles(Path.GetDirectoryName(rulesFile)!).Single();
 
         // Everything a user can do with statements: the example, every sample, a rule, the look.
         await main.OpenExampleCommand.ExecuteAsync(null);
@@ -78,13 +83,13 @@ public sealed partial class NothingKeptTests : IDisposable
         Assert.Single(main.Rules);
 
         var written = Directory.EnumerateFiles(_appData, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal).ToList();
-        Assert.Equal([rulesFile, settingsFile], written);
+        Assert.Equal([movedAside, rulesFile, settingsFile], written);
         var text = string.Concat(written.Select(File.ReadAllText));
         foreach (var forbidden in Forbidden())
             Assert.DoesNotContain(forbidden, text, StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>The samples' file names, their folder, and every identifying text inside the valid ones.</summary>
+    /// <summary>The samples' file names, their folder, and every identifying text, date and amount inside the valid ones.</summary>
     private static IEnumerable<string> Forbidden()
     {
         yield return Samples.Dir;
@@ -102,6 +107,17 @@ public sealed partial class NothingKeptTests : IDisposable
                 {
                     if (value is { Length: >= 6 })
                         yield return value;
+                }
+                foreach (var date in new[] { t.BookingDate, t.ValueDate })
+                {
+                    yield return date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                    yield return SlovakFormat.Date(date);
+                }
+                // Amounts of at least 10, so that short numbers such as a priority can't match by chance.
+                if (Math.Abs(t.Amount) >= 10)
+                {
+                    yield return Math.Abs(t.Amount).ToString("0.00", CultureInfo.InvariantCulture);
+                    yield return Math.Abs(t.Amount).ToString("0.00", SlovakFormat.Culture);
                 }
             }
         }

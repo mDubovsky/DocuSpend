@@ -8,8 +8,11 @@ using DocuSpend.Presentation.Look;
 /// <summary>The states of the screens the specs ask to see, each set up through the view models, as a user would.</summary>
 internal static class Screens
 {
-    /// <summary>A name for the file, and how to get the window into that state.</summary>
-    public sealed record Screen(string Name, Action<MainViewModel> Arrange);
+    /// <summary>
+    /// A name for the file, and how to get the window into that state. <paramref name="Prepare"/> sets up the rules
+    /// file before the window starts, since the window reads it at start; what it returns is disposed once it has.
+    /// </summary>
+    public sealed record Screen(string Name, Action<MainViewModel> Arrange, Func<string, IDisposable?>? Prepare = null);
 
     public static IReadOnlyList<Screen> All { get; } =
     [
@@ -51,15 +54,48 @@ internal static class Screens
             main.RuleForm.SelectedSubcategory = main.RuleForm.Subcategories[0];
             main.AddRuleCommand.Execute(null);
         }),
+        new("06-rules-damaged", _ => { }, rules =>
+        {
+            File.WriteAllText(rules, "{ damaged");
+            return null;
+        }),
+        new("07-rules-not-saving", AddRuleOnTheExample, rules =>
+        {
+            File.WriteAllText(rules, """{ "version": 1, "categories": [], "subcategories": [], "rules": [] }""");
+            // Held open with no sharing, as another program might, while the window starts.
+            return new FileStream(rules, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        }),
+        new("08-rule-not-saved", AddRuleOnTheExample, rules =>
+        {
+            // A file where the folder should be: the folder can't be created, so the save fails.
+            Directory.Delete(Path.GetDirectoryName(rules)!);
+            File.WriteAllText(Path.GetDirectoryName(rules)!, "");
+            return null;
+        }),
     ];
+
+    private static void AddRuleOnTheExample(MainViewModel main)
+    {
+        Open(main, "01-typical-month");
+        main.Statement.SelectedCategory = new CategoryId("uncategorized-out");
+        main.RuleForm.SelectedKind = ConditionKind.Text;
+        main.RuleForm.Text = main.Statement.Transactions[0].Description;
+        main.RuleForm.SelectedCategory = main.RuleForm.Categories.Single(c => c.Id == new CategoryId("leisure"));
+        main.RuleForm.SelectedSubcategory = main.RuleForm.Subcategories[0];
+        main.AddRuleCommand.Execute(null);
+    }
 
     /// <summary>Opens a fresh window in the state, renders it, and saves "&lt;name&gt;-&lt;look&gt;.png".</summary>
     public static string Capture(Screen screen, LookChoice choice, string look, string output)
     {
-        var rules = Path.Combine(Path.GetTempPath(), "docuspend-screenshots-" + Guid.NewGuid().ToString("N") + ".json");
+        var folder = Directory.CreateTempSubdirectory("docuspend-screenshots-").FullName;
+        var rules = Path.Combine(folder, "DocuSpend", "rules.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(rules)!);
         try
         {
-            var model = new MainViewModel(new SpikeRuleStore(rules), example: SamplePath("01-typical-month"));
+            MainViewModel model;
+            using (screen.Prepare?.Invoke(rules))
+                model = new MainViewModel(new RuleStore(rules), example: SamplePath("01-typical-month"));
             model.SelectedLook = model.Looks.Single(l => l.Choice == choice);
             // Tall enough that nothing needs scrolling, so the whole window is in one picture.
             var window = new MainWindow(model) { Width = 1280, Height = 1660 };
@@ -74,7 +110,7 @@ internal static class Screens
         }
         finally
         {
-            File.Delete(rules);
+            Directory.Delete(folder, recursive: true);
         }
     }
 
