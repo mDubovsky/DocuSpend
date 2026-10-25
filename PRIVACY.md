@@ -8,9 +8,20 @@ A bank statement says a lot about you. DocuSpend is built so that it never leave
 
 It reads the file you choose, in your computer's memory, and shows you the result. That is all. It doesn't send a copy anywhere, and it doesn't save one: no copy, no cache, no log, no list of recent files. When you close DocuSpend, nothing about the statement is left behind by it: not its content, its name, or the folder it was in.
 
-DocuSpend keeps only two things for itself, in its own folder (`%APPDATA%\DocuSpend`): whether you chose the light or the dark look, and the categorization rules you create. Neither contains anything from a statement, unless you type it into a rule yourself.
-
 Windows' own "open file" window may remember the folder you last opened a file from, as it does for every program that uses it. That memory belongs to Windows, not to DocuSpend. DocuSpend doesn't add your statement to Windows' list of recent files.
+
+## What DocuSpend keeps
+
+DocuSpend keeps two things for itself, in its own folder, `%APPDATA%\DocuSpend`:
+
+- `settings.json`: whether you chose the light or the dark look.
+- `rules.json`: the rules and categories you made: what each rule looks for, where it puts it, and its priority. It is saved every time you change a rule, and it is a plain text file you can open.
+
+Neither contains anything from a statement, unless you type it into a rule yourself: a rule that looks for a shop's name contains that name. Nothing records which statements you opened.
+
+If `rules.json` is ever damaged, DocuSpend doesn't throw it away. It moves it aside in the same folder, as `rules.damaged-` followed by the date and time, and tells you where. You may also find `spike-rules.json` there, from a development version; DocuSpend no longer uses it.
+
+To remove everything DocuSpend has kept, close it and delete the folder `%APPDATA%\DocuSpend`. To find it, type `%APPDATA%` into File Explorer's address bar.
 
 ## What it never does
 

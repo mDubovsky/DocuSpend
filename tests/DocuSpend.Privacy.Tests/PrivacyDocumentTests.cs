@@ -7,6 +7,7 @@ public class PrivacyDocumentTests
 
     [Theory]
     [InlineData("## What DocuSpend does with your statement")]
+    [InlineData("## What DocuSpend keeps")]
     [InlineData("## What it never does")]
     [InlineData("## How this is enforced")]
     [InlineData("## Check it yourself")]
@@ -21,6 +22,18 @@ public class PrivacyDocumentTests
     public void It_gives_the_command_to_verify_a_download_against_this_repository()
     {
         Assert.Contains("gh attestation verify DocuSpend.StatementCheck-win-x64.zip --repo mDubovsky/DocuSpend", Text);
+    }
+
+    /// <summary>The names DocuSpend gives its files (RuleStore, SettingsStore), so a user can find and remove them.</summary>
+    [Theory]
+    [InlineData(@"`%APPDATA%\DocuSpend`")]
+    [InlineData("`settings.json`")]
+    [InlineData("`rules.json`")]
+    [InlineData("`rules.damaged-`")]
+    [InlineData("`spike-rules.json`")]
+    public void It_names_every_file_DocuSpend_keeps(string name)
+    {
+        Assert.Contains(name, Text);
     }
 
     [Fact]
