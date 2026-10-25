@@ -1,4 +1,5 @@
 using System.Security;
+using DocuSpend.Statements.Reading;
 
 namespace DocuSpend.Presentation;
 
@@ -12,6 +13,20 @@ public enum OpenProblem
     DoesNotReconcile,
     CannotOpen,
     TooLarge,
+}
+
+public static class OpenProblems
+{
+    /// <summary>The reader's kind of rejection, as the problem the user is told about.</summary>
+    public static OpenProblem From(RejectionKind kind) => kind switch
+    {
+        RejectionKind.EmptyFile => OpenProblem.Empty,
+        RejectionKind.NotAPdf => OpenProblem.NotAPdf,
+        RejectionKind.NotAVubStatement => OpenProblem.NotAVubStatement,
+        RejectionKind.Unreadable => OpenProblem.Unreadable,
+        RejectionKind.DoesNotReconcile => OpenProblem.DoesNotReconcile,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
 }
 
 /// <summary>A file's bytes, or why it couldn't be read; never both.</summary>

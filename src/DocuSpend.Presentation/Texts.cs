@@ -27,6 +27,44 @@ public static class Texts
     public const string Balance = "Zostatok";
     public const string StatementUnreadable = "Výpis sa nepodarilo prečítať.";
 
+    // Opening a statement (spec: starting; opening a statement)
+    public const string StartHeading = "Otvorte výpis z účtu";
+    public const string StartHint = "Vyberte mesačný výpis z účtu VÚB vo formáte PDF, alebo ho sem pretiahnite.";
+    public const string StartPrivacy = "Výpis sa číta len vo vašom počítači. DocuSpend ho nikam neposiela ani neukladá.";
+    public const string OpenStatement = "Otvoriť výpis…";
+    public const string TryExample = "Vyskúšať na ukážke";
+    public const string ExampleLabel = "Ukážka s vymyslenými údajmi";
+    public const string Reading = "Výpis sa číta…";
+    public const string DropHere = "Pustite výpis sem";
+    public const string PickerPdfFiles = "Výpisy vo formáte PDF";
+    public const string PickerAllFiles = "Všetky súbory";
+    public const string Close = "Zavrieť";
+
+    // When a file can't be opened (spec: the messages table)
+    public const string NotOpened = "Výpis sa neotvoril.";
+    public const string PreviousStatementKept = "Zobrazený zostáva predchádzajúci výpis.";
+    public const string DropSeveralFiles = "Pretiahnite naraz len jeden výpis.";
+    public const string DropNotAFile = "Sem môžete pretiahnuť len súbor s výpisom.";
+
+    /// <summary>What is wrong with the file and what to do, in the user's terms. Never the reader's own reason.</summary>
+    public static string Problem(OpenProblem problem) => problem switch
+    {
+        OpenProblem.Empty => "Súbor je prázdny. Stiahnite výpis z internet bankingu znova.",
+        OpenProblem.NotAPdf => "Súbor nie je PDF, alebo je poškodený či chránený heslom. Stiahnite výpis z internet bankingu znova, bez hesla.",
+        OpenProblem.NotAVubStatement => "Tento súbor nie je mesačný výpis z účtu VÚB. DocuSpend zatiaľ vie čítať len tie.",
+        OpenProblem.Unreadable => "Časť výpisu sa nedá prečítať. Výpis má možno podobu, ktorú DocuSpend ešte nepozná.",
+        OpenProblem.DoesNotReconcile => "Pohyby vo výpise nesedia s jeho súčtami, preto by grafy neboli správne.",
+        OpenProblem.CannotOpen => "Súbor sa nedá otvoriť. Možno bol presunutý alebo ho práve používa iný program.",
+        OpenProblem.TooLarge => "Súbor je príliš veľký na mesačný výpis.",
+        _ => throw new ArgumentOutOfRangeException(nameof(problem), problem, null),
+    };
+
+    /// <summary>The whole message for a file that wasn't opened; it says so when the previous statement stays.</summary>
+    public static string NotOpenedMessage(OpenProblem problem, bool previousStatementKept) =>
+        previousStatementKept
+            ? $"{NotOpened} {Problem(problem)} {PreviousStatementKept}"
+            : $"{NotOpened} {Problem(problem)}";
+
     // Column headers
     public const string Date = "Dátum";
     public const string Description = "Popis";
