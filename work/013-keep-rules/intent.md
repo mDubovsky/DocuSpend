@@ -1,5 +1,5 @@
 ---
-status: draft
+status: specced
 issue: 13
 ---
 
@@ -50,7 +50,7 @@ This is the last thing the MVP's "done when" asks for that DocuSpend can't do ye
 - **A file saved by a newer DocuSpend is left untouched too**, treated like a file that can't be opened right now, and the user is told to use the newer version. Overwriting it would lose rules the older version doesn't understand.
 - **The spike's file is ignored and left where it is.** Its rules are not brought over: only the maintainer used it, and its rules are easy to add again. DocuSpend doesn't delete files from the user's folder; [PRIVACY.md](../../PRIVACY.md) says how to remove it.
 - **Two DocuSpend windows at once: the last one to save wins**, as long as the file is never damaged. Preventing it, or merging changes, is out of proportion for a single-user desktop tool.
-- **Deleting a rule stays out of this item.** Once rules are kept, a mistaken rule stays until the rule editor exists, but adding a rule on top already corrects any mistake. An issue for the MVP's rule editor follows next.
+- **Deleting a rule stays out of this item.** Once rules are kept, a mistaken rule stays until the rule editor exists, but adding a rule on top already corrects any mistake. The MVP's rule editor is [#24](https://github.com/mDubovsky/DocuSpend/issues/24).
 
 ## Open questions
 None.
