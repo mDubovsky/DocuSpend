@@ -2,11 +2,15 @@
 
 A bank statement says a lot about you. DocuSpend is built so that it never leaves your computer, and so that you don't have to take our word for it.
 
-**Where things stand:** the DocuSpend application isn't built yet. Today the project has the parts that read and categorize statements, and two small command-line tools for developers. Everything below applies to them now and to the application when it comes.
+**Where things stand:** DocuSpend is in early development, with no release yet. The project has a Windows desktop application that opens a statement you choose and shows where your money went, and two small command-line tools for developers. Everything below applies to all of them.
 
 ## What DocuSpend does with your statement
 
-It reads the file you choose, in your computer's memory, and shows you the result. That is all. It doesn't send a copy anywhere, and it doesn't save one.
+It reads the file you choose, in your computer's memory, and shows you the result. That is all. It doesn't send a copy anywhere, and it doesn't save one: no copy, no cache, no log, no list of recent files. When you close DocuSpend, nothing about the statement is left behind by it: not its content, its name, or the folder it was in.
+
+DocuSpend keeps only two things for itself, in its own folder (`%APPDATA%\DocuSpend`): whether you chose the light or the dark look, and the categorization rules you create. Neither contains anything from a statement, unless you type it into a rule yourself.
+
+Windows' own "open file" window may remember the folder you last opened a file from, as it does for every program that uses it. That memory belongs to Windows, not to DocuSpend. DocuSpend doesn't add your statement to Windows' list of recent files.
 
 ## What it never does
 
