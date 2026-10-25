@@ -23,6 +23,7 @@ The screens stay as they are. What changes is that the user's rules and categori
 ### Starting
 - **Nothing saved yet** (first start, or the user removed the folder): DocuSpend starts with the built-in categories and default rules only, and says nothing.
 - **Saved rules that read:** every user rule and category is back before the first statement is opened. "Moje pravidlá" lists the user rules in the order they were created, as before closing. Every statement is categorized exactly as it would have been before closing: each transaction in the same sub-category, decided by the same rule.
+- **"Moje pravidlá" describes every kind of rule.** Today it can describe only the kinds the form makes. A loaded rule of another kind is described as "Protistrana obsahuje „…“" or "Protistrana sa rovná „…“" (counterparty name), "Účet protistrany: …" (counterparty account) or "Variabilný symbol: …" (variable symbol).
 - **Rules saved by an earlier version of DocuSpend** load the same way and give the same categorization. The next save writes them in the current shape.
 
 ### When the saved rules can't be used
