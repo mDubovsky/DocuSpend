@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "id": "user-11111111111111111111111111111111",
+      "name": "Deti",
+      "role": "spending",
+      "subcategories": [
+        { "id": "user-11111111111111111111111111111111.other", "name": "Ostatné" },
+        { "id": "user-22222222222222222222222222222222", "name": "Krúžky" }
+      ]
+    },
+    {
+      "id": "user-33333333333333333333333333333333",
+      "name": "Vedľajší príjem",
+      "role": "income",
+      "subcategories": [
+        { "id": "user-33333333333333333333333333333333.other", "name": "Ostatné" }
+      ]
+    },
+    {
+      "id": "user-44444444444444444444444444444444",
+      "name": "Požičané rodine",
+      "role": "excluded",
+      "subcategories": [
+        { "id": "user-44444444444444444444444444444444.other", "name": "Ostatné" }
+      ]
+    }
+  ],
+  "subcategories": [
+    { "category": "housing", "id": "user-55555555555555555555555555555555", "name": "Garáž" }
+  ],
+  "rules": [
+    { "id": "user-a0000000000000000000000000000001", "priority": 2, "order": 1, "target": "food.groceries",
+      "condition": { "kind": "text", "text": "minimarket", "mode": "contains" } },
+    { "id": "user-a0000000000000000000000000000002", "priority": 2, "order": 2, "target": "user-22222222222222222222222222222222",
+      "condition": { "kind": "text", "text": "PEKAREN KLAS TRENCIN", "mode": "equals" } },
+    { "id": "user-a0000000000000000000000000000003", "priority": 1, "order": 3, "target": "user-44444444444444444444444444444444.other",
+      "condition": { "kind": "counterpartyName", "text": "vzor", "mode": "contains" } },
+    { "id": "user-a0000000000000000000000000000004", "priority": 3, "order": 4, "target": "user-55555555555555555555555555555555",
+      "condition": { "kind": "counterpartyName", "text": "Bytové družstvo Lipa", "mode": "equals" } },
+    { "id": "user-a0000000000000000000000000000005", "priority": 1, "order": 5, "target": "user-33333333333333333333333333333333.other",
+      "condition": { "kind": "counterpartyAccount", "account": "SK57 1100 0000 0029 4587 1630" } },
+    { "id": "user-a0000000000000000000000000000006", "priority": 2, "order": 6, "target": "user-11111111111111111111111111111111.other",
+      "condition": { "kind": "amount", "min": 50, "max": 100.00 } },
+    { "id": "user-a0000000000000000000000000000007", "priority": 5, "order": 7, "target": "leisure.games",
+      "condition": { "kind": "amount", "max": 12.50 } },
+    { "id": "user-a0000000000000000000000000000008", "priority": 4, "order": 8, "target": "investments.other",
+      "condition": { "kind": "amount", "min": 1000 } },
+    { "id": "user-a0000000000000000000000000000009", "priority": 2, "order": 9, "target": "housing.equipment",
+      "condition": { "kind": "variableSymbol", "symbol": "0326" } },
+    { "id": "user-a0000000000000000000000000000010", "priority": 6, "order": 10, "target": "own-transfers.other",
+      "condition": { "kind": "type", "types": [ "transfer", "instantTransfer" ] } },
+    { "id": "user-a0000000000000000000000000000011", "priority": 1, "order": 11, "target": "fees.fees",
+      "condition": { "kind": "type", "types": [ "feeReversal" ] } },
+    { "id": "user-a0000000000000000000000000000012", "priority": 2, "order": 12, "target": "health.drugstore",
+      "condition": { "kind": "text", "text": "Lekáreň", "mode": "contains" } }
+  ]
+}
