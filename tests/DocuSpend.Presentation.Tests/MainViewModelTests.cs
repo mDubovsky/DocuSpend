@@ -5,8 +5,8 @@ using DocuSpend.Categorization.Rules;
 namespace DocuSpend.Presentation.Tests;
 
 /// <summary>
-/// The window's state: which sample is shown, and adding rules that are saved and survive a restart (spec: starting
-/// and choosing a sample, adding a rule, rules survive a restart).
+/// The window's state: adding rules that are saved and survive a restart, and the choice of look (spec: adding a
+/// rule, rules survive a restart). Opening statements is in <see cref="OpeningTests"/>.
 /// </summary>
 public sealed class MainViewModelTests : IDisposable
 {
@@ -20,9 +20,14 @@ public sealed class MainViewModelTests : IDisposable
             Directory.Delete(_folder, recursive: true);
     }
 
-    /// <summary>A fresh start of the application, with the rules file of this test.</summary>
-    private MainViewModel Start(IReadOnlyList<SampleItem>? samples = null) =>
-        new(samples ?? SampleCatalog.Available(Samples.Dir), new SpikeRuleStore(RulesFile));
+    /// <summary>A fresh start of the application, with the rules file of this test, and a sample opened.</summary>
+    private async Task<MainViewModel> Start(string sample = "01-typical-month")
+    {
+        var main = new MainViewModel(new SpikeRuleStore(RulesFile));
+        await main.OpenFileAsync(Samples.Path(sample));
+        Assert.True(main.HasStatement);
+        return main;
+    }
 
     private static void Target(RuleFormViewModel form, SubcategoryId target)
     {
@@ -46,54 +51,9 @@ public sealed class MainViewModelTests : IDisposable
     }
 
     [Fact]
-    public void The_first_sample_is_shown_at_start()
+    public async Task An_added_rule_categorizes_again_at_once_and_is_listed()
     {
-        var main = Start();
-
-        Assert.Equal("01-typical-month", main.SelectedSample?.Name);
-        Assert.Equal(SlovakFormat.Period(new DateOnly(2026, 3, 1), new DateOnly(2026, 3, 31)), main.Statement.Period);
-        Assert.Null(main.Error);
-        Assert.Empty(main.Rules);
-    }
-
-    [Theory]
-    [MemberData(nameof(StatementViewModelTests.Valid), MemberType = typeof(StatementViewModelTests))]
-    public void Choosing_a_sample_shows_it(string name)
-    {
-        var main = Start();
-        var statement = Samples.Read(name);
-
-        main.SelectedSample = main.Samples.Single(s => s.Name == name);
-
-        Assert.Equal(SlovakFormat.Period(statement.PeriodStart, statement.PeriodEnd), main.Statement.Period);
-        Assert.Equal(SlovakFormat.Amount(statement.ClosingBalance), main.Statement.ClosingBalance);
-    }
-
-    [Fact]
-    public void A_sample_that_cannot_be_read_shows_a_slovak_message()
-    {
-        Directory.CreateDirectory(_folder);
-        var broken = Path.Combine(_folder, "broken.pdf");
-        File.WriteAllBytes(broken, [1, 2, 3]);
-
-        var main = Start([new SampleItem("broken", "Pokazený", broken)]);
-
-        Assert.Equal(Texts.StatementUnreadable, main.Error);
-    }
-
-    [Fact]
-    public void Without_samples_nothing_is_shown()
-    {
-        var main = Start([]);
-
-        Assert.Null(main.SelectedSample);
-        Assert.Empty(main.Statement.Categories);
-    }
-
-    [Fact]
-    public void An_added_rule_categorizes_again_at_once_and_is_listed()
-    {
-        var main = Start();
+        var main = await Start();
 
         var description = AddRuleForAnUncategorizedPayment(main);
 
@@ -108,9 +68,9 @@ public sealed class MainViewModelTests : IDisposable
     }
 
     [Fact]
-    public void An_added_rule_beats_every_earlier_rule()
+    public async Task An_added_rule_beats_every_earlier_rule()
     {
-        var main = Start();
+        var main = await Start();
         var description = AddRuleForAnUncategorizedPayment(main);
 
         main.RuleForm.SelectedKind = ConditionKind.Text;
@@ -123,11 +83,11 @@ public sealed class MainViewModelTests : IDisposable
     }
 
     [Fact]
-    public void A_rule_survives_a_restart()
+    public async Task A_rule_survives_a_restart()
     {
-        var description = AddRuleForAnUncategorizedPayment(Start());
+        var description = AddRuleForAnUncategorizedPayment(await Start());
 
-        var restarted = Start();
+        var restarted = await Start();
 
         Assert.Single(restarted.Rules);
         Assert.All(restarted.Statement.Categorized!.Transactions.Where(t => t.Transaction.Description == description),
@@ -135,15 +95,15 @@ public sealed class MainViewModelTests : IDisposable
     }
 
     [Fact]
-    public void Saved_rules_apply_to_every_sample()
+    public async Task Saved_rules_apply_to_every_statement_opened()
     {
-        var main = Start();
+        var main = await Start();
         main.RuleForm.SelectedKind = ConditionKind.Type;
         main.RuleForm.SelectedType = main.RuleForm.Types[0];
         Target(main.RuleForm, Games);
         main.AddRuleCommand.Execute(null);
 
-        main.SelectedSample = main.Samples.Single(s => s.Name == "02-busy-month");
+        await main.OpenFileAsync(Samples.Path("02-busy-month"));
 
         var expected = Categorizer.Categorize(Samples.Read("02-busy-month"), main.Statement.Config);
         Assert.Equal(expected.Transactions.Select(t => t.Placement), main.Statement.Categorized!.Transactions.Select(t => t.Placement));
@@ -151,9 +111,22 @@ public sealed class MainViewModelTests : IDisposable
     }
 
     [Fact]
-    public void A_rule_that_matches_nothing_is_saved_and_says_so()
+    public async Task Rules_saved_before_are_applied_to_a_statement_opened_after_a_restart()
     {
-        var main = Start();
+        var description = AddRuleForAnUncategorizedPayment(await Start());
+
+        var restarted = new MainViewModel(new SpikeRuleStore(RulesFile));
+        Assert.Single(restarted.Rules);
+        await restarted.OpenFileAsync(Samples.Path("01-typical-month"));
+
+        Assert.All(restarted.Statement.Categorized!.Transactions.Where(t => t.Transaction.Description == description),
+            t => Assert.Equal(Games, t.Placement.Subcategory));
+    }
+
+    [Fact]
+    public async Task A_rule_that_matches_nothing_is_saved_and_says_so()
+    {
+        var main = await Start();
         main.RuleForm.SelectedKind = ConditionKind.Text;
         main.RuleForm.Text = "nič také tu nie je";
         Target(main.RuleForm, Games);
@@ -162,13 +135,13 @@ public sealed class MainViewModelTests : IDisposable
 
         Assert.Single(main.Rules);
         Assert.Equal(Texts.RuleMatchedNothing, main.RuleForm.Message);
-        Assert.Single(Start().Rules);
+        Assert.Single((await Start()).Rules);
     }
 
     [Fact]
-    public void Invalid_input_saves_nothing()
+    public async Task Invalid_input_saves_nothing()
     {
-        var main = Start();
+        var main = await Start();
         main.RuleForm.SelectedKind = ConditionKind.Text;
         Target(main.RuleForm, Games);
 
@@ -180,12 +153,12 @@ public sealed class MainViewModelTests : IDisposable
     }
 
     [Fact]
-    public void An_unreadable_rules_file_is_reported_and_never_overwritten()
+    public async Task An_unreadable_rules_file_is_reported_and_never_overwritten()
     {
         Directory.CreateDirectory(_folder);
         File.WriteAllText(RulesFile, "{ damaged");
 
-        var main = Start();
+        var main = await Start();
         AddRuleForAnUncategorizedPayment(main);
 
         Assert.Equal(Texts.RulesFileUnreadable, main.RulesError);
@@ -201,15 +174,15 @@ public sealed class MainViewModelTests : IDisposable
         Assert.Equal("Text sa rovná „netflix“", MainViewModel.Describe(new TextCondition("netflix", TextMode.EqualTo)));
         Assert.Equal("Typ: Okamžitý prevod",
             MainViewModel.Describe(new TypeCondition([Statements.Model.TransactionType.InstantTransfer])));
-        Assert.Equal("Suma od 10,00 € do 20,00 €", MainViewModel.Describe(new AmountCondition(10m, 20m)).Replace(' ', ' '));
-        Assert.Equal("Suma od 10,00 €", MainViewModel.Describe(new AmountCondition(10m, null)).Replace(' ', ' '));
-        Assert.Equal("Suma do 20,00 €", MainViewModel.Describe(new AmountCondition(null, 20m)).Replace(' ', ' '));
+        Assert.Equal("Suma od 10,00 € do 20,00 €", MainViewModel.Describe(new AmountCondition(10m, 20m)).Replace(' ', ' '));
+        Assert.Equal("Suma od 10,00 €", MainViewModel.Describe(new AmountCondition(10m, null)).Replace(' ', ' '));
+        Assert.Equal("Suma do 20,00 €", MainViewModel.Describe(new AmountCondition(null, 20m)).Replace(' ', ' '));
     }
 
     [Fact]
     public void The_look_offers_three_choices_in_slovak_and_follows_windows_at_first()
     {
-        var main = Start();
+        var main = new MainViewModel(new SpikeRuleStore(RulesFile));
 
         Assert.Equal([Look.LookChoice.System, Look.LookChoice.Light, Look.LookChoice.Dark], main.Looks.Select(l => l.Choice));
         Assert.Equal(["Podľa systému", "Svetlý", "Tmavý"], main.Looks.Select(l => l.Label));
@@ -220,19 +193,19 @@ public sealed class MainViewModelTests : IDisposable
     public void A_chosen_look_is_saved_and_in_effect_after_a_restart()
     {
         var settings = Path.Combine(_folder, "settings.json");
-        var main = new MainViewModel(SampleCatalog.Available(Samples.Dir), new SpikeRuleStore(RulesFile), new Look.SettingsStore(settings));
+        var main = new MainViewModel(new SpikeRuleStore(RulesFile), new Look.SettingsStore(settings));
 
         main.SelectedLook = main.Looks.Single(l => l.Choice == Look.LookChoice.Dark);
 
-        var restarted = new MainViewModel(SampleCatalog.Available(Samples.Dir), new SpikeRuleStore(RulesFile), new Look.SettingsStore(settings));
+        var restarted = new MainViewModel(new SpikeRuleStore(RulesFile), new Look.SettingsStore(settings));
         Assert.Equal(Look.LookChoice.Dark, restarted.Look);
         Assert.Equal(Look.LookChoice.Dark, restarted.SelectedLook.Choice);
     }
 
     [Fact]
-    public void Changing_the_look_keeps_what_the_user_was_doing()
+    public async Task Changing_the_look_keeps_what_the_user_was_doing()
     {
-        var main = Start();
+        var main = await Start();
         main.Statement.SelectedCategory = new CategoryId("housing");
         main.RuleForm.Text = "rozpísané";
 

@@ -11,9 +11,15 @@ internal static class Samples
 
     public static readonly string Dir = FindDir();
 
+    public static readonly string[] Invalid =
+        ["06-other-bank-statement", "07-not-a-statement", "08-corrupted-statement", "09-empty-file"];
+
+    /// <summary>The sample's PDF file.</summary>
+    public static string Path(string name) => System.IO.Path.Combine(Dir, name + ".pdf");
+
     public static Statement Read(string name)
     {
-        var result = new VubStatementReader().Read(File.ReadAllBytes(Path.Combine(Dir, name + ".pdf")));
+        var result = new VubStatementReader().Read(File.ReadAllBytes(Path(name)));
         Assert.True(result.IsSuccess, result.Rejection?.Message);
         return result.Statement!;
     }
@@ -22,8 +28,8 @@ internal static class Samples
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
         {
-            if (File.Exists(Path.Combine(dir.FullName, "DocuSpend.slnx")))
-                return Path.Combine(dir.FullName, "samples", "public");
+            if (File.Exists(System.IO.Path.Combine(dir.FullName, "DocuSpend.slnx")))
+                return System.IO.Path.Combine(dir.FullName, "samples", "public");
         }
         throw new InvalidOperationException("Repository root (DocuSpend.slnx) not found.");
     }

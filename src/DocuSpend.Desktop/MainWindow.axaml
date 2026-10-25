@@ -19,14 +19,6 @@
         <StackPanel Spacing="{StaticResource Look.Space.Large}">
           <Grid ColumnDefinitions="*,Auto">
             <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}">
-              <TextBlock Classes="muted" Text="{x:Static vm:Texts.Sample}" VerticalAlignment="Center" />
-              <ComboBox ItemsSource="{Binding Samples}" SelectedItem="{Binding SelectedSample}" MinWidth="260">
-                <ComboBox.ItemTemplate>
-                  <DataTemplate x:DataType="vm:SampleItem">
-                    <TextBlock Text="{Binding Title}" />
-                  </DataTemplate>
-                </ComboBox.ItemTemplate>
-              </ComboBox>
               <TextBlock Classes="muted" Text="{Binding Statement.Period}" VerticalAlignment="Center" />
             </StackPanel>
             <!-- Light or dark: follow Windows, or always one of them -->
@@ -46,8 +38,8 @@
               </ListBox>
             </StackPanel>
           </Grid>
-          <Border Classes="message error" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-            <TextBlock Text="{Binding Error}" TextWrapping="Wrap" />
+          <Border Classes="message error" IsVisible="{Binding OpenMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <TextBlock Text="{Binding OpenMessage}" TextWrapping="Wrap" />
           </Border>
           <WrapPanel>
             <StackPanel Margin="{StaticResource Look.Margin.KeyFigure}">

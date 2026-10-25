@@ -17,7 +17,7 @@ public partial class MainWindow : Window
     private IReadOnlyDictionary<ISeries, CategoryId> _sliceCategories = new Dictionary<ISeries, CategoryId>();
 
     /// <summary>For the XAML loader only; the application uses the constructor with a model.</summary>
-    public MainWindow() : this(new MainViewModel([], new SpikeRuleStore(Path.Combine(Path.GetTempPath(), "docuspend-designer-rules.json")))) { }
+    public MainWindow() : this(new MainViewModel(new SpikeRuleStore(Path.Combine(Path.GetTempPath(), "docuspend-designer-rules.json")))) { }
 
     public MainWindow(MainViewModel model)
     {

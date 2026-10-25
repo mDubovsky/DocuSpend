@@ -12,7 +12,6 @@ public static class Texts
     public const string AppTitle = "DocuSpend";
 
     // The statement view
-    public const string Sample = "Ukážkový výpis";
     public const string Period = "Obdobie";
     public const string OpeningBalance = "Počiatočný zostatok";
     public const string ClosingBalance = "Konečný zostatok";
@@ -25,7 +24,6 @@ public static class Texts
     public const string NoCategorySelected = "Vyberte kategóriu v grafe alebo v zozname.";
     public const string NoDescription = "(bez popisu)";
     public const string Balance = "Zostatok";
-    public const string StatementUnreadable = "Výpis sa nepodarilo prečítať.";
 
     // Opening a statement (spec: starting; opening a statement)
     public const string StartHeading = "Otvorte výpis z účtu";
@@ -107,12 +105,6 @@ public static class Texts
         _ => $"Pravidlo zaradilo {count} transakcií.",
     };
 
-    // Titles of the samples that travel with the application
-    public const string SampleTypicalMonth = "Bežný mesiac";
-    public const string SampleBusyMonth = "Rušný mesiac";
-    public const string SampleAwkwardMonth = "Nezvyčajný mesiac";
-    public const string SampleEmptyMonth = "Mesiac bez transakcií";
-    public const string SampleSingleTransactionMonth = "Mesiac s jednou transakciou";
 
     public static string TypeName(TransactionType type) => type switch
     {

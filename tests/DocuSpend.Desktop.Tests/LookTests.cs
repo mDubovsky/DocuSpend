@@ -26,7 +26,8 @@ public sealed class LookTests : IDisposable
 
     private (MainWindow Window, MainViewModel Model) Open(LookChoice choice)
     {
-        var model = new MainViewModel(SampleCatalog.Available(MainWindowTests.SamplesDir()), new SpikeRuleStore(Path.Combine(_folder, "rules.json")));
+        var model = new MainViewModel(new SpikeRuleStore(Path.Combine(_folder, "rules.json")));
+        Headless.Wait(model.OpenFileAsync(MainWindowTests.Sample("01-typical-month")));
         model.SelectedLook = model.Looks.Single(l => l.Choice == choice);
         var window = new MainWindow(model);
         window.Show();
@@ -96,7 +97,7 @@ public sealed class LookTests : IDisposable
         Assert.Equal(Palette.Dark.Card, Hex(((SolidColorPaint)window.BalanceLine.TooltipBackgroundPaint!).Color));
         Assert.Equal(new CategoryId("housing"), model.Statement.SelectedCategory);
         Assert.Equal("rozpísané pravidlo", model.RuleForm.Text);
-        Assert.Equal("01-typical-month", model.SelectedSample?.Name);
+        Assert.True(model.HasStatement);
         Finish(window);
     });
 
