@@ -41,6 +41,16 @@ public partial class MainWindow : Window
         {
             if (e.PropertyName == nameof(MainViewModel.Look))
                 ApplyLook(model.Look);
+            // The charts are hidden on the start screen. LiveCharts measures a chart only after it has painted a
+            // frame since its last measure, and resets that only when the chart scrolls into view, so charts that
+            // were hidden stayed empty until scrolled away and back. Once they have been rendered visible, ask both
+            // to update.
+            if (e.PropertyName == nameof(MainViewModel.HasStatement) && model.HasStatement)
+                RequestAnimationFrame(_ => RequestAnimationFrame(_ =>
+                {
+                    SpendingPie.CoreChart.Update();
+                    BalanceLine.CoreChart.Update();
+                }));
         };
         ApplyLook(model.Look);
         // The charts draw their own colours, so a change of look (the switch, or Windows) redraws them.
