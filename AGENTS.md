@@ -36,7 +36,7 @@ Run from the repo root:
 
 - Build: `dotnet build`
 - Test: `dotnet test` (includes the privacy checks; one check alone: `dotnet test --project tests/DocuSpend.Privacy.Tests --filter-trait "Check=privacy-dependencies"`, see CONTRIBUTING.md)
-- Run the desktop application (Windows; it shows the synthetic samples): `dotnet run --project src/DocuSpend.Desktop`
+- Run the desktop application (Windows; it opens a statement you choose, or the example): `dotnet run --project src/DocuSpend.Desktop`
 - Screenshots of every screen in both looks, without a screen: `dotnet run --project tools/DocuSpend.Screenshots` (writes to `artifacts/screenshots/`; CI uploads them too). Compare a change that touches the look against `work/011-modern-look/screenshots/`.
 - Verify the read-and-categorize flow on the samples: `dotnet run --project tools/DocuSpend.StatementCheck -- --verify samples/public`
 - Regenerate test samples: `dotnet run --project tools/DocuSpend.SampleGenerator -- generate` (see [samples/README.md](samples/README.md); never edit samples by hand)

@@ -44,6 +44,11 @@ public class LookTests
                 data.Add(look, nameof(Palette.Primary), nameof(Palette.Card), 3);
                 data.Add(look, nameof(Palette.Accent), nameof(Palette.Card), 3);
                 data.Add(look, nameof(Palette.Accent), nameof(Palette.Background), 3);
+                // The outlined buttons' text, on the card and on the tint while the pointer is over them (#12).
+                data.Add(look, nameof(Palette.Accent), nameof(Palette.Card), 4.5);
+                data.Add(look, nameof(Palette.Accent), nameof(Palette.Hover), 4.5);
+                // A message's close button, in the error colour, while the pointer is over it.
+                data.Add(look, nameof(Palette.Error), nameof(Palette.Hover), 4.5);
             }
             return data;
         }

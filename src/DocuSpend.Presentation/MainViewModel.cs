@@ -10,25 +10,29 @@ namespace DocuSpend.Presentation;
 /// <summary>A user rule in the list: what it matches and where it puts it.</summary>
 public sealed record RuleRow(string Condition, string Target);
 
-/// <summary>The window: the samples to choose from, the statement shown, the rule form and the saved rules.</summary>
+/// <summary>
+/// The window: the start screen or the statement the user opened, the message about a file that wasn't opened, the
+/// rule form and the saved rules.
+/// </summary>
 public sealed partial class MainViewModel : ObservableObject
 {
     private readonly IStatementReader _reader = new VubStatementReader();
     private readonly SpikeRuleStore _store;
     private readonly SettingsStore? _settings;
+    private readonly string? _example;
     private readonly List<RuleDraft> _drafts = [];
 
     /// <param name="settings">Where the choice of look is remembered; without it, the choice lasts only this session.</param>
-    public MainViewModel(IReadOnlyList<SampleItem> samples, SpikeRuleStore store, SettingsStore? settings = null)
+    /// <param name="example">The example statement's path; without it, or when the file is missing, none is offered.</param>
+    public MainViewModel(SpikeRuleStore store, SettingsStore? settings = null, string? example = null)
     {
         _store = store;
         _settings = settings;
-        Samples = samples;
+        _example = example is not null && File.Exists(example) ? example : null;
         Statement = new StatementViewModel(LoadRules());
         RuleForm = new RuleFormViewModel(Statement.Config.Catalog);
         RulesError = store.IsAvailable ? null : Texts.RulesFileUnreadable;
         Rules = _drafts.Select(Row).ToList();
-        SelectedSample = samples.FirstOrDefault();
         var saved = settings?.LoadLook() ?? LookChoice.System;
         _loadingLook = true;
         SelectedLook = Looks.Single(l => l.Choice == saved);
@@ -57,18 +61,103 @@ public sealed partial class MainViewModel : ObservableObject
             _settings?.SaveLook(value.Choice);
     }
 
-    public IReadOnlyList<SampleItem> Samples { get; }
-
     public StatementViewModel Statement { get; }
 
     public RuleFormViewModel RuleForm { get; }
 
-    [ObservableProperty]
-    public partial SampleItem? SelectedSample { get; set; }
+    /// <summary>Where "Otvoriť výpis…" asks for a file; the window sets it.</summary>
+    public IStatementPicker? Picker { get; set; }
 
-    /// <summary>Why the chosen sample isn't shown, or null.</summary>
+    /// <summary>False on the start screen; true once a statement has been opened.</summary>
     [ObservableProperty]
-    public partial string? Error { get; private set; }
+    public partial bool HasStatement { get; private set; }
+
+    /// <summary>The statement shown is the example, with invented data, and is labelled so.</summary>
+    [ObservableProperty]
+    public partial bool IsExample { get; private set; }
+
+    /// <summary>A file is being read; opening another waits until it is done.</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(OpenCommand), nameof(OpenExampleCommand))]
+    public partial bool IsReading { get; private set; }
+
+    /// <summary>A file is being dragged over the window; the window sets it.</summary>
+    [ObservableProperty]
+    public partial bool IsDraggingOver { get; set; }
+
+    /// <summary>Why the last file wasn't opened, or why a drop wasn't, until closed or replaced; or null.</summary>
+    [ObservableProperty]
+    public partial string? OpenMessage { get; private set; }
+
+    public bool HasExample => _example is not null;
+
+    private bool CanOpen() => !IsReading;
+
+    private bool CanOpenExample() => !IsReading && _example is not null;
+
+    /// <summary>Asks the picker for a file and opens it; cancelling changes nothing.</summary>
+    [RelayCommand(CanExecute = nameof(CanOpen))]
+    private async Task OpenAsync()
+    {
+        if (Picker is null || await Picker.PickAsync() is not { } path)
+            return;
+        await OpenFileAsync(path);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanOpenExample))]
+    private Task OpenExampleAsync() => _example is null ? Task.CompletedTask : OpenFileAsync(_example, isExample: true);
+
+    [RelayCommand]
+    private void CloseMessage() => OpenMessage = null;
+
+    /// <summary>
+    /// Reads the file and shows its statement, replacing what was shown. A file that can't be read changes nothing
+    /// that is shown and sets the message instead. Ignored while another file is being read.
+    /// </summary>
+    public async Task OpenFileAsync(string path, bool isExample = false)
+    {
+        if (IsReading)
+            return;
+        IsReading = true;
+        try
+        {
+            var content = await StatementFile.ReadAsync(path);
+            var problem = content.Problem;
+            Statements.Model.Statement? statement = null;
+            if (problem is null)
+            {
+                var result = await Task.Run(() => _reader.Read(content.Bytes!));
+                statement = result.Statement;
+                if (result.Rejection is { } rejection)
+                    problem = OpenProblems.From(rejection.Kind);
+            }
+            if (statement is null)
+            {
+                OpenMessage = Texts.NotOpenedMessage(problem!.Value, previousStatementKept: HasStatement);
+                return;
+            }
+            Statement.Show(statement);
+            HasStatement = true;
+            IsExample = isExample;
+            OpenMessage = null;
+        }
+        finally
+        {
+            IsReading = false;
+        }
+    }
+
+    /// <summary>Opens a dropped file; several files, a folder or anything else give their message and change nothing.</summary>
+    public Task DropAsync(DroppedContent dropped)
+    {
+        IsDraggingOver = false;
+        if (IsReading)
+            return Task.CompletedTask;
+        if (dropped.Files.Count == 1 && dropped.Others == 0)
+            return OpenFileAsync(dropped.Files[0]);
+        OpenMessage = dropped.Files.Count > 1 ? Texts.DropSeveralFiles : Texts.DropNotAFile;
+        return Task.CompletedTask;
+    }
 
     /// <summary>The saved user rules, oldest first.</summary>
     [ObservableProperty]
@@ -77,16 +166,6 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Why the saved rules aren't used, or null.</summary>
     [ObservableProperty]
     public partial string? RulesError { get; private set; }
-
-    partial void OnSelectedSampleChanged(SampleItem? value)
-    {
-        if (value is null)
-            return;
-        var result = _reader.Read(File.ReadAllBytes(value.Path));
-        Error = result.IsSuccess ? null : Texts.StatementUnreadable;
-        if (result.Statement is { } statement)
-            Statement.Show(statement);
-    }
 
     /// <summary>
     /// Adds the form's rule on top of every earlier one, saves it, and categorizes the statement again. Nothing is

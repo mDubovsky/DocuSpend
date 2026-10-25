@@ -46,11 +46,11 @@
   </ItemGroup>
 
   <!--
-    The valid synthetic samples travel with the program, so the build can be tried on a clean machine. They are
-    already public. Samples 06 to 09 are not statements and stay out.
+    One synthetic sample travels with the program as the example on the start screen, "Vyskúšať na ukážke"
+    (work/012-open-statement/intent.md, decisions). It is already public.
   -->
   <ItemGroup>
-    <None Include="..\..\samples\public\01-typical-month.pdf;..\..\samples\public\02-busy-month.pdf;..\..\samples\public\03-awkward-month.pdf;..\..\samples\public\04-empty-month.pdf;..\..\samples\public\05-single-transaction-month.pdf"
+    <None Include="..\..\samples\public\01-typical-month.pdf"
           Link="samples\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

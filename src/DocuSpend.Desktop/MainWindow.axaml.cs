@@ -1,5 +1,8 @@
 using System.ComponentModel;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using DocuSpend.Categorization.Model;
 using DocuSpend.Desktop.Look;
@@ -17,12 +20,20 @@ public partial class MainWindow : Window
     private IReadOnlyDictionary<ISeries, CategoryId> _sliceCategories = new Dictionary<ISeries, CategoryId>();
 
     /// <summary>For the XAML loader only; the application uses the constructor with a model.</summary>
-    public MainWindow() : this(new MainViewModel([], new SpikeRuleStore(Path.Combine(Path.GetTempPath(), "docuspend-designer-rules.json")))) { }
+    public MainWindow() : this(new MainViewModel(new SpikeRuleStore(Path.Combine(Path.GetTempPath(), "docuspend-designer-rules.json")))) { }
 
     public MainWindow(MainViewModel model)
     {
         InitializeComponent();
         DataContext = _model = model;
+        model.Picker = new StatementPicker(this);
+
+        // Drag events only bubble. Seeing handled events too, the window gets every drag even when a control inside
+        // it (the rule form's text box) has handled it.
+        AddHandler(DragDrop.DragEnterEvent, OnDragOver, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(DragDrop.DragOverEvent, OnDragOver, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(DragDrop.DragLeaveEvent, OnDragLeave, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(DragDrop.DropEvent, OnDrop, RoutingStrategies.Bubble, handledEventsToo: true);
 
         SpendingPie.DataPointerDown += OnSliceClicked;
         model.Statement.PropertyChanged += OnStatementChanged;
@@ -75,6 +86,37 @@ public partial class MainWindow : Window
         var (background, text) = Charts.Tooltip(palette);
         SpendingPie.TooltipBackgroundPaint = BalanceLine.TooltipBackgroundPaint = background;
         SpendingPie.TooltipTextPaint = BalanceLine.TooltipTextPaint = text;
+    }
+
+    /// <summary>Anything may be dropped, so a wrong drop gets its message; only files show "Pustite výpis sem".</summary>
+    private void OnDragOver(object? sender, DragEventArgs e)
+    {
+        e.DragEffects = DragDropEffects.Copy;
+        _model.IsDraggingOver = e.DataTransfer.Contains(DataFormat.File);
+        e.Handled = true;
+    }
+
+    private void OnDragLeave(object? sender, DragEventArgs e)
+    {
+        _model.IsDraggingOver = false;
+        e.Handled = true;
+    }
+
+    private async void OnDrop(object? sender, DragEventArgs e)
+    {
+        e.Handled = true;
+        await _model.DropAsync(Dropped(e.DataTransfer));
+    }
+
+    /// <summary>The local paths of the dropped files, and how many other things (folders, text) came with them.</summary>
+    internal static DroppedContent Dropped(IDataTransfer data)
+    {
+        var items = data.Items;
+        var files = items.Select(i => i.TryGetFile()).OfType<IStorageFile>()
+            .Select(f => f.TryGetLocalPath()).OfType<string>().ToList();
+        // Nothing usable at all still counts as one wrong thing, so it gets the "only a file" message.
+        var others = Math.Max(items.Count - files.Count, files.Count == 0 ? 1 : 0);
+        return new DroppedContent(files, others);
     }
 
     private void OnSliceClicked(IChartView chart, IEnumerable<ChartPoint>? points)

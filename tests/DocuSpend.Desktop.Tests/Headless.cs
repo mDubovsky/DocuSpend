@@ -25,6 +25,24 @@ internal static class Headless
     /// exists. The session tears its isolated application down right after, and work still queued then (a layout
     /// pass) fails with a font error that would hide the test's own failure, so that failure is kept and rethrown.
     /// </summary>
+    /// <summary>
+    /// Waits for work started on the UI thread (opening a statement) while letting the UI thread run what it
+    /// queues, as the real application's message loop would; blocking on the task would never finish.
+    /// </summary>
+    public static void Wait(Task task)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+        while (!task.IsCompleted)
+        {
+            if (DateTime.UtcNow > deadline)
+                throw new TimeoutException("The task didn't finish.");
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(1);
+        }
+        Dispatcher.UIThread.RunJobs();
+        task.GetAwaiter().GetResult();
+    }
+
     public static void Run(Action test)
     {
         ExceptionDispatchInfo? failure = null;
