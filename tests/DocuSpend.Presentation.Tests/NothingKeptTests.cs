@@ -18,6 +18,7 @@ public sealed partial class NothingKeptTests : IDisposable
     private static readonly string[] Writers =
     [
         "src/DocuSpend.Presentation/Look/SettingsStore.cs",
+        "src/DocuSpend.Presentation/RuleStore.cs",
         "src/DocuSpend.Presentation/SpikeRuleStore.cs",
     ];
 
