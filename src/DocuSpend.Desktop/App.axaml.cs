@@ -21,7 +21,7 @@ public partial class App : Application
         {
             // The example statement travels with the program, in a folder next to it.
             desktop.MainWindow = new MainWindow(new MainViewModel(
-                new SpikeRuleStore(SpikeRuleStore.DefaultPath), new SettingsStore(SettingsStore.DefaultPath), Example.DefaultPath));
+                new RuleStore(RuleStore.DefaultPath), new SettingsStore(SettingsStore.DefaultPath), Example.DefaultPath));
         }
         base.OnFrameworkInitializationCompleted();
     }

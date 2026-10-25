@@ -19,7 +19,6 @@ public sealed partial class NothingKeptTests : IDisposable
     [
         "src/DocuSpend.Presentation/Look/SettingsStore.cs",
         "src/DocuSpend.Presentation/RuleStore.cs",
-        "src/DocuSpend.Presentation/SpikeRuleStore.cs",
     ];
 
     [GeneratedRegex(
@@ -64,7 +63,7 @@ public sealed partial class NothingKeptTests : IDisposable
     {
         var settingsFile = Path.Combine(_appData, "DocuSpend", "settings.json");
         var rulesFile = Path.Combine(_appData, "DocuSpend", "rules.json");
-        var main = new MainViewModel(new SpikeRuleStore(rulesFile), new SettingsStore(settingsFile), Samples.Path("01-typical-month"));
+        var main = new MainViewModel(new RuleStore(rulesFile), new SettingsStore(settingsFile), Samples.Path("01-typical-month"));
 
         // Everything a user can do with statements: the example, every sample, a rule, the look.
         await main.OpenExampleCommand.ExecuteAsync(null);

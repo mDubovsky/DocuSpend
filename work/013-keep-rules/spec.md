@@ -17,7 +17,7 @@ The screens stay as they are. What changes is that the user's rules and categori
 
 ### Saving
 - DocuSpend saves after every change to the user's part: a rule added (today), and later any rule edited, deleted or moved, or a category or sub-category added. There is no save button.
-- The change is saved before DocuSpend confirms it. The rule form's confirmation ("Pravidlo zaradilo 3 transakcie." or "Pravidlo je uložené, ale v tomto výpise mu nezodpovedá žiadna transakcia.") appears only for a rule that was saved.
+- The change is saved before DocuSpend confirms it. The rule form's confirmation is "Pravidlo zaradilo 3 transakcie." or, for a rule that matches nothing in the statement, "Pravidlo je uložené, ale v tomto výpise mu nezodpovedá žiadna transakcia." A rule that wasn't saved (below) that matches nothing gets "V tomto výpise pravidlu nezodpovedá žiadna transakcia." instead, since it isn't saved.
 - A save either completes or leaves the previous saved rules as they were. If DocuSpend or Windows ends during a save, the next start finds either the rules from before the change or the rules after it, never a mixture or a damaged file.
 
 ### Starting

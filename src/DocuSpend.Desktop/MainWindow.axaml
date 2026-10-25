@@ -56,6 +56,13 @@
                 <Button Grid.Column="1" Classes="close" Content="{x:Static vm:Texts.Close}" Command="{Binding CloseMessageCommand}" />
               </Grid>
             </Border>
+            <Border x:Name="RulesMessage" Classes="message error" IsVisible="{Binding RulesMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <Grid ColumnDefinitions="*,Auto">
+                <!-- Selectable, so the path of a moved-aside file can be copied. -->
+                <SelectableTextBlock Text="{Binding RulesMessage}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Classes="close" Content="{x:Static vm:Texts.Close}" Command="{Binding CloseRulesMessageCommand}" />
+              </Grid>
+            </Border>
             <WrapPanel IsVisible="{Binding HasStatement}">
               <StackPanel Margin="{StaticResource Look.Margin.KeyFigure}">
                 <TextBlock Classes="label" Text="{x:Static vm:Texts.SpendingTotal}" />
@@ -237,11 +244,11 @@
               <Button Grid.Row="3" Grid.Column="1" Classes="primary" Content="{x:Static vm:Texts.AddRule}"
                       Command="{Binding AddRuleCommand}" IsDefault="True" />
             </Grid>
-            <Border Classes="message error" IsVisible="{Binding RuleForm.Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-              <TextBlock Text="{Binding RuleForm.Error}" TextWrapping="Wrap" />
-            </Border>
             <Border Classes="message confirmation" IsVisible="{Binding RuleForm.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
               <TextBlock Text="{Binding RuleForm.Message}" TextWrapping="Wrap" />
+            </Border>
+            <Border Classes="message error" IsVisible="{Binding RuleForm.Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <TextBlock Text="{Binding RuleForm.Error}" TextWrapping="Wrap" />
             </Border>
           </StackPanel>
         </Border>
@@ -249,8 +256,8 @@
           <DockPanel>
             <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.Rules}" />
             <Border Classes="message error" DockPanel.Dock="Top"
-                    IsVisible="{Binding RulesError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-              <TextBlock Text="{Binding RulesError}" TextWrapping="Wrap" />
+                    x:Name="RulesNotSaving" IsVisible="{Binding RulesNotSaving}">
+              <TextBlock Text="{x:Static vm:Texts.RulesNotSaving}" TextWrapping="Wrap" />
             </Border>
             <Panel>
               <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoRules}" IsVisible="{Binding !Rules.Count}" />

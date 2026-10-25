@@ -26,7 +26,7 @@ public sealed class LookTests : IDisposable
 
     private (MainWindow Window, MainViewModel Model) Open(LookChoice choice)
     {
-        var model = new MainViewModel(new SpikeRuleStore(Path.Combine(_folder, "rules.json")));
+        var model = new MainViewModel(new RuleStore(Path.Combine(_folder, "rules.json")));
         Headless.Wait(model.OpenFileAsync(MainWindowTests.Sample("01-typical-month")));
         model.SelectedLook = model.Looks.Single(l => l.Choice == choice);
         var window = new MainWindow(model);
