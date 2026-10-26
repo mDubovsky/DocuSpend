@@ -22,7 +22,7 @@ Every behavior change ships with tests on the synthetic samples (`Samples.Path` 
   - **saving is off for the session:** write `{ "version": 2 }` to `rules.json` before starting (a file from a newer DocuSpend);
   - **damaged rules:** write `{ damaged` to `rules.json`.
 - **`DocuSpend.Desktop.Tests`**: what only the real window shows, without a screen:
-  - wrap each test in `Headless.Run`, and wait for async commands with `Headless.Wait`;
+  - wrap each test in `Headless.Run`, and wait for async commands with `Headless.Wait`; the window tests run one after another (`Parallelization` in `Headless.cs`), since they share one UI thread and parallel classes starved the background work of opening a statement on CI;
   - after changing state, call `Dispatcher.UIThread.RunJobs()` before looking at controls;
   - find controls by `x:Name` with `FindControl`, and give anything a test needs to find a name;
   - press a button by running its `Command` with its `CommandParameter`; send a key with `window.KeyPress(...)` from `Avalonia.Headless`;
