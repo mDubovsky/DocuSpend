@@ -192,9 +192,8 @@ public class ChangeRuleTests
             added.UserRules[1],
         ]);
 
-        foreach (var name in Samples.Valid)
+        foreach (var statement in Samples.Valid.Select(Samples.Read))
         {
-            var statement = Samples.Read(name);
             Assert.Equal(
                 Categorizer.Categorize(statement, direct).Transactions.Select(t => (t.Placement, t.Rule)),
                 Categorizer.Categorize(statement, changed).Transactions.Select(t => (t.Placement, t.Rule)));

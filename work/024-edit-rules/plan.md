@@ -157,6 +157,8 @@ Test-first for logic; one commit per step, each after the maintainer approves it
 - **Found in the build: the Fluent `Expander` kept Fluent's colours.** Its header was grey in the light look and black in the dark one. It was styled from the palette, then removed when the review replaced it with two views.
 - **Found in the build: a rule list taller than its card centred itself.** A `ScrollViewer` with a maximum height in a taller space is centred by default; the rule lists are pinned to the top.
 - **Found in the screenshot review: numbers, the fold-out section and the question in the row.** The maintainer asked for priority numbers only in the form, for the rules card to switch between "Moje pravidlá" and "Vstavané pravidlá" with pills in its heading, and for the deletion question to be a pop-up box with nothing chosen at start. The spec, the intent and this plan describe what was built. The help mark by "Moje pravidlá" went with the numbers.
+- **Found in CI: a window test timed out on Linux.** The window test classes ran in parallel, each blocking a thread-pool thread while it waited for the one headless UI thread, and on the small Linux runner the statement reader's background work waited past the 30-second limit. The window tests now run one after another (`Parallelization(Mode = ParallelMode.None)` in `Headless.cs`), in the same time as before.
+- **Found in code scanning:** a redundant cast, a loop that maps its items, and `Path.Combine` calls that could drop a part; fixed, with `Path.Join` in the new tests.
 - **Found in the hand check:** nothing; the maintainer approved it as built.
 
 ## Verification

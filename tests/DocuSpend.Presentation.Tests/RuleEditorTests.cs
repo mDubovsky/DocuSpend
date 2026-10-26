@@ -10,9 +10,9 @@ namespace DocuSpend.Presentation.Tests;
 /// </summary>
 public sealed class RuleEditorTests : IDisposable
 {
-    private readonly string _folder = Path.Combine(Path.GetTempPath(), "docuspend-tests-" + Guid.NewGuid().ToString("N"));
+    private readonly string _folder = Path.Join(Path.GetTempPath(), "docuspend-tests-" + Guid.NewGuid().ToString("N"));
 
-    private string RulesFile => Path.Combine(_folder, "rules.json");
+    private string RulesFile => Path.Join(_folder, "rules.json");
 
     public void Dispose()
     {
@@ -335,9 +335,9 @@ public sealed class RuleEditorTests : IDisposable
     [Fact]
     public async Task An_edit_that_cannot_be_saved_applies_says_so_and_the_next_change_saves_it()
     {
-        var folder = Path.Combine(_folder, "DocuSpend");
+        var folder = Path.Join(_folder, "DocuSpend");
         Directory.CreateDirectory(_folder);
-        var file = Path.Combine(folder, "rules.json");
+        var file = Path.Join(folder, "rules.json");
         var main = new MainViewModel(new RuleStore(file));
         await main.OpenFileAsync(Samples.Path("01-typical-month"));
         main.RuleForm.Text = "kino";
@@ -589,8 +589,8 @@ public sealed class RuleEditorTests : IDisposable
     [Fact]
     public async Task A_deletion_that_cannot_be_saved_applies_says_so_and_the_next_change_saves_it()
     {
-        var folder = Path.Combine(_folder, "DocuSpend");
-        var file = Path.Combine(folder, "rules.json");
+        var folder = Path.Join(_folder, "DocuSpend");
+        var file = Path.Join(folder, "rules.json");
         var config = CategorizationConfig.Default.AddUserRule(Text("alfa"), Games, 1).Value!.AddUserRule(Text("beta"), Rent, 1).Value!;
         Assert.True(new RuleStore(file).Save(config));
         var main = new MainViewModel(new RuleStore(file));

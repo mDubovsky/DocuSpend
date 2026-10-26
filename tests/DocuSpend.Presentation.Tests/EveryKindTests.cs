@@ -11,7 +11,7 @@ namespace DocuSpend.Presentation.Tests;
 /// </summary>
 public sealed class EveryKindTests : IDisposable
 {
-    private readonly string _folder = Path.Combine(Path.GetTempPath(), "docuspend-tests-" + Guid.NewGuid().ToString("N"));
+    private readonly string _folder = Path.Join(Path.GetTempPath(), "docuspend-tests-" + Guid.NewGuid().ToString("N"));
 
     public void Dispose()
     {
@@ -49,8 +49,10 @@ public sealed class EveryKindTests : IDisposable
 
     private static string Euro(decimal amount) => SlovakFormat.Amount(amount);
 
-    public static TheoryData<Case> Cases => new(
-    (Case[])[
+    public static TheoryData<Case> Cases => new(AllCases);
+
+    private static readonly Case[] AllCases =
+    [
         new("text contains", Text(ConditionKind.Text, TextMode.Contains, "kino"),
             new TextCondition("kino", TextMode.Contains), "Text obsahuje „kino“"),
         new("text equals", Text(ConditionKind.Text, TextMode.EqualTo, "Kino Lumière"),
@@ -70,13 +72,13 @@ public sealed class EveryKindTests : IDisposable
             new TypeCondition([TransactionType.CardPayment, TransactionType.Transfer]), "Typ: Platba kartou, Prevod"),
         new("variable symbol", form => { form.SelectedKind = ConditionKind.VariableSymbol; form.Symbol = "0326"; },
             new VariableSymbolCondition("0326"), "Variabilný symbol: 0326"),
-    ]);
+    ];
 
     [Theory]
     [MemberData(nameof(Cases))]
     public async Task A_rule_of_each_kind_added_through_the_form_is_the_rule_the_categorization_makes(Case @case)
     {
-        var main = new MainViewModel(new RuleStore(Path.Combine(_folder, "rules.json")));
+        var main = new MainViewModel(new RuleStore(Path.Join(_folder, "rules.json")));
         await main.OpenFileAsync(Samples.Path("01-typical-month"));
         @case.Fill(main.RuleForm);
         main.RuleForm.SelectedCategory = main.RuleForm.Categories.Single(c => c.Subcategories.Any(s => s.Id == Target));

@@ -19,7 +19,7 @@ public sealed class RuleEditorWindowTests : IDisposable
 
     private (MainWindow Window, MainViewModel Model) StartWithStatement()
     {
-        var model = new MainViewModel(new RuleStore(Path.Combine(_folder, "rules.json")), example: MainWindowTests.Sample("01-typical-month"));
+        var model = new MainViewModel(new RuleStore(Path.Join(_folder, "rules.json")), example: MainWindowTests.Sample("01-typical-month"));
         var window = new MainWindow(model);
         window.Show();
         Headless.Wait(model.OpenExampleCommand.ExecuteAsync(null));
