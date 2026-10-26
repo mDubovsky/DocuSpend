@@ -623,6 +623,60 @@ public sealed class RuleEditorTests : IDisposable
         Assert.Equal(["Text obsahuje „beta“"], new MainViewModel(new RuleStore(file)).Rules.Select(r => r.Condition));
     }
 
+    // Built-in rules
+
+    [Fact]
+    public async Task Every_built_in_rule_is_listed_in_the_order_tried_with_256()
+    {
+        var main = await StartWith((Text("alfa"), Games, 2));
+
+        var defaults = main.Statement.Config.RulesInOrder().Where(r => r.Source == RuleSource.Default).ToList();
+        Assert.Equal(defaults.Select(r => r.Id), main.BuiltInRules.Select(r => r.Id));
+        Assert.All(main.BuiltInRules, r => Assert.Equal("256", r.Priority));
+        Assert.Equal(Texts.BuiltInPriority, (CategorizationConfig.MaxUserPriority + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Assert.Equal(MainViewModel.Describe(defaults[0].Condition), main.BuiltInRules[0].Condition);
+        Assert.Equal("Vstavané pravidlá", Texts.BuiltInRules);
+    }
+
+    [Fact]
+    public async Task No_change_to_user_rules_changes_the_built_in_rules()
+    {
+        var main = await StartWith((Text("alfa"), Games, 2), (Text("beta"), Games, 3));
+        var before = main.BuiltInRules.ToList();
+        var defaults = main.Statement.Config.DefaultRules;
+
+        main.EditRuleCommand.Execute(main.Rules[0]);
+        main.RuleForm.Priority = "1";
+        main.SaveRuleCommand.Execute(null);
+        main.AskToDeleteCommand.Execute(main.Rules[1]);
+        main.DeleteRuleCommand.Execute(null);
+
+        Assert.Equal(before, main.BuiltInRules);
+        Assert.Equal(defaults, main.Statement.Config.DefaultRules);
+    }
+
+    // Many rules
+
+    [Fact]
+    public async Task With_200_rules_an_edit_and_a_deletion_each_take_under_a_second()
+    {
+        var rules = Enumerable.Range(1, 200).Select(i => (Text($"obchod {i}"), Games, i % 20 + 1)).ToArray();
+        var main = await StartWith(rules);
+        Assert.Equal(200, main.Rules.Count);
+
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        main.EditRuleCommand.Execute(main.Rules[100]);
+        main.RuleForm.Priority = "1";
+        main.SaveRuleCommand.Execute(null);
+        Assert.True(clock.Elapsed < TimeSpan.FromSeconds(1), $"The edit took {clock.Elapsed}.");
+
+        clock.Restart();
+        main.AskToDeleteCommand.Execute(main.Rules[50]);
+        main.DeleteRuleCommand.Execute(null);
+        Assert.True(clock.Elapsed < TimeSpan.FromSeconds(1), $"The deletion took {clock.Elapsed}.");
+        Assert.Equal(199, main.Rules.Count);
+    }
+
     [Fact]
     public void The_priority_help_says_what_the_numbers_mean() =>
         Assert.Equal(

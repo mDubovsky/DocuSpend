@@ -35,6 +35,7 @@ public sealed partial class MainViewModel : ObservableObject
         RulesMessage = Texts.RulesProblemMessage(load.Problem, load.MovedTo);
         RulesNotSaving = !store.IsSaving;
         Rules = UserRows();
+        BuiltInRules = Statement.Config.DefaultRules.Select(r => Row(r, Texts.BuiltInPriority)).ToList();
         var saved = settings?.LoadLook() ?? LookChoice.System;
         _loadingLook = true;
         SelectedLook = Looks.Single(l => l.Choice == saved);
@@ -160,6 +161,12 @@ public sealed partial class MainViewModel : ObservableObject
         OpenMessage = dropped.Files.Count > 1 ? Texts.DropSeveralFiles : Texts.DropNotAFile;
         return Task.CompletedTask;
     }
+
+    /// <summary>
+    /// The default rules in the order they are tried, each shown with <see cref="Texts.BuiltInPriority"/>: every user
+    /// rule wins over them (spec: "Vstavané pravidlá"). They never change while DocuSpend runs.
+    /// </summary>
+    public IReadOnlyList<RuleRow> BuiltInRules { get; }
 
     /// <summary>The user rules in the order they are tried: the one higher up wins (spec: "Moje pravidlá").</summary>
     [ObservableProperty]

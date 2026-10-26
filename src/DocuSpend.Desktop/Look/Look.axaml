@@ -48,6 +48,8 @@
     <x:Double x:Key="Look.Width.Priority">34</x:Double>
     <Thickness x:Key="Look.Padding.SmallButton">12,3</Thickness>
     <Thickness x:Key="Look.Padding.RuleRow">8,4</Thickness>
+    <x:Double x:Key="Look.Height.RuleList">320</x:Double>
+    <Thickness x:Key="Look.Margin.BuiltInRules">0,14,0,0</Thickness>
   </Styles.Resources>
 
   <!-- The window: background, and the body text everything inherits -->
@@ -333,6 +335,20 @@
   <!-- A row asking before it deletes its rule -->
   <Style Selector="TextBlock.question">
     <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <!-- A list of rules scrolls within its card instead of making the card taller -->
+  <Style Selector="ScrollViewer.ruleList">
+    <Setter Property="MaxHeight" Value="{StaticResource Look.Height.RuleList}" />
+  </Style>
+  <!-- "Vstavané pravidlá": a quiet section that opens below the user's rules -->
+  <Style Selector="Expander.builtInRules">
+    <Setter Property="Margin" Value="{StaticResource Look.Margin.BuiltInRules}" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Look.CardEdge}" />
+    <Setter Property="Foreground" Value="{DynamicResource Look.Text}" />
   </Style>
 
 </Styles>

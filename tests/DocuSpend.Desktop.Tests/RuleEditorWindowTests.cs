@@ -177,6 +177,27 @@ public sealed class RuleEditorWindowTests : IDisposable
     });
 
     [Fact]
+    public void Vstavane_pravidla_is_closed_at_start_and_opened_lists_every_default_rule_with_256_and_no_buttons() => Headless.Run(() =>
+    {
+        var (window, model) = StartWithStatement();
+        var section = (Expander)Named(window, "BuiltInRules");
+
+        Assert.False(section.IsExpanded);
+        Assert.Equal("Vstavané pravidlá", section.Header);
+
+        section.IsExpanded = true;
+        Dispatcher.UIThread.RunJobs();
+
+        var list = Named(window, "BuiltInRuleList");
+        Assert.True(list.IsEffectivelyVisible);
+        var rows = list.GetLogicalDescendants().OfType<Border>().Where(b => b.Classes.Contains("ruleRow")).ToList();
+        Assert.Equal(model.Statement.Config.DefaultRules.Count, rows.Count);
+        Assert.All(rows, r => Assert.Equal("256", r.GetLogicalDescendants().OfType<TextBlock>().First().Text));
+        Assert.Empty(list.GetLogicalDescendants().OfType<Button>());
+        window.Close();
+    });
+
+    [Fact]
     public void Each_rule_in_the_list_shows_its_number() => Headless.Run(() =>
     {
         var (window, model) = StartWithStatement();
