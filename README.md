@@ -10,7 +10,7 @@ Give DocuSpend a statement and get charts showing when and how you spent: how mu
 - the account balance through the month;
 - rules you add to sort transactions into categories.
 
-What works today: opening your own statement, with a clear message for a file that can't be read; sorting transactions into categories with built-in rules and rules of your own, which are kept between sessions and can be edited, reordered and deleted; and the charts, whose hover cards show a slice's category, amount and share, and the balance on any day under the pointer. Fixing the look switch and scroll bars ([#19](https://github.com/mDubovsky/DocuSpend/issues/19)) is next. What the first version includes: [docs/mvp.md](docs/mvp.md).
+What works today: opening your own statement, with a clear message for a file that can't be read; sorting transactions into categories with built-in rules and rules of your own, which are kept between sessions and can be edited, reordered and deleted; the charts, whose hover cards show a slice's category, amount and share, and the balance on any day under the pointer; and one look, light or dark, that every control follows, scroll bars and the look switch included. Creating your own categories and sub-categories ([#25](https://github.com/mDubovsky/DocuSpend/issues/25)) is next. What the first version includes: [docs/mvp.md](docs/mvp.md).
 
 ## Privacy
 

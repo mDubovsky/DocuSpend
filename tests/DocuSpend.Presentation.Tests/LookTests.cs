@@ -49,6 +49,14 @@ public class LookTests
                 data.Add(look, nameof(Palette.Accent), nameof(Palette.Hover), 4.5);
                 // A message's close button, in the error colour, while the pointer is over it.
                 data.Add(look, nameof(Palette.Error), nameof(Palette.Hover), 4.5);
+                // A switch's choice under the pointer: readable, and visibly apart from the switch, whose background
+                // is the rows' hover tone (#19). 1.15 is about how far the chosen pill stands from the switch.
+                data.Add(look, nameof(Palette.Text), nameof(Palette.SwitchHover), 4.5);
+                data.Add(look, nameof(Palette.SwitchHover), nameof(Palette.Hover), 1.15);
+                // A scroll bar's handle, on a card, on the window's background and on its own track (#19).
+                data.Add(look, nameof(Palette.ScrollThumb), nameof(Palette.Card), 3);
+                data.Add(look, nameof(Palette.ScrollThumb), nameof(Palette.Background), 3);
+                data.Add(look, nameof(Palette.ScrollThumb), nameof(Palette.Hover), 3);
             }
             return data;
         }

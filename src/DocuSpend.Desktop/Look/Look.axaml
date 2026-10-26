@@ -56,7 +56,96 @@
     <x:Double x:Key="Look.Space.HoverGap">14</x:Double>
     <x:Double x:Key="Look.Size.HoverDot">12</x:Double>
     <Thickness x:Key="Look.Padding.HoverCard">12,8</Thickness>
+    <x:Double x:Key="Look.Size.ScrollBar">12</x:Double>
+    <x:Double x:Key="Look.Size.ScrollThumb">6</x:Double>
+    <x:Double x:Key="Look.Size.ScrollThumbMin">32</x:Double>
+    <CornerRadius x:Key="Look.Radius.ScrollThumb">3</CornerRadius>
+
+    <!--
+      Scroll bars (#19): a slim, rounded handle on a faint track, in a strip of their own, with no arrow buttons.
+      This replaces Fluent's scroll bar as a whole, so nothing of its expanding, arrowed bar is left. Clicking the track
+      either side of the handle still pages, through the transparent page buttons.
+    -->
+    <ControlTheme x:Key="Look.ScrollThumb" TargetType="Thumb">
+      <Setter Property="Background" Value="{DynamicResource Look.ScrollThumb}" />
+      <Setter Property="CornerRadius" Value="{StaticResource Look.Radius.ScrollThumb}" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" />
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:pointerover">
+        <Setter Property="Background" Value="{DynamicResource Look.Muted}" />
+      </Style>
+      <Style Selector="^:pressed">
+        <Setter Property="Background" Value="{DynamicResource Look.Muted}" />
+      </Style>
+    </ControlTheme>
+    <ControlTheme x:Key="Look.ScrollPage" TargetType="RepeatButton">
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="Transparent" />
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="{x:Type ScrollBar}" TargetType="ScrollBar">
+      <Style Selector="^:vertical">
+        <Setter Property="Width" Value="{StaticResource Look.Size.ScrollBar}" />
+        <Setter Property="Template">
+          <ControlTemplate>
+            <Panel Background="Transparent">
+              <Border Width="{StaticResource Look.Size.ScrollThumb}" HorizontalAlignment="Center"
+                      Background="{DynamicResource Look.Hover}" CornerRadius="{StaticResource Look.Radius.ScrollThumb}" />
+              <Track Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                     Value="{TemplateBinding Value, Mode=TwoWay}" ViewportSize="{TemplateBinding ViewportSize}"
+                     DeferThumbDrag="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}"
+                     Orientation="Vertical" IsDirectionReversed="True">
+                <Track.DecreaseButton>
+                  <RepeatButton Name="PART_PageUpButton" Theme="{StaticResource Look.ScrollPage}" />
+                </Track.DecreaseButton>
+                <Track.IncreaseButton>
+                  <RepeatButton Name="PART_PageDownButton" Theme="{StaticResource Look.ScrollPage}" />
+                </Track.IncreaseButton>
+                <Thumb Theme="{StaticResource Look.ScrollThumb}" Width="{StaticResource Look.Size.ScrollThumb}"
+                       MinHeight="{StaticResource Look.Size.ScrollThumbMin}" HorizontalAlignment="Center" />
+              </Track>
+            </Panel>
+          </ControlTemplate>
+        </Setter>
+      </Style>
+      <Style Selector="^:horizontal">
+        <Setter Property="Height" Value="{StaticResource Look.Size.ScrollBar}" />
+        <Setter Property="Template">
+          <ControlTemplate>
+            <Panel Background="Transparent">
+              <Border Height="{StaticResource Look.Size.ScrollThumb}" VerticalAlignment="Center"
+                      Background="{DynamicResource Look.Hover}" CornerRadius="{StaticResource Look.Radius.ScrollThumb}" />
+              <Track Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                     Value="{TemplateBinding Value, Mode=TwoWay}" ViewportSize="{TemplateBinding ViewportSize}"
+                     DeferThumbDrag="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}"
+                     Orientation="Horizontal">
+                <Track.DecreaseButton>
+                  <RepeatButton Name="PART_PageUpButton" Theme="{StaticResource Look.ScrollPage}" />
+                </Track.DecreaseButton>
+                <Track.IncreaseButton>
+                  <RepeatButton Name="PART_PageDownButton" Theme="{StaticResource Look.ScrollPage}" />
+                </Track.IncreaseButton>
+                <Thumb Theme="{StaticResource Look.ScrollThumb}" Height="{StaticResource Look.Size.ScrollThumb}"
+                       MinWidth="{StaticResource Look.Size.ScrollThumbMin}" VerticalAlignment="Center" />
+              </Track>
+            </Panel>
+          </ControlTemplate>
+        </Setter>
+      </Style>
+    </ControlTheme>
   </Styles.Resources>
+
+  <!-- Every scroll bar always shows while its list has more than fits, beside the list rather than over it (#19).
+       A list box binds its inner scroll viewer's setting to its own, which outranks a style, so it gets it too. -->
+  <Style Selector="ScrollViewer">
+    <Setter Property="AllowAutoHide" Value="False" />
+  </Style>
 
   <!-- The window: background, and the body text everything inherits -->
   <Style Selector="Window">
@@ -116,6 +205,7 @@
   <Style Selector="ListBox">
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="ScrollViewer.AllowAutoHide" Value="False" />
   </Style>
   <Style Selector="ListBoxItem">
     <Setter Property="Padding" Value="{StaticResource Look.Padding.Row}" />
@@ -144,16 +234,27 @@
     <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
 
-  <!-- A segmented choice (light or dark): a pill holding pills, the chosen one in the accent tint -->
+  <!-- A segmented choice (light or dark): a pill holding pills, the chosen one in the accent tint. It keeps its own
+       height in a taller row, so its pills keep their shape and their text stays centred (#19). -->
   <Style Selector="ListBox.segmented">
     <Setter Property="Background" Value="{DynamicResource Look.Hover}" />
     <Setter Property="CornerRadius" Value="{StaticResource Look.Radius.Pill}" />
     <Setter Property="Padding" Value="{StaticResource Look.Padding.Segmented}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
   <Style Selector="ListBox.segmented ListBoxItem">
     <Setter Property="Padding" Value="{StaticResource Look.Padding.Segment}" />
     <Setter Property="Margin" Value="0" />
     <Setter Property="FontSize" Value="{StaticResource Look.FontSize.Label}" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <!-- A choice under the pointer: its own tone, since the switch's background is the rows' hover tone (#19). The
+       chosen choice keeps its accent pill, by the rule for a selected row above. -->
+  <Style Selector="ListBox.segmented ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Look.SwitchHover}" />
+  </Style>
+  <Style Selector="ListBox.segmented ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Look.AccentTint}" />
   </Style>
   <Style Selector="ListBox.segmented ListBoxItem:selected TextBlock">
     <Setter Property="FontWeight" Value="SemiBold" />
@@ -186,6 +287,7 @@
   <!-- Form controls: rounded -->
   <Style Selector="TextBox">
     <Setter Property="CornerRadius" Value="{StaticResource Look.Radius.Control}" />
+    <Setter Property="ScrollViewer.AllowAutoHide" Value="False" />
   </Style>
   <Style Selector="ComboBox">
     <Setter Property="CornerRadius" Value="{StaticResource Look.Radius.Control}" />
