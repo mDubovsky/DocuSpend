@@ -1,7 +1,9 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using DocuSpend.Categorization.Model;
 using DocuSpend.Desktop;
 using DocuSpend.Presentation;
@@ -101,7 +103,43 @@ internal static class Screens
         new("13-ring-card-long-name", main => Open(main, "02-busy-month"), InWindow: window => HoverRing(window, MiddleOf(window, "Elektronika"))),
         new("14-balance-card-gap", main => Open(main, "01-typical-month"), InWindow: window => HoverDay(window, DayWithoutBookings(window))),
         new("14-balance-card-busy", main => Open(main, "02-busy-month"), InWindow: window => HoverDay(window, BusiestDay(window))),
+        // The switches and the scroll bars (#19): "Podľa systému" is never the chosen look in these pictures.
+        new("15-look-switch-hover", main => Open(main, "01-typical-month"), InWindow: window => PointAt(window, Choice(window.LookSwitch, 0))),
+        new("16-rules-switch-hover", main => Open(main, "01-typical-month"), InWindow: window => PointAt(window, Choice(window.RuleViewSwitch, 1))),
+        new("17-scroll-bar", main =>
+        {
+            Open(main, "02-busy-month");
+            SelectTheLongestCategory(main);
+        }, InWindow: ScrollTransactionsAndPointAtTheHandle),
     ];
+
+    private static ListBoxItem Choice(ListBox @switch, int index) => @switch.GetVisualDescendants().OfType<ListBoxItem>().ElementAt(index);
+
+    private static void PointAt(MainWindow window, Control control) =>
+        window.MouseMove(control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), window)!.Value);
+
+    /// <summary>Selects the category with the most transactions, so its list has more than fits.</summary>
+    private static void SelectTheLongestCategory(MainViewModel main)
+    {
+        var statement = main.Statement;
+        statement.SelectedRow = statement.Categories.MaxBy(row =>
+        {
+            statement.SelectedRow = row;
+            return statement.Transactions.Count;
+        })!;
+    }
+
+    /// <summary>Scrolls the transaction list part way, then puts the pointer on its scroll bar's handle.</summary>
+    private static void ScrollTransactionsAndPointAtTheHandle(MainWindow window)
+    {
+        var model = (MainViewModel)window.DataContext!;
+        var list = window.GetVisualDescendants().OfType<ListBox>().Single(l => ReferenceEquals(l.ItemsSource, model.Statement.Transactions));
+        var scroller = list.GetVisualDescendants().OfType<ScrollViewer>().First();
+        scroller.Offset = new Vector(0, (scroller.Extent.Height - scroller.Viewport.Height) / 3);
+        Settle();
+        var bar = scroller.GetVisualDescendants().OfType<ScrollBar>().First(b => b.Orientation == Avalonia.Layout.Orientation.Vertical);
+        PointAt(window, bar.GetVisualDescendants().OfType<Thumb>().Single());
+    }
 
     /// <summary>Opens the example and adds a rule of each kind through the form, then renumbers one, as a user would.</summary>
     private static void AddRulesOfEveryKind(MainViewModel main)
