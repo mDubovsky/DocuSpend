@@ -1,5 +1,5 @@
 ---
-status: draft
+status: specced
 issue: 21
 ---
 
@@ -18,7 +18,7 @@ Rules are needed only now and then. Someone who opens a statement to see where t
 - **The rules screen holds everything about rules that is on the statement screen today:** the form for a new rule, "Moje pravidlá" with editing, deleting and priority, and "Vstavané pravidlá". It works as it does today; this item moves it, it doesn't change it.
 - **Rules still act on the open statement straight away.** Adding, editing or deleting a rule on the rules screen categorizes the open statement again, as today, and the user is still told how many of its transactions the rule catches. Going back to the statement screen shows the new categorization.
 - **Switching loses nothing.** Going to the rules and back keeps what the user was looking at: the selected category and its transactions. Going to the statement and back keeps a rule that is half typed or being edited.
-- **Messages that concern the whole application stay visible on both screens**, for example that a statement couldn't be opened, or that rules can't be loaded or saved.
+- **Messages that concern the whole application stay visible on both screens**, for example that a statement couldn't be opened, or that the saved rules couldn't be loaded. Messages that answer a rule change stay with the change, on the rules screen.
 - **Room to grow:** the rules screen leaves room for what will join it later, such as managing categories, and nothing in this item stands in the way of categorizing a single transaction from the statement screen later.
 
 ## Success criteria
@@ -28,7 +28,7 @@ Rules are needed only now and then. Someone who opens a statement to see where t
 - Everything the rules card does today works on the rules screen: adding a rule of each kind, editing, deleting with confirmation, changing priority, the built-in rules, and the messages for invalid input and for rules that can't be saved.
 - Adding a rule on the rules screen recategorizes the open statement: the user is told how many transactions it catches, and back on the statement screen the charts, categories and transactions follow it.
 - After switching to the rules and back, the same category is selected and its transactions are shown. After switching to the statement and back, a half-typed rule, or a rule being edited, is still there.
-- An error about opening a statement, or about loading or saving rules, is visible whichever screen is shown.
+- An error about opening a statement, or about loading the saved rules, is visible whichever screen is shown.
 - Every new part of the screens comes from the shared look; the look test still finds no literal colour, size or spacing in the screens.
 - Nothing in this item adds networking, telemetry or an unreviewed dependency ([decision 0006](../../docs/decisions/0006-privacy-approach-and-network-boundary.md)), and what is saved doesn't change.
 - The maintainer opens a real statement, switches between the screens, adds and edits a rule, and checks the statement screen at the default window size, as a hand check.
