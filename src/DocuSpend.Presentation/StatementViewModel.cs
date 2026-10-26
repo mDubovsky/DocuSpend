@@ -14,8 +14,12 @@ public sealed record PieSlice(CategoryId Category, string Name, decimal Spending
     public string ShareText => SlovakFormat.Share(Share);
 }
 
-/// <summary>The balance at the end of a day.</summary>
-public sealed record BalancePoint(DateOnly Date, decimal Balance);
+/// <summary>The balance at the end of a day, with the texts the balance chart's hover card shows.</summary>
+public sealed record BalancePoint(DateOnly Date, decimal Balance)
+{
+    public string DateText => SlovakFormat.Date(Date);
+    public string BalanceText => SlovakFormat.Amount(Balance);
+}
 
 /// <summary>A category in the list: every category with transactions this month, whatever its role.</summary>
 public sealed record CategoryRow(CategoryId Category, string Name, int Count, decimal Amount, string Total)
@@ -73,7 +77,7 @@ public sealed partial class StatementViewModel : ObservableObject
     [ObservableProperty]
     public partial bool HasSpending { get; private set; }
 
-    /// <summary>From the opening balance at the period's start, by booking date, to the closing balance at its end.</summary>
+    /// <summary>One point for every day of the period, each the balance at the end of that day.</summary>
     [ObservableProperty]
     public partial IReadOnlyList<BalancePoint> BalancePoints { get; private set; } = [];
 
@@ -177,15 +181,14 @@ public sealed partial class StatementViewModel : ObservableObject
 
     private static List<BalancePoint> Balances(Statement statement)
     {
-        var points = new List<BalancePoint> { new(statement.PeriodStart, statement.OpeningBalance) };
+        var byDay = statement.Transactions.GroupBy(t => t.BookingDate).ToDictionary(g => g.Key, g => g.Sum(t => t.Amount));
+        var points = new List<BalancePoint>();
         var running = statement.OpeningBalance;
-        foreach (var day in statement.Transactions.GroupBy(t => t.BookingDate).OrderBy(g => g.Key))
+        for (var day = statement.PeriodStart; day <= statement.PeriodEnd; day = day.AddDays(1))
         {
-            running += day.Sum(t => t.Amount);
-            points.Add(new BalancePoint(day.Key, running));
+            running += byDay.GetValueOrDefault(day);
+            points.Add(new BalancePoint(day, running));
         }
-        if (points[^1].Date != statement.PeriodEnd)
-            points.Add(new BalancePoint(statement.PeriodEnd, running));
         return points;
     }
 }

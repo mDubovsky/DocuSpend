@@ -52,6 +52,10 @@
     <x:Double x:Key="Look.Width.DialogMin">380</x:Double>
     <x:Double x:Key="Look.Width.DialogMax">520</x:Double>
     <Thickness x:Key="Look.Margin.DialogButtons">0,8,0,0</Thickness>
+    <x:Double x:Key="Look.Space.HoverEdge">8</x:Double>
+    <x:Double x:Key="Look.Space.HoverGap">14</x:Double>
+    <x:Double x:Key="Look.Size.HoverDot">12</x:Double>
+    <Thickness x:Key="Look.Padding.HoverCard">12,8</Thickness>
   </Styles.Resources>
 
   <!-- The window: background, and the body text everything inherits -->
@@ -325,6 +329,26 @@
   <Style Selector="Button.small">
     <Setter Property="Padding" Value="{StaticResource Look.Padding.SmallButton}" />
     <Setter Property="FontSize" Value="{StaticResource Look.FontSize.Label}" />
+  </Style>
+
+  <!-- The charts' hover cards and the dot on the balance line: drawn over the whole window, so a card is never cut by a chart -->
+  <Style Selector="Border.hoverCard">
+    <Setter Property="Background" Value="{DynamicResource Look.Card}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Look.CardEdge}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{StaticResource Look.Radius.Control}" />
+    <Setter Property="Padding" Value="{StaticResource Look.Padding.HoverCard}" />
+    <Setter Property="BoxShadow" Value="0 4 16 0 #26000000" />
+  </Style>
+  <Style Selector="Border.hoverCard TextBlock.name">
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="Ellipse.hoverDot">
+    <Setter Property="Width" Value="{StaticResource Look.Size.HoverDot}" />
+    <Setter Property="Height" Value="{StaticResource Look.Size.HoverDot}" />
+    <Setter Property="Fill" Value="{DynamicResource Look.Accent}" />
+    <Setter Property="Stroke" Value="{DynamicResource Look.Card}" />
+    <Setter Property="StrokeThickness" Value="2" />
   </Style>
 
   <!-- A pop-up question: the window dimmed behind a card in its middle -->

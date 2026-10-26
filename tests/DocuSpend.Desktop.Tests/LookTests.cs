@@ -94,7 +94,6 @@ public sealed class LookTests : IDisposable
         Assert.Equal(Palette.Dark.Card, Hex(CardBackground(window)));
         var line = (StepLineSeries<DateTimePoint>)window.BalanceLine.Series!.Single();
         Assert.Equal(Palette.Dark.Accent, Hex(((SolidColorPaint)line.Stroke!).Color));
-        Assert.Equal(Palette.Dark.Card, Hex(((SolidColorPaint)window.BalanceLine.TooltipBackgroundPaint!).Color));
         Assert.Equal(new CategoryId("housing"), model.Statement.SelectedCategory);
         Assert.Equal("rozpísané pravidlo", model.RuleForm.Text);
         Assert.True(model.HasStatement);

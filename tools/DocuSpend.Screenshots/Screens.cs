@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Threading;
@@ -5,6 +6,7 @@ using DocuSpend.Categorization.Model;
 using DocuSpend.Desktop;
 using DocuSpend.Presentation;
 using DocuSpend.Presentation.Look;
+using LiveChartsCore.Drawing;
 
 /// <summary>The states of the screens the specs ask to see, each set up through the view models, as a user would.</summary>
 internal static class Screens
@@ -91,6 +93,14 @@ internal static class Screens
             AddRulesOfEveryKind(main);
             main.SelectedRuleView = main.RuleViews[1];
         }),
+        // Hovers through the real charts: the pointer is moved onto a slice or a day, and the window finds what is there.
+        new("13-ring-card-top", main => Open(main, "02-busy-month"), InWindow: window => HoverRing(window, 280)),
+        new("13-ring-card-right", main => Open(main, "02-busy-month"), InWindow: window => HoverRing(window, 10)),
+        new("13-ring-card-bottom", main => Open(main, "02-busy-month"), InWindow: window => HoverRing(window, 100)),
+        new("13-ring-card-left", main => Open(main, "02-busy-month"), InWindow: window => HoverRing(window, 190)),
+        new("13-ring-card-long-name", main => Open(main, "02-busy-month"), InWindow: window => HoverRing(window, MiddleOf(window, "Elektronika"))),
+        new("14-balance-card-gap", main => Open(main, "01-typical-month"), InWindow: window => HoverDay(window, DayWithoutBookings(window))),
+        new("14-balance-card-busy", main => Open(main, "02-busy-month"), InWindow: window => HoverDay(window, BusiestDay(window))),
     ];
 
     /// <summary>Opens the example and adds a rule of each kind through the form, then renumbers one, as a user would.</summary>
@@ -137,6 +147,51 @@ internal static class Screens
         main.RuleForm.SelectedCategory = main.RuleForm.Categories.Single(c => c.Id == new CategoryId("leisure"));
         main.RuleForm.SelectedSubcategory = main.RuleForm.Subcategories[0];
         main.AddRuleCommand.Execute(null);
+    }
+
+    /// <summary>The ring's centre in the window; the ring runs from 78 to 122 units out from it.</summary>
+    private static Point RingCentre(MainWindow window) => window.SpendingPie.TranslatePoint(new Point(130, 130), window)!.Value;
+
+    /// <summary>Moves the pointer onto the ring at an angle in degrees, clockwise from 3 o'clock, where the ring starts, midway between its edges.</summary>
+    private static void HoverRing(MainWindow window, double degrees)
+    {
+        var centre = RingCentre(window);
+        var radians = degrees * Math.PI / 180;
+        window.MouseMove(centre);
+        window.MouseMove(new Point(centre.X + 100 * Math.Cos(radians), centre.Y + 100 * Math.Sin(radians)));
+    }
+
+    /// <summary>The angle of the middle of the slice whose category name starts with <paramref name="name"/>.</summary>
+    private static double MiddleOf(MainWindow window, string name)
+    {
+        var slices = ((MainViewModel)window.DataContext!).Statement.Slices;
+        var before = slices.TakeWhile(s => !s.Name.StartsWith(name, StringComparison.Ordinal)).Sum(s => s.Share);
+        return (double)(before + slices.First(s => s.Name.StartsWith(name, StringComparison.Ordinal)).Share / 2) * 360;
+    }
+
+    /// <summary>Moves the pointer to the middle of a day's stretch of the balance line, halfway up the plotting area.</summary>
+    private static void HoverDay(MainWindow window, DateOnly day)
+    {
+        var chart = window.BalanceLine;
+        var area = chart.CoreChart;
+        var noon = day.ToDateTime(new TimeOnly(12, 0)).Ticks;
+        var x = chart.ScaleDataToPixels(new LvcPointD(noon, 0)).X;
+        var middle = new Point(x, area.DrawMarginLocation.Y + area.DrawMarginSize.Height / 2);
+        window.MouseMove(chart.TranslatePoint(new Point(area.DrawMarginLocation.X + 1, middle.Y), window)!.Value);
+        window.MouseMove(chart.TranslatePoint(middle, window)!.Value);
+    }
+
+    private static DateOnly DayWithoutBookings(MainWindow window)
+    {
+        var statement = ((MainViewModel)window.DataContext!).Statement;
+        var booked = statement.Categorized!.Transactions.Select(t => t.Transaction.BookingDate).ToHashSet();
+        return statement.BalancePoints.Skip(1).First(p => !booked.Contains(p.Date)).Date;
+    }
+
+    private static DateOnly BusiestDay(MainWindow window)
+    {
+        var statement = ((MainViewModel)window.DataContext!).Statement;
+        return statement.Categorized!.Transactions.GroupBy(t => t.Transaction.BookingDate).MaxBy(g => g.Count())!.Key;
     }
 
     /// <summary>Opens a fresh window in the state, renders it, and saves "&lt;name&gt;-&lt;look&gt;.png".</summary>

@@ -48,6 +48,7 @@ public partial class MainWindow : Window
         }, RoutingStrategies.Bubble, handledEventsToo: true);
 
         SpendingPie.DataPointerDown += OnSliceClicked;
+        WireHoverCards();
         model.Statement.PropertyChanged += OnStatementChanged;
         model.PropertyChanged += (_, e) =>
         {
@@ -100,6 +101,7 @@ public partial class MainWindow : Window
 
     private void DrawCharts()
     {
+        HideHoverCards();
         var palette = Palette;
         var (ring, categories) = Charts.Ring(_model.Statement.Slices, palette);
         _sliceCategories = categories;
@@ -108,10 +110,6 @@ public partial class MainWindow : Window
         BalanceLine.XAxes = Charts.DateAxis(palette);
         BalanceLine.YAxes = Charts.AmountAxis(palette);
         BalanceLine.Series = Charts.Balance(_model.Statement.BalancePoints, palette);
-
-        var (background, text) = Charts.Tooltip(palette);
-        SpendingPie.TooltipBackgroundPaint = BalanceLine.TooltipBackgroundPaint = background;
-        SpendingPie.TooltipTextPaint = BalanceLine.TooltipTextPaint = text;
     }
 
     /// <summary>Anything may be dropped, so a wrong drop gets its message; only files show "Pustite výpis sem".</summary>
