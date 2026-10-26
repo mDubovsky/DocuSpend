@@ -207,7 +207,7 @@ public class ConfigRuleTests
     [Fact]
     public void User_rules_come_before_default_rules_whatever_the_numbers()
     {
-        var config = Added(Start, Coop, Rent, 9999);
+        var config = Added(Start, Coop, Rent, 255);
 
         Assert.Equal(RuleSource.User, config.RulesInOrder().First().Source);
         Assert.Equal(
@@ -221,7 +221,7 @@ public class ConfigRuleTests
         // The default rules put COOP in groceries.
         Assert.Equal("food.groceries", Decide(Start, Card("COOP JEDNOTA")));
 
-        var config = Added(Start, Coop, Rent, 9999);
+        var config = Added(Start, Coop, Rent, 255);
 
         Assert.Equal("housing.rent", Decide(config, Card("COOP JEDNOTA")));
     }

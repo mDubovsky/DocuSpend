@@ -149,7 +149,7 @@ public static class Texts
         RefusalKind.DuplicateName => "Taký názov už existuje.",
         RefusalKind.UnknownCategory => "Taká kategória neexistuje.",
         RefusalKind.NoSubcategoriesAllowed => "Do tejto kategórie nemožno pridať podkategóriu.",
-        RefusalKind.InvalidPriority => "Priorita musí byť celé číslo od 1.",
+        RefusalKind.InvalidPriority => "Priorita musí byť celé číslo od 1 do 255.",
         RefusalKind.UnknownTarget => "Vyberte podkategóriu.",
         RefusalKind.UnknownRule => "Také pravidlo neexistuje.",
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
