@@ -1,5 +1,5 @@
 ---
-status: draft
+status: specced
 issue: 24
 ---
 
@@ -13,6 +13,7 @@ A user can add rules but can't change them afterwards. A rule with a typo, the w
 The MVP includes "a very basic editor to list, edit, and delete rules and change their priority" ([mvp.md](../../docs/mvp.md)). DocuSpend has the list, but not the rest.
 
 ## Desired outcome
+- **Every kind of condition can be made on screen.** The form for a rule offers all six kinds the MVP lists (transaction type, text, counterparty name, counterparty account, amount, variable symbol), for adding and editing alike. Until now it offered three.
 - **Every user rule can be edited.** The user can change its condition (including the kind of condition) and its target sub-category, with the same choices and the same checks as when adding a rule. It stays the same rule: it keeps its identifier ([decision 0004](../../docs/decisions/0004-stable-category-and-rule-identifiers.md)) and its place among rules with the same priority number.
 - **Every user rule can be deleted**, after confirming, so a slip of the mouse never loses a rule.
 - **Every user rule's priority can be changed.** The user sees each rule's priority number and can give it a different one. The number starts at the rule's current value, so a user who doesn't care about numbers never has to touch it, and a help mark next to it explains in a short Slovak tooltip what the number means (1 wins, own rules always beat built-in ones, the newest wins between equal numbers). The list shows the rules in the order they are tried, so the rule that wins is the one higher up.
@@ -22,6 +23,7 @@ The MVP includes "a very basic editor to list, edit, and delete rules and change
 - **Nothing new is saved.** What is kept between sessions doesn't change shape; this item only changes which rules it holds.
 
 ## Success criteria
+- A user can add, and edit, a rule of each of the six kinds of condition on screen.
 - A user changes a rule's condition, and its target, and the open statement is categorized as if the rule had been added that way; after a restart the changed rule is back as changed.
 - An edit with invalid input (for example an empty text or an amount range that is upside down) is refused with the same Slovak reason as when adding a rule, and the rule is left as it was.
 - After an edit, the user is told how many transactions of the open statement the rule now catches.
@@ -49,6 +51,7 @@ The MVP includes "a very basic editor to list, edit, and delete rules and change
 - **Editing a rule keeps it the same rule**: same identifier, same place among rules with the same number. That is what [#3's spec](../003-categorize-transactions/spec.md) already says for changing a number ("doesn't change which was created first"), and it keeps a corrected rule from suddenly winning or losing ties.
 - **No change to what is saved**, as the issue notes: #13 already saves whatever the user's rules are, whichever screen changes them.
 - **Default rules are shown but read-only**, as the issue asks. They belong to the version of DocuSpend the user runs (#13), and a user rule on top already overrides any of them.
+- **The form offers all six kinds of condition**, decided by the maintainer while specifying. The MVP already lists them for user rules, and an editor has to be able to show any rule the user can have.
 - **Deleting asks for confirmation**, not undo. It is simpler to get right, and deleting is rare.
 - **Priority is changed by typing a number only**, as the MVP and the issue describe. Priority numbers can be confusing, so the field starts at the rule's current value and a help mark explains it in a tooltip. Moving rules up and down can come later if numbers turn out awkward.
 - **After an edit, the user is told how many transactions the rule now catches**, as after adding one. It is the quickest way to see whether the edit did what the user meant.
