@@ -27,10 +27,21 @@ Every change moves through the same stages. Each stage produces a markdown file 
 - **Single source of truth:** the repo owns the intent, spec, plan and `status:`. GitHub owns discussion, triage, coarse labels (`idea`, `ready`, `blocked`) and open/closed. Don't copy the intent into the issue; link to the folder.
 - Docs-only or trivial changes (typos, small doc fixes) don't need an issue or work folder. Anything that changes behavior does.
 
+## Choosing the next item
+
+When asked which item to take next, recommend one in this order, with a one-line reason, and name the runner-up:
+
+1. An open bug in something that already works (label `bug`), most visible first.
+2. The item that `README.md` names as next.
+3. The rest of the MVP ([mvp.md](mvp.md)) that isn't done yet, preferring an item others depend on, and one that brings the MVP's "done when" closer.
+4. Ideas outside the MVP, only once the MVP is done or when the human asks for one.
+
+An item that is too big to finish in one go is split first, with `new-issue`.
+
 ## Branching and PRs
 
 1. Start from an issue. Create branch `NNN-slug` from an up-to-date `main`. Never work or commit on `main`.
-2. Commit the stages in order, each after human approval: intent, spec, plan, then code and tests in small commits. Update `status:` as you go.
+2. Commit the stages in order, each after human approval: intent, spec, plan. Once the plan is approved, the build is committed step by step without asking again, one commit per plan step, stopping only at the plan's review stops or for a decision. Update `status:` as you go.
 3. Open a PR into `main` that says `Closes #NNN`. One PR per item by default. For large items, merge a docs-only PR (intent, spec, plan) first, then a separate code PR.
 4. A human reviews and merges with a squash merge, so `main` has one commit per item. The stage-by-stage history stays visible in the PR and on the item branch, which is kept after merging (not deleted) to preserve that history.
 5. Protect `main` on GitHub (PR required, no direct pushes) once more than one person contributes. While the repo is private and single-contributor, the maintainer may merge item branches into `main` locally instead of through a PR; the rule that nobody works directly on `main` still applies.
@@ -39,9 +50,9 @@ Every change moves through the same stages. Each stage produces a markdown file 
 
 - `work/_templates/`: skeletons for `intent.md`, `spec.md`, `plan.md`
 - `work/NNN-slug/`: one folder per backlog item (see [work/README.md](../work/README.md))
-- `.claude/skills/`: skills that help with each stage: `new-issue`, `new-intent`, `write-spec`, `write-plan`
+- `.claude/skills/`: skills that help with each stage: `new-issue`, `new-intent`, `write-spec`, `write-plan`, `finish-item`
 - `.github/`: issue and PR templates
 
 ## Git
 
-Agents never commit without human approval, never push, and never work on `main`.
+Agents never commit without human approval (the plan's approval covers its build steps, see AGENTS.md rule 1), never push, and never work on `main`.

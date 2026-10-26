@@ -12,6 +12,42 @@ Small fixes (typos, minor doc edits) can go straight to a branch and PR without 
 
 **Privacy:** never commit real bank statements or other personal financial data. Use synthetic samples in `samples/public/`. `samples/private/` is gitignored for your own local files.
 
+## Writing tests
+
+Every behavior change ships with tests on the synthetic samples (`Samples.Path` and `Samples.Read` in each test project). Where each kind of test goes:
+
+- **`DocuSpend.Categorization.Tests`**: rules, categories and saving, below any screen. Only this project sees the categorization's internals (`InternalsVisibleTo`), such as `CategorizationConfig.Create`, which builds a configuration from given rules, identifiers and creation orders included.
+- **`DocuSpend.Presentation.Tests`**: what a screen does, through the view models, with no window. Start a `MainViewModel` on a `RuleStore` in a temporary folder, open a sample with `OpenFileAsync`, and run commands as a click would. To see a second session, start a new `MainViewModel` on the same file. To reach the problems the screen must report:
+  - **saving fails:** put a file where the store's folder should be, so the folder can't be created;
+  - **saving is off for the session:** write `{ "version": 2 }` to `rules.json` before starting (a file from a newer DocuSpend);
+  - **damaged rules:** write `{ damaged` to `rules.json`.
+- **`DocuSpend.Desktop.Tests`**: what only the real window shows, without a screen:
+  - wrap each test in `Headless.Run`, and wait for async commands with `Headless.Wait`;
+  - after changing state, call `Dispatcher.UIThread.RunJobs()` before looking at controls;
+  - find controls by `x:Name` with `FindControl`, and give anything a test needs to find a name;
+  - press a button by running its `Command` with its `CommandParameter`; send a key with `window.KeyPress(...)` from `Avalonia.Headless`;
+  - a hidden control can't take focus, so `Focus()` on it does nothing;
+  - `IsEffectivelyVisible` doesn't say whether a part of a control's own template is shown (an `Expander`'s content, a popup). Check the control's own property instead (`IsExpanded`, `ToolTip.GetIsOpen`).
+
+Keep timing tests generous (a second for what should feel instant), since CI machines vary.
+
+### Screenshots
+
+A change to a screen adds or updates a screen in `tools/DocuSpend.Screenshots/Screens.cs`. Each `Screen` has:
+- `Arrange`: gets the window into the state through the view models, as a user would;
+- `Prepare`: writes the rules file before the window starts, when needed;
+- `InWindow`: does what only the window can, such as opening a tooltip.
+
+The tool renders a 1280 × 1660 window so nothing needs scrolling, in both looks, into `artifacts/screenshots/`. Look at both looks of every changed screen before asking for a review. A tooltip or popup is drawn at the window's top-left corner there, because there is no mouse pointer; that is the tool, not the application.
+
+### The look in screens
+
+`LookCheck` (in `DocuSpend.Desktop.Tests`) fails on a literal value in any screen's XAML for these properties: `FontSize`, `FontWeight`, `CornerRadius`, `Margin`, `Padding`, `Spacing`, `RowSpacing`, `ColumnSpacing`, `Foreground`, `Background`, `BorderBrush`, `BorderThickness`, `BoxShadow` and `Opacity`, and on any colour. `0` and `Transparent` are allowed. Sizes that are structure (`Width`, `Height`, `MinWidth`, column widths) may be written in place. A new size or style goes in `src/DocuSpend.Desktop/Look/Look.axaml`; a new colour goes in `Palette.cs`, where its contrast is tested.
+
+Avalonia's Fluent controls bring their own colours, which may not match the palette in one of the looks; an `Expander`'s header was grey in the light look and black in the dark one, for example. Style the control's template parts in `Look.axaml` from the palette. The Fluent theme is compiled, so its part names can't be searched for in the package. To find them, list `GetVisualDescendants()` of the control (type and `Name`) in a throwaway headless test, and delete the test afterwards.
+
+Avalonia 11 doesn't open a tooltip on keyboard focus. `MainWindow` does it for every `Button.help`, so a new help mark needs only that class and a `ToolTip.Tip`.
+
 ## Privacy checks
 
 DocuSpend's rule is [decision 0006](docs/decisions/0006-privacy-approach-and-network-boundary.md): **no code that can see a statement may use the network**. These checks enforce it on every change; [PRIVACY.md](PRIVACY.md) explains them for users, and [privacy/README.md](privacy/README.md) has the detail. Each check runs under its own name, so any of them can be made required for merging (see below).

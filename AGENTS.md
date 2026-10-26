@@ -4,7 +4,7 @@ DocuSpend is an open-source tool that turns bank statements (PDF, spreadsheet, �
 
 ## Rules
 
-1. **Never commit without asking the human for approval first.**
+1. **Never commit without the human's approval.** Intent, spec and plan are each committed after the human approves them. Once the plan is approved, that approval covers the build: commit each build step when it is done and every test passes, without asking, and carry on to the next. Stop and wait only at the plan's marked review stops (screenshots, hand checks, privacy findings), when a decision is the human's to make, or when something goes against the spec or plan.
 2. **Never push. Pushing is for humans only.**
 3. **Never work or commit on `main`.** `main` is for merging PRs only. Work on a branch named after the item (`NNN-slug`, where NNN is the GitHub issue number), created from an up-to-date `main`.
 4. Never commit real financial data. Do not read anything in `samples/private/` unless the human explicitly asks, and never reproduce its contents in committed files, tests, or docs. Use synthetic fixtures only.
@@ -21,9 +21,9 @@ DocuSpend is an open-source tool that turns bank statements (PDF, spreadsheet, �
 - `docs/mvp.md`: what the first version includes and excludes
 - `docs/glossary.md`: shared terms; use them consistently
 - `docs/decisions/`: short records of non-obvious decisions
-- `docs/sdlc.md`: the intent → spec → plan workflow
+- `docs/sdlc.md`: the intent → spec → plan workflow, and how to choose the next item
 - `work/`: one folder per backlog item, named after its GitHub issue; templates in `work/_templates/`
-- `.claude/skills/`: project skills (`new-issue`, `new-intent`, `write-spec`, `write-plan`)
+- `.claude/skills/`: project skills (`new-issue`, `new-intent`, `write-spec`, `write-plan`, `finish-item`)
 - `PRIVACY.md`: what the application does with a statement, for users; `privacy/`: the lists the privacy checks enforce
 - `.github/`: issue and PR templates, `workflows/` (CI, code scanning, release) and `dependabot.yml`
 - `samples/public/`: committed synthetic statements for tests; `samples/private/` is gitignored
@@ -36,6 +36,7 @@ Run from the repo root:
 
 - Build: `dotnet build`
 - Test: `dotnet test` (includes the privacy checks; one check alone: `dotnet test --project tests/DocuSpend.Privacy.Tests --filter-trait "Check=privacy-dependencies"`, see CONTRIBUTING.md)
+- Writing tests (where each kind goes, how to make saving fail, the headless window), screenshots, and what the look test allows in screens: CONTRIBUTING.md, "Writing tests"
 - Run the desktop application (Windows; it opens a statement you choose, or the example): `dotnet run --project src/DocuSpend.Desktop`
 - Screenshots of every screen in both looks, without a screen: `dotnet run --project tools/DocuSpend.Screenshots` (writes to `artifacts/screenshots/`; CI uploads them too). Compare a change that touches the look against `work/011-modern-look/screenshots/`.
 - Verify the read-and-categorize flow on the samples: `dotnet run --project tools/DocuSpend.StatementCheck -- --verify samples/public`
