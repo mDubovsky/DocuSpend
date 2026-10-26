@@ -104,7 +104,7 @@
               <!-- The ring has a fixed square of its own, so a long legend never squeezes it. -->
               <Grid ColumnDefinitions="260,*" IsVisible="{Binding Statement.HasSpending}">
                 <Panel Width="260" Height="260" VerticalAlignment="Center">
-                  <lvc:PieChart x:Name="SpendingPie" LegendPosition="Hidden" />
+                  <lvc:PieChart x:Name="SpendingPie" LegendPosition="Hidden" TooltipPosition="Hidden" />
                   <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                     <TextBlock Classes="label" Text="{x:Static vm:Texts.SpendingTotal}" HorizontalAlignment="Center" />
                     <TextBlock Classes="ringTotal" Text="{Binding Statement.SpendingTotal}" HorizontalAlignment="Center" />
@@ -135,7 +135,7 @@
         <Border Classes="card" Grid.Row="1" Grid.Column="1" IsVisible="{Binding HasStatement}">
           <DockPanel>
             <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.BalanceChart}" />
-            <lvc:CartesianChart x:Name="BalanceLine" Height="300" />
+            <lvc:CartesianChart x:Name="BalanceLine" Height="300" TooltipPosition="Hidden" />
           </DockPanel>
         </Border>
 
@@ -343,6 +343,23 @@
 
       </Grid>
     </ScrollViewer>
+
+    <!-- The charts' hover cards and the dot on the balance line. Above the content, so nothing cuts a card; it lets the pointer through to the charts. -->
+    <Canvas x:Name="HoverLayer" IsHitTestVisible="False">
+      <Border x:Name="RingCard" Classes="hoverCard" IsVisible="False">
+        <StackPanel>
+          <TextBlock x:Name="RingCardName" Classes="name" TextTrimming="CharacterEllipsis" />
+          <TextBlock x:Name="RingCardAmount" />
+        </StackPanel>
+      </Border>
+      <Border x:Name="BalanceCard" Classes="hoverCard" IsVisible="False">
+        <StackPanel>
+          <TextBlock x:Name="BalanceCardDate" Classes="name" />
+          <TextBlock x:Name="BalanceCardBalance" />
+        </StackPanel>
+      </Border>
+      <Ellipse x:Name="HoverDot" Classes="hoverDot" IsVisible="False" />
+    </Canvas>
 
     <!-- "Odstrániť toto pravidlo?": a pop-up over the dimmed window, which waits until it is answered -->
     <Panel x:Name="DeleteDialog" IsVisible="{Binding RuleToDelete, Converter={x:Static ObjectConverters.IsNotNull}}">

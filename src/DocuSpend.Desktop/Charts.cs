@@ -56,7 +56,6 @@ internal static class Charts
                 InnerRadius = RingHole,
                 HoverPushout = 6,
                 IsVisibleAtLegend = false,
-                ToolTipLabelFormatter = _ => $"{slice.AmountText} ({slice.ShareText})",
             };
             categories[pie] = slice.Category;
             return (ISeries)pie;
@@ -66,7 +65,7 @@ internal static class Charts
 
     /// <summary>
     /// The balance: a stepped line, because the balance changes on booking dates and holds in between, in the accent
-    /// colour with a soft fill fading downwards. No markers; hovering shows the date and the balance.
+    /// colour with a soft fill fading downwards. No markers; the window's own hover card shows the date and the balance.
     /// </summary>
     public static ISeries[] Balance(IReadOnlyList<BalancePoint> points, Palette palette)
     {
@@ -82,8 +81,6 @@ internal static class Charts
                 GeometrySize = 0,
                 GeometryFill = null,
                 GeometryStroke = null,
-                YToolTipLabelFormatter = point => SlovakFormat.Amount((decimal)(point.Model?.Value ?? 0)),
-                XToolTipLabelFormatter = point => SlovakFormat.Date(DateOnly.FromDateTime(point.Model?.DateTime ?? default)),
             },
         ];
     }
@@ -111,8 +108,4 @@ internal static class Charts
             TextSize = 12,
         },
     ];
-
-    /// <summary>The hover card: the look's card with its text colour.</summary>
-    public static (SolidColorPaint Background, SolidColorPaint Text) Tooltip(Palette palette) =>
-        (new SolidColorPaint(Color(palette.Card)), new SolidColorPaint(Color(palette.Text)));
 }
