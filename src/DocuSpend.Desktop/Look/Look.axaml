@@ -340,6 +340,7 @@
   <!-- A list of rules scrolls within its card instead of making the card taller -->
   <Style Selector="ScrollViewer.ruleList">
     <Setter Property="MaxHeight" Value="{StaticResource Look.Height.RuleList}" />
+    <Setter Property="VerticalAlignment" Value="Top" />
   </Style>
   <!-- "Vstavané pravidlá": a quiet section that opens below the user's rules -->
   <Style Selector="Expander.builtInRules">
@@ -349,6 +350,27 @@
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderBrush" Value="{DynamicResource Look.CardEdge}" />
     <Setter Property="Foreground" Value="{DynamicResource Look.Text}" />
+  </Style>
+
+  <!-- Its header in the card's own colours, not Fluent's, in every state -->
+  <Style Selector="Expander.builtInRules /template/ ToggleButton#ExpanderHeader /template/ Border#ToggleButtonBackground">
+    <Setter Property="Background" Value="{DynamicResource Look.Card}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Look.CardEdge}" />
+  </Style>
+  <Style Selector="Expander.builtInRules /template/ ToggleButton#ExpanderHeader:pointerover /template/ Border#ToggleButtonBackground">
+    <Setter Property="Background" Value="{DynamicResource Look.Hover}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Look.CardEdge}" />
+  </Style>
+  <Style Selector="Expander.builtInRules /template/ ToggleButton#ExpanderHeader:pressed /template/ Border#ToggleButtonBackground">
+    <Setter Property="Background" Value="{DynamicResource Look.Hover}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Look.CardEdge}" />
+  </Style>
+  <Style Selector="Expander.builtInRules /template/ ToggleButton#ExpanderHeader /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Foreground" Value="{DynamicResource Look.Text}" />
+  </Style>
+  <Style Selector="Expander.builtInRules /template/ Border#ExpanderContent">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Look.CardEdge}" />
   </Style>
 
 </Styles>

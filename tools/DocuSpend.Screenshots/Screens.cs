@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Threading;
 using DocuSpend.Categorization.Model;
@@ -11,8 +12,10 @@ internal static class Screens
     /// <summary>
     /// A name for the file, and how to get the window into that state. <paramref name="Prepare"/> sets up the rules
     /// file before the window starts, since the window reads it at start; what it returns is disposed once it has.
+    /// <paramref name="InWindow"/> does what only the window can, such as opening a tooltip.
     /// </summary>
-    public sealed record Screen(string Name, Action<MainViewModel> Arrange, Func<string, IDisposable?>? Prepare = null);
+    public sealed record Screen(
+        string Name, Action<MainViewModel> Arrange, Func<string, IDisposable?>? Prepare = null, Action<MainWindow>? InWindow = null);
 
     public static IReadOnlyList<Screen> All { get; } =
     [
@@ -72,7 +75,54 @@ internal static class Screens
             File.WriteAllText(Path.GetDirectoryName(rules)!, "");
             return null;
         }),
+        new("09-rules-list", AddRulesOfEveryKind),
+        new("10-rule-delete-question", main =>
+        {
+            AddRulesOfEveryKind(main);
+            main.AskToDeleteCommand.Execute(main.Rules[1]);
+        }),
+        new("11-rule-editing", main =>
+        {
+            AddRulesOfEveryKind(main);
+            main.EditRuleCommand.Execute(main.Rules[2]);
+        }, InWindow: window => ToolTip.SetIsOpen(window.FindControl<Control>("PriorityHelp")!, true)),
+        new("12-built-in-rules", AddRulesOfEveryKind, InWindow: window => window.FindControl<Expander>("BuiltInRules")!.IsExpanded = true),
     ];
+
+    /// <summary>Opens the example and adds a rule of each kind through the form, then renumbers one, as a user would.</summary>
+    private static void AddRulesOfEveryKind(MainViewModel main)
+    {
+        Open(main, "01-typical-month");
+        var form = main.RuleForm;
+        void Add(string target, Action fill)
+        {
+            fill();
+            form.SelectedCategory = form.Categories.Single(c => c.Subcategories.Any(s => s.Id == new SubcategoryId(target)));
+            form.SelectedSubcategory = form.Subcategories.Single(s => s.Id == new SubcategoryId(target));
+            main.AddRuleCommand.Execute(null);
+        }
+
+        Add("food.groceries", () => { form.SelectedKind = ConditionKind.Text; form.Text = "Kaufland"; });
+        Add("own-transfers.other", () =>
+        {
+            form.SelectedKind = ConditionKind.CounterpartyName;
+            form.SelectedTextMode = form.TextModes[1];
+            form.Text = "Ján Vzorový";
+        });
+        Add("housing.rent", () => { form.SelectedKind = ConditionKind.Amount; form.AmountFrom = "500"; });
+        Add("leisure.games", () =>
+        {
+            form.SelectedKind = ConditionKind.Type;
+            form.Types[0].IsChecked = form.Types[1].IsChecked = true;
+        });
+        Add("housing.equipment", () => { form.SelectedKind = ConditionKind.VariableSymbol; form.Symbol = "0326"; });
+        Add("investments.other", () => { form.SelectedKind = ConditionKind.CounterpartyAccount; form.Account = "SK31 1200 0000 1987 4263 7541"; });
+
+        main.EditRuleCommand.Execute(main.Rules.Single(r => r.Condition.StartsWith("Suma", StringComparison.Ordinal)));
+        form.Priority = "3";
+        main.SaveRuleCommand.Execute(null);
+        form.Message = null;
+    }
 
     private static void AddRuleOnTheExample(MainViewModel main)
     {
@@ -102,6 +152,11 @@ internal static class Screens
             window.Show();
             screen.Arrange(model);
             Settle();
+            if (screen.InWindow is { } inWindow)
+            {
+                inWindow(window);
+                Settle();
+            }
 
             var path = Path.Combine(output, $"{screen.Name}-{look}.png");
             window.CaptureRenderedFrame()!.Save(path);
