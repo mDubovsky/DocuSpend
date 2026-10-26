@@ -106,6 +106,10 @@ None: #24 is merged into `main`, and this branch starts from it. The maintainer 
 - **Scrolling with the pointer over a chart.** The card hides on scroll and comes back on the next pointer move. This is covered by a window test of the hiding, and the rest by the hand check.
 - **Display scaling.** Positions are in Avalonia's device-independent units, both from the chart and in the layer, so scaling doesn't change the placement. This is part of the hand check if the maintainer's display is scaled; otherwise it is a known gap, noted in the finish.
 
+- **Found in the build:** the charts aren't laid out on the headless platform the window tests use, so a hover can't be simulated there, as the plan expected. The window tests give the window a slice or a day and a position instead, and the screenshot tool, which draws for real, covers the real hovers.
+- **Found in the screenshot review:** the first ring screenshots hovered the wrong slices, because the ring starts at 3 o'clock, not at the top. The angles in the screenshot tool were corrected and the screenshots drawn again; the application was not affected. The balance card also hides a small dip in the line where it sits over it, which is expected for a card.
+- **Found in the hand check:** nothing. The risk of the library missing a slice at the ring's exact axes did not show up, so its fallback was not needed.
+
 ## Verification
 
 | Acceptance criterion | Checked by |
