@@ -35,6 +35,18 @@ public partial class MainWindow : Window
         AddHandler(DragDrop.DragLeaveEvent, OnDragLeave, RoutingStrategies.Bubble, handledEventsToo: true);
         AddHandler(DragDrop.DropEvent, OnDrop, RoutingStrategies.Bubble, handledEventsToo: true);
 
+        // A help mark's tooltip opens on hover by itself; Avalonia 11 has no option to open it on keyboard focus too.
+        AddHandler(GotFocusEvent, (_, e) =>
+        {
+            if (e.Source is Button help && help.Classes.Contains("help") && e.NavigationMethod is NavigationMethod.Tab or NavigationMethod.Directional)
+                ToolTip.SetIsOpen(help, true);
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(LostFocusEvent, (_, e) =>
+        {
+            if (e.Source is Button help && help.Classes.Contains("help"))
+                ToolTip.SetIsOpen(help, false);
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
+
         SpendingPie.DataPointerDown += OnSliceClicked;
         model.Statement.PropertyChanged += OnStatementChanged;
         model.PropertyChanged += (_, e) =>

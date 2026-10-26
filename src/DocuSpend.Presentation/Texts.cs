@@ -95,6 +95,9 @@ public static class Texts
     public const string AddRule = "Pridať pravidlo";
     public const string Rules = "Moje pravidlá";
     public const string NoRules = "Zatiaľ žiadne pravidlá.";
+
+    /// <summary>The help mark by "Moje pravidlá" and by "Priorita" (spec of #24).</summary>
+    public const string PriorityHelp = "Pravidlá sa uplatňujú od priority 1. Transakciu zaradí prvé pravidlo, ktorému zodpovedá. Vaše pravidlá môžu mať prioritu od 1 do 255; vstavané pravidlá majú prioritu 256, takže vaše pravidlá majú vždy prednosť. Ak majú dve pravidlá rovnakú prioritu, rozhoduje novšie.";
     public const string AmountNotANumber = "Suma musí byť číslo, napríklad 12,50.";
     public const string RuleMatchedNothing = "Pravidlo je uložené, ale v tomto výpise mu nezodpovedá žiadna transakcia.";
     public const string RuleMatchedNothingUnsaved = "V tomto výpise pravidlu nezodpovedá žiadna transakcia.";

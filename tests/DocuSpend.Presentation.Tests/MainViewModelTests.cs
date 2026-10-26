@@ -380,7 +380,8 @@ public sealed class MainViewModelTests : IDisposable
 
         var main = new MainViewModel(new RuleStore(RulesFile));
 
-        Assert.Equal(["Protistrana obsahuje „vzor“", "Účet protistrany: SK57 1100", "Variabilný symbol: 0326"], main.Rules.Select(r => r.Condition));
+        // All three have number 1, so the newest is tried first and listed first.
+        Assert.Equal(["Variabilný symbol: 0326", "Účet protistrany: SK57 1100", "Protistrana obsahuje „vzor“"], main.Rules.Select(r => r.Condition));
     }
 
     [Fact]

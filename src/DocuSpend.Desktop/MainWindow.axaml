@@ -255,7 +255,10 @@
         </Border>
         <Border Classes="card" Grid.Row="3" Grid.Column="1" IsVisible="{Binding HasStatement}">
           <DockPanel>
-            <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.Rules}" />
+            <StackPanel Classes="headingRow" DockPanel.Dock="Top">
+              <TextBlock Classes="heading" Text="{x:Static vm:Texts.Rules}" />
+              <Button x:Name="RulesHelp" Classes="help" Content="?" ToolTip.Tip="{x:Static vm:Texts.PriorityHelp}" />
+            </StackPanel>
             <Border Classes="message error" DockPanel.Dock="Top"
                     x:Name="RulesNotSaving" IsVisible="{Binding RulesNotSaving}">
               <TextBlock Text="{x:Static vm:Texts.RulesNotSaving}" TextWrapping="Wrap" />
@@ -265,9 +268,10 @@
               <ItemsControl ItemsSource="{Binding Rules}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="vm:RuleRow">
-                    <Grid ColumnDefinitions="*,*" Margin="{StaticResource Look.Margin.Row}">
-                      <TextBlock Text="{Binding Condition}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" />
-                      <TextBlock Grid.Column="1" Classes="muted" Text="{Binding Target}" TextTrimming="CharacterEllipsis" />
+                    <Grid ColumnDefinitions="Auto,*,*" Margin="{StaticResource Look.Margin.Row}">
+                      <TextBlock Classes="priority" Text="{Binding Priority}" />
+                      <TextBlock Grid.Column="1" Text="{Binding Condition}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" />
+                      <TextBlock Grid.Column="2" Classes="muted" Text="{Binding Target}" TextTrimming="CharacterEllipsis" />
                     </Grid>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>

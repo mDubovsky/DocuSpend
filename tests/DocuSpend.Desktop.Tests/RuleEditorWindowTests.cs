@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using DocuSpend.Presentation;
@@ -64,6 +65,40 @@ public sealed class RuleEditorWindowTests : IDisposable
         boxes[0].IsChecked = true;
         boxes[2].IsChecked = true;
         Assert.Equal([true, false, true], model.RuleForm.Types.Take(3).Select(t => t.IsChecked));
+        window.Close();
+    });
+
+    [Fact]
+    public void The_help_mark_by_my_rules_explains_the_numbers_on_hover_and_on_keyboard_focus() => Headless.Run(() =>
+    {
+        var (window, _) = StartWithStatement();
+        var help = (Button)Named(window, "RulesHelp");
+
+        Assert.Equal(Texts.PriorityHelp, ToolTip.GetTip(help));
+        Assert.False(ToolTip.GetIsOpen(help));
+
+        help.Focus(NavigationMethod.Tab);
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(ToolTip.GetIsOpen(help));
+
+        Assert.True(window.GetLogicalDescendants().OfType<TextBox>().First(t => t.IsEffectivelyVisible).Focus(NavigationMethod.Tab));
+        Dispatcher.UIThread.RunJobs();
+        Assert.False(ToolTip.GetIsOpen(help));
+        window.Close();
+    });
+
+    [Fact]
+    public void Each_rule_in_the_list_shows_its_number() => Headless.Run(() =>
+    {
+        var (window, model) = StartWithStatement();
+        model.RuleForm.Text = "Pekáreň";
+        model.RuleForm.SelectedCategory = model.RuleForm.Categories[0];
+        model.RuleForm.SelectedSubcategory = model.RuleForm.Subcategories[0];
+        model.AddRuleCommand.Execute(null);
+        Dispatcher.UIThread.RunJobs();
+
+        var numbers = window.GetLogicalDescendants().OfType<TextBlock>().Where(t => t.Classes.Contains("priority") && t.IsEffectivelyVisible);
+        Assert.Equal(["1"], numbers.Select(t => t.Text));
         window.Close();
     });
 }

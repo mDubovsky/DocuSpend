@@ -1,14 +1,15 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DocuSpend.Categorization;
+using DocuSpend.Categorization.Model;
 using DocuSpend.Categorization.Rules;
 using DocuSpend.Presentation.Look;
 using DocuSpend.Statements.Reading;
 
 namespace DocuSpend.Presentation;
 
-/// <summary>A user rule in the list: what it matches and where it puts it.</summary>
-public sealed record RuleRow(string Condition, string Target);
+/// <summary>A rule in a list: its number, what it matches and where it puts it.</summary>
+public sealed record RuleRow(RuleId Id, string Priority, string Condition, string Target);
 
 /// <summary>
 /// The window: the start screen or the statement the user opened, the message about a file that wasn't opened, the
@@ -33,7 +34,7 @@ public sealed partial class MainViewModel : ObservableObject
         RuleForm = new RuleFormViewModel(Statement.Config.Catalog);
         RulesMessage = Texts.RulesProblemMessage(load.Problem, load.MovedTo);
         RulesNotSaving = !store.IsSaving;
-        Rules = Statement.Config.UserRules.Select(Row).ToList();
+        Rules = UserRows();
         var saved = settings?.LoadLook() ?? LookChoice.System;
         _loadingLook = true;
         SelectedLook = Looks.Single(l => l.Choice == saved);
@@ -160,7 +161,7 @@ public sealed partial class MainViewModel : ObservableObject
         return Task.CompletedTask;
     }
 
-    /// <summary>The user rules, oldest first.</summary>
+    /// <summary>The user rules in the order they are tried: the one higher up wins (spec: "Moje pravidlá").</summary>
     [ObservableProperty]
     public partial IReadOnlyList<RuleRow> Rules { get; private set; }
 
@@ -207,14 +208,17 @@ public sealed partial class MainViewModel : ObservableObject
     {
         var saved = _store.Save(config);
         Statement.Config = config;
-        Rules = config.UserRules.Select(Row).ToList();
+        Rules = UserRows();
         return saved;
     }
 
-    private RuleRow Row(Rule rule)
+    private List<RuleRow> UserRows() =>
+        Statement.Config.RulesInOrder().Where(r => r.Source == RuleSource.User).Select(r => Row(r, r.Priority.ToString(SlovakFormat.Culture))).ToList();
+
+    private RuleRow Row(Rule rule, string priority)
     {
         var (category, subcategory) = Statement.Config.Catalog.FindSubcategory(rule.Target)!.Value;
-        return new RuleRow(Describe(rule.Condition), $"{category.Name} › {subcategory.Name}");
+        return new RuleRow(rule.Id, priority, Describe(rule.Condition), $"{category.Name} › {subcategory.Name}");
     }
 
     /// <summary>A condition in Slovak, as the rules list shows it.</summary>
