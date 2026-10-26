@@ -154,6 +154,10 @@ Test-first for logic; one commit per step, each after the maintainer approves it
 - **Changing the list's order breaks tests that assumed creation order** (from #13). They change with step 3, because the spec changes the order. The saved file's order is unaffected (creation order, as before).
 - **Escape inside a text box** goes to the text box first. With the pop-up, the focus is in the box while the question is open, so this no longer arises.
 - **The row's buttons may not fit a narrow card** with long conditions. The condition and the target are cut with "…" first, and the screenshot review checks the default window size.
+- **Found in the build: the Fluent `Expander` kept Fluent's colours.** Its header was grey in the light look and black in the dark one. It was styled from the palette, then removed when the review replaced it with two views.
+- **Found in the build: a rule list taller than its card centred itself.** A `ScrollViewer` with a maximum height in a taller space is centred by default; the rule lists are pinned to the top.
+- **Found in the screenshot review: numbers, the fold-out section and the question in the row.** The maintainer asked for priority numbers only in the form, for the rules card to switch between "Moje pravidlá" and "Vstavané pravidlá" with pills in its heading, and for the deletion question to be a pop-up box with nothing chosen at start. The spec, the intent and this plan describe what was built. The help mark by "Moje pravidlá" went with the numbers.
+- **Found in the hand check:** nothing; the maintainer approved it as built.
 
 ## Verification
 
