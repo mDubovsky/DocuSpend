@@ -40,7 +40,7 @@ public sealed record Palette(
         Error: "#C02A37",
         ErrorTint: "#FDECEE",
         Grid: "#E6E8F0",
-        SwitchHover: "#DCDFEA",
+        SwitchHover: "#DCDDE1",
         ScrollThumb: "#7E84A2");
 
     /// <summary>

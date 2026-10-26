@@ -25,10 +25,10 @@ The header's row grows when "Otvoriť výpis…" appears. The switch sits in a h
 
 | | `SwitchHover` | Against the switch (`Hover`) | Against the chosen pill (`AccentTint`) | Text on it |
 |---|---|---|---|---|
-| Light | `#DCDFEA` | 1.21 | 1.08, and grey rather than blue | 12.5 |
+| Light | `#DCDDE1` | 1.24 | 1.11, a neutral grey with no blue | 12.3 |
 | Dark | `#3A3F63` | 1.41 | 1.15, and grey rather than blue | 8.8 |
 
-  For comparison, the chosen pill against the switch is 1.12 (light) and 1.23 (dark) today. A test pins `SwitchHover` at least 1.15 from `Hover`, and text on it at 4.5. The exact tones are part of the screenshot review.
+  For comparison, the chosen pill against the switch is 1.12 (light) and 1.23 (dark) today. A test pins `SwitchHover` at least 1.15 from `Hover`, and text on it at 4.5. The exact tones are part of the screenshot review. In that review the maintainer found the first light tone, `#DCDFEA`, too close to the chosen pill, so a choice under the pointer looked chosen. It became the neutral grey above.
 
 ### Scroll bars (Avalonia 11.3.22's Fluent theme, read from its source at tag `11.3.22` on 2026-10-26)
 - Fluent's `ScrollBar` has arrow buttons and a thumb that shrinks to a thin line until the pointer comes near (`IsExpanded`). When it expands, the arrows show. Its colours come from Fluent's own resource keys. Overriding those keys can't remove the arrows, so DocuSpend replaces the scroll bar's look as a whole: a **`ControlTheme` for `ScrollBar`** in `Look.axaml`'s resources, found by type like Fluent's own. Its template is a `Track` only: transparent page buttons on each side of the thumb (so clicking the track still pages) and a rounded `Thumb`. There are no arrow buttons and nothing shrinks. One template for vertical and horizontal, since `Track` takes the orientation.
