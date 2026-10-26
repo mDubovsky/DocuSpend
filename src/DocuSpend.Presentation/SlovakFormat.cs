@@ -14,6 +14,12 @@ public static class SlovakFormat
     /// <summary>"1 349,87 €". Statements are in euros.</summary>
     public static string Amount(decimal amount) => amount.ToString("C2", Culture);
 
+    /// <summary>
+    /// An amount as the user would type it into a field: a decimal comma, no thousands spaces and no "€", with the
+    /// amount's own decimal places ("12,50"), so <see cref="TryParseAmount"/> reads it back unchanged.
+    /// </summary>
+    public static string AmountInput(decimal amount) => amount.ToString(Culture);
+
     /// <summary>"24. 10. 2026".</summary>
     public static string Date(DateOnly date) => date.ToString("d", Culture);
 

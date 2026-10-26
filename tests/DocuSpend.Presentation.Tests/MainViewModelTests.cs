@@ -99,7 +99,7 @@ public sealed class MainViewModelTests : IDisposable
     {
         var main = await Start();
         main.RuleForm.SelectedKind = ConditionKind.Type;
-        main.RuleForm.SelectedType = main.RuleForm.Types[0];
+        main.RuleForm.Types[0].IsChecked = true;
         Target(main.RuleForm, Games);
         main.AddRuleCommand.Execute(null);
 
@@ -189,7 +189,7 @@ public sealed class MainViewModelTests : IDisposable
     {
         var main = await Start("02-busy-month");
         main.RuleForm.SelectedKind = ConditionKind.Type;
-        main.RuleForm.SelectedType = main.RuleForm.Types[0];
+        main.RuleForm.Types[0].IsChecked = true;
         Target(main.RuleForm, Games);
         main.AddRuleCommand.Execute(null);
         main.RuleForm.SelectedKind = ConditionKind.Amount;
@@ -380,7 +380,8 @@ public sealed class MainViewModelTests : IDisposable
 
         var main = new MainViewModel(new RuleStore(RulesFile));
 
-        Assert.Equal(["Protistrana obsahuje „vzor“", "Účet protistrany: SK57 1100", "Variabilný symbol: 0326"], main.Rules.Select(r => r.Condition));
+        // All three have number 1, so the newest is tried first and listed first.
+        Assert.Equal(["Variabilný symbol: 0326", "Účet protistrany: SK57 1100", "Protistrana obsahuje „vzor“"], main.Rules.Select(r => r.Condition));
     }
 
     [Fact]

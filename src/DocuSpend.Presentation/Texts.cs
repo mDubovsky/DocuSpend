@@ -79,10 +79,26 @@ public static class Texts
 
     // The rule form
     public const string NewRule = "Nové pravidlo";
+    public const string EditRule = "Upraviť pravidlo";
+    public const string SaveRule = "Uložiť zmeny";
+    public const string CancelEdit = "Zrušiť";
+    public const string Priority = "Priorita";
+    public const string Edit = "Upraviť";
+    public const string Delete = "Odstrániť";
+    public const string DeleteQuestion = "Odstrániť toto pravidlo?";
+    public const string Keep = "Ponechať";
+    public const string RuleDeleted = "Pravidlo je odstránené.";
+    public const string DeleteOnlyThisSession = "Pravidlo sa po zatvorení DocuSpend vráti.";
+    public const string DeleteSaveFailed = "Odstránenie sa nepodarilo uložiť, preto sa pravidlo po zatvorení DocuSpend vráti. Pri ďalšej zmene sa DocuSpend pokúsi uložiť znova.";
+    public const string ChangeOnlyThisSession = "Zmena platí len do zatvorenia DocuSpend.";
+    public const string ChangeSaveFailed = "Zmenu sa nepodarilo uložiť, preto po zatvorení DocuSpend neostane. Pri ďalšej zmene sa DocuSpend pokúsi uložiť znova.";
     public const string Condition = "Podmienka";
     public const string KindText = "Text v popise";
     public const string KindAmount = "Suma";
     public const string KindType = "Typ transakcie";
+    public const string KindCounterpartyName = "Protistrana";
+    public const string KindCounterpartyAccount = "Účet protistrany";
+    public const string KindVariableSymbol = "Variabilný symbol";
     public const string ModeContains = "obsahuje";
     public const string ModeEqualTo = "rovná sa";
     public const string AmountFrom = "Od";
@@ -91,7 +107,12 @@ public static class Texts
     public const string TargetSubcategory = "Podkategória";
     public const string AddRule = "Pridať pravidlo";
     public const string Rules = "Moje pravidlá";
+    public const string BuiltInRules = "Vstavané pravidlá";
+
     public const string NoRules = "Zatiaľ žiadne pravidlá.";
+
+    /// <summary>The help mark by "Moje pravidlá" and by "Priorita" (spec of #24).</summary>
+    public const string PriorityHelp = "Pravidlá sa uplatňujú od priority 1. Transakciu zaradí prvé pravidlo, ktorému zodpovedá. Vaše pravidlá môžu mať prioritu od 1 do 255; vstavané pravidlá majú prioritu 256, takže vaše pravidlá majú vždy prednosť. Ak majú dve pravidlá rovnakú prioritu, rozhoduje novšie.";
     public const string AmountNotANumber = "Suma musí byť číslo, napríklad 12,50.";
     public const string RuleMatchedNothing = "Pravidlo je uložené, ale v tomto výpise mu nezodpovedá žiadna transakcia.";
     public const string RuleMatchedNothingUnsaved = "V tomto výpise pravidlu nezodpovedá žiadna transakcia.";
@@ -149,7 +170,7 @@ public static class Texts
         RefusalKind.DuplicateName => "Taký názov už existuje.",
         RefusalKind.UnknownCategory => "Taká kategória neexistuje.",
         RefusalKind.NoSubcategoriesAllowed => "Do tejto kategórie nemožno pridať podkategóriu.",
-        RefusalKind.InvalidPriority => "Priorita musí byť celé číslo od 1.",
+        RefusalKind.InvalidPriority => "Priorita musí byť celé číslo od 1 do 255.",
         RefusalKind.UnknownTarget => "Vyberte podkategóriu.",
         RefusalKind.UnknownRule => "Také pravidlo neexistuje.",
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),

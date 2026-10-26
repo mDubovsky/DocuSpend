@@ -1,14 +1,23 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DocuSpend.Categorization;
+using DocuSpend.Categorization.Model;
 using DocuSpend.Categorization.Rules;
 using DocuSpend.Presentation.Look;
 using DocuSpend.Statements.Reading;
 
 namespace DocuSpend.Presentation;
 
-/// <summary>A user rule in the list: what it matches and where it puts it.</summary>
-public sealed record RuleRow(string Condition, string Target);
+/// <summary>The two lists the rules card switches between (spec: the rules card).</summary>
+public enum RuleView { Mine, BuiltIn }
+
+public sealed record RuleViewOption(RuleView View, string Label);
+
+/// <summary>
+/// A rule in a list: what it matches and where it puts it. <paramref name="Priority"/> is the user rule's number,
+/// which the list keeps for its order but shows only in the form; empty for a built-in rule.
+/// </summary>
+public sealed record RuleRow(RuleId Id, string Priority, string Condition, string Target, bool IsEditing = false);
 
 /// <summary>
 /// The window: the start screen or the statement the user opened, the message about a file that wasn't opened, the
@@ -33,7 +42,9 @@ public sealed partial class MainViewModel : ObservableObject
         RuleForm = new RuleFormViewModel(Statement.Config.Catalog);
         RulesMessage = Texts.RulesProblemMessage(load.Problem, load.MovedTo);
         RulesNotSaving = !store.IsSaving;
-        Rules = Statement.Config.UserRules.Select(Row).ToList();
+        Rules = UserRows();
+        BuiltInRules = Statement.Config.DefaultRules.Select(r => Row(r, "")).ToList();
+        SelectedRuleView = RuleViews[0];
         var saved = settings?.LoadLook() ?? LookChoice.System;
         _loadingLook = true;
         SelectedLook = Looks.Single(l => l.Choice == saved);
@@ -160,7 +171,26 @@ public sealed partial class MainViewModel : ObservableObject
         return Task.CompletedTask;
     }
 
-    /// <summary>The user rules, oldest first.</summary>
+    /// <summary>
+    /// The default rules in the order they are tried, without numbers: every user rule wins over them (spec: the rules
+    /// card). They never change while DocuSpend runs.
+    /// </summary>
+    public IReadOnlyList<RuleRow> BuiltInRules { get; }
+
+    public IReadOnlyList<RuleViewOption> RuleViews { get; } =
+    [
+        new(RuleView.Mine, Texts.Rules),
+        new(RuleView.BuiltIn, Texts.BuiltInRules),
+    ];
+
+    /// <summary>Which list the rules card shows: the user's own at start, or the built-in ones.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsBuiltInView))]
+    public partial RuleViewOption SelectedRuleView { get; set; }
+
+    public bool IsBuiltInView => SelectedRuleView.View == RuleView.BuiltIn;
+
+    /// <summary>The user rules in the order they are tried: the one higher up wins (spec: "Moje pravidlá").</summary>
     [ObservableProperty]
     public partial IReadOnlyList<RuleRow> Rules { get; private set; }
 
@@ -182,6 +212,13 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void AddRule()
     {
+        TakeBackQuestion();
+        // Enter in the form presses its default button; while a rule is open, that means saving it.
+        if (RuleForm.IsEditing)
+        {
+            SaveRule();
+            return;
+        }
         if (RuleForm.TryBuild() is not { } draft)
             return;
         var outcome = Statement.Config.AddUserRuleOnTop(draft.Condition, draft.Target);
@@ -192,11 +229,116 @@ public sealed partial class MainViewModel : ObservableObject
         }
         var saved = ApplyUserChange(outcome.Value!);
 
-        var added = Statement.Config.UserRules[^1].Id;
-        var matched = Statement.Categorized?.Transactions.Count(t => t.Rule?.Id == added) ?? 0;
         RuleForm.Clear();
+        Confirm(Statement.Config.UserRules[^1].Id, saved, Texts.RuleOnlyThisSession, Texts.RuleSaveFailed);
+    }
+
+    /// <summary>Opens a user rule in the form (spec: editing a rule). Whatever was typed in the form is replaced.</summary>
+    [RelayCommand]
+    private void EditRule(RuleRow row)
+    {
+        TakeBackQuestion();
+        if (Statement.Config.UserRules.FirstOrDefault(r => r.Id == row.Id) is not { } rule)
+            return;
+        RuleForm.Edit(rule);
+        Rules = UserRows();
+    }
+
+    /// <summary>
+    /// Changes the open rule as the form describes it, saves it, and categorizes the statement again. It keeps its
+    /// identifier and creation order. Invalid input changes nothing and leaves the form open.
+    /// </summary>
+    [RelayCommand]
+    private void SaveRule()
+    {
+        TakeBackQuestion();
+        if (RuleForm.EditingRule is not { } id || RuleForm.TryBuild() is not { } draft || RuleForm.TryPriority() is not { } priority)
+            return;
+        var outcome = Statement.Config.ChangeUserRule(id, draft.Condition, draft.Target, priority);
+        if (!outcome.IsSuccess)
+        {
+            RuleForm.Error = Texts.Refusal(outcome.Refusal!.Kind);
+            return;
+        }
+        RuleForm.Reset();
+        var saved = ApplyUserChange(outcome.Value!);
+        Confirm(id, saved, Texts.ChangeOnlyThisSession, Texts.ChangeSaveFailed);
+    }
+
+    /// <summary>Closes the open rule without changing it; the form is an empty "Nové pravidlo" again.</summary>
+    [RelayCommand]
+    private void CancelEdit()
+    {
+        TakeBackQuestion();
+        RuleForm.Reset();
+        RuleForm.Message = null;
+        Rules = UserRows();
+    }
+
+    /// <summary>
+    /// The rule the pop-up asks about, "Odstrániť toto pravidlo?", or null when no question is open (spec: deleting a
+    /// rule). While it is open the rest of the window waits.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(KeepRuleCommand))]
+    public partial RuleRow? RuleToDelete { get; private set; }
+
+    /// <summary>What the last deletion did, in "Moje pravidlá", until the next change; or null (spec: deleting a rule).</summary>
+    [ObservableProperty]
+    public partial string? RulesListMessage { get; private set; }
+
+    /// <summary>That the last deletion won't be kept, until the next change; or null.</summary>
+    [ObservableProperty]
+    public partial string? RulesListError { get; private set; }
+
+    /// <summary>"Odstrániť" in a row: a pop-up asks first, and nothing is deleted yet.</summary>
+    [RelayCommand]
+    private void AskToDelete(RuleRow row) => RuleToDelete = row;
+
+    /// <summary>"Ponechať", or Escape: the pop-up closes and the rule stays.</summary>
+    [RelayCommand(CanExecute = nameof(IsAsking))]
+    private void KeepRule() => TakeBackQuestion();
+
+    private bool IsAsking() => RuleToDelete is not null;
+
+    /// <summary>
+    /// "Odstrániť" after the question: deletes the rule, saves, and categorizes the statement again. A deletion that
+    /// can't be saved still applies until DocuSpend closes, and the list says the rule will come back.
+    /// </summary>
+    [RelayCommand]
+    private void DeleteRule()
+    {
+        if (RuleToDelete?.Id is not { } id)
+            return;
+        TakeBackQuestion();
+        var outcome = Statement.Config.RemoveUserRule(id);
+        if (!outcome.IsSuccess)
+        {
+            Rules = UserRows();
+            return;
+        }
+        if (RuleForm.EditingRule == id)
+        {
+            RuleForm.Reset();
+            RuleForm.Message = null;
+        }
+        var saved = ApplyUserChange(outcome.Value!);
+        RulesListMessage = Texts.RuleDeleted;
+        RulesListError = saved ? null : RulesNotSaving ? Texts.DeleteOnlyThisSession : Texts.DeleteSaveFailed;
+    }
+
+    /// <summary>Closes an open deletion question; any other change closes it too.</summary>
+    private void TakeBackQuestion() => RuleToDelete = null;
+
+    /// <summary>
+    /// The form's confirmation after a rule was added or changed: how many transactions it now catches, and whether
+    /// it will be kept.
+    /// </summary>
+    private void Confirm(RuleId rule, bool saved, string onlyThisSession, string saveFailed)
+    {
+        var matched = Statement.Categorized?.Transactions.Count(t => t.Rule?.Id == rule) ?? 0;
         RuleForm.Message = matched > 0 ? Texts.RuleMatched(matched) : saved ? Texts.RuleMatchedNothing : Texts.RuleMatchedNothingUnsaved;
-        RuleForm.Error = saved ? null : RulesNotSaving ? Texts.RuleOnlyThisSession : Texts.RuleSaveFailed;
+        RuleForm.Error = saved ? null : RulesNotSaving ? onlyThisSession : saveFailed;
     }
 
     /// <summary>
@@ -205,16 +347,21 @@ public sealed partial class MainViewModel : ObservableObject
     /// </summary>
     private bool ApplyUserChange(CategorizationConfig config)
     {
+        RulesListMessage = RulesListError = null;
         var saved = _store.Save(config);
         Statement.Config = config;
-        Rules = config.UserRules.Select(Row).ToList();
+        Rules = UserRows();
         return saved;
     }
 
-    private RuleRow Row(Rule rule)
+    private List<RuleRow> UserRows() =>
+        Statement.Config.RulesInOrder().Where(r => r.Source == RuleSource.User).Select(r => Row(r, r.Priority.ToString(SlovakFormat.Culture))).ToList();
+
+    private RuleRow Row(Rule rule, string priority)
     {
         var (category, subcategory) = Statement.Config.Catalog.FindSubcategory(rule.Target)!.Value;
-        return new RuleRow(Describe(rule.Condition), $"{category.Name} › {subcategory.Name}");
+        return new RuleRow(rule.Id, priority, Describe(rule.Condition), $"{category.Name} › {subcategory.Name}",
+            IsEditing: rule.Id == RuleForm.EditingRule);
     }
 
     /// <summary>A condition in Slovak, as the rules list shows it.</summary>

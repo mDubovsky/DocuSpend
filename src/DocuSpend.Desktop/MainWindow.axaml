@@ -13,6 +13,8 @@
 
   <Window.KeyBindings>
     <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenCommand}" />
+    <!-- Escape takes back a row's "Odstrániť toto pravidlo?"; it does nothing while no row asks -->
+    <KeyBinding Gesture="Escape" Command="{Binding KeepRuleCommand}" />
   </Window.KeyBindings>
 
   <!-- Only the arrangement lives here; every colour, size and spacing comes from Look/Look.axaml. -->
@@ -183,8 +185,8 @@
         <!-- A new rule, and the saved ones -->
         <Border Classes="card" Grid.Row="3" Grid.Column="0" IsVisible="{Binding HasStatement}">
           <StackPanel Spacing="{StaticResource Look.Space.Medium}">
-            <TextBlock Classes="heading" Text="{x:Static vm:Texts.NewRule}" />
-            <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="{StaticResource Look.Space.Medium}">
+            <TextBlock x:Name="FormHeading" Classes="heading" Text="{Binding RuleForm.Heading}" />
+            <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="{StaticResource Look.Space.Medium}">
               <TextBlock Classes="muted" Text="{x:Static vm:Texts.Condition}" VerticalAlignment="Center" />
               <StackPanel Grid.Column="1" Spacing="{StaticResource Look.Space.Medium}">
                 <ComboBox ItemsSource="{Binding RuleForm.Kinds}" SelectedItem="{Binding RuleForm.SelectedKindOption}" MinWidth="200">
@@ -194,7 +196,7 @@
                     </DataTemplate>
                   </ComboBox.ItemTemplate>
                 </ComboBox>
-                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding RuleForm.IsText}">
+                <StackPanel x:Name="TextFields" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding RuleForm.IsText}">
                   <ComboBox ItemsSource="{Binding RuleForm.TextModes}" SelectedItem="{Binding RuleForm.SelectedTextMode}" MinWidth="120">
                     <ComboBox.ItemTemplate>
                       <DataTemplate x:DataType="vm:TextModeOption">
@@ -204,21 +206,22 @@
                   </ComboBox>
                   <TextBox Text="{Binding RuleForm.Text}" MinWidth="240" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding RuleForm.IsAmount}">
+                <StackPanel x:Name="AmountFields" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding RuleForm.IsAmount}">
                   <TextBlock Classes="muted" Text="{x:Static vm:Texts.AmountFrom}" VerticalAlignment="Center" />
                   <TextBox Text="{Binding RuleForm.AmountFrom}" Width="110" />
                   <TextBlock Classes="muted" Text="{x:Static vm:Texts.AmountTo}" VerticalAlignment="Center" />
                   <TextBox Text="{Binding RuleForm.AmountTo}" Width="110" />
                   <TextBlock Classes="muted" Text="€" VerticalAlignment="Center" />
                 </StackPanel>
-                <ComboBox ItemsSource="{Binding RuleForm.Types}" SelectedItem="{Binding RuleForm.SelectedType}" MinWidth="240"
-                          IsVisible="{Binding RuleForm.IsType}">
-                  <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="vm:TypeOption">
-                      <TextBlock Text="{Binding Label}" />
+                <TextBox x:Name="AccountField" Text="{Binding RuleForm.Account}" MinWidth="300" IsVisible="{Binding RuleForm.IsAccount}" />
+                <ItemsControl x:Name="TypeChoices" ItemsSource="{Binding RuleForm.Types}" IsVisible="{Binding RuleForm.IsType}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TypeChoice">
+                      <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" />
                     </DataTemplate>
-                  </ComboBox.ItemTemplate>
-                </ComboBox>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBox x:Name="SymbolField" Text="{Binding RuleForm.Symbol}" MinWidth="200" IsVisible="{Binding RuleForm.IsSymbol}" />
               </StackPanel>
 
               <TextBlock Grid.Row="1" Classes="muted" Text="{x:Static vm:Texts.TargetCategory}" VerticalAlignment="Center" />
@@ -241,8 +244,20 @@
                 </ComboBox.ItemTemplate>
               </ComboBox>
 
-              <Button Grid.Row="3" Grid.Column="1" Classes="primary" Content="{x:Static vm:Texts.AddRule}"
-                      Command="{Binding AddRuleCommand}" IsDefault="True" />
+              <TextBlock Grid.Row="3" Classes="muted" Text="{x:Static vm:Texts.Priority}" VerticalAlignment="Center" IsVisible="{Binding RuleForm.IsEditing}" />
+              <StackPanel x:Name="PriorityRow" Grid.Row="3" Grid.Column="1" Classes="headingRow" IsVisible="{Binding RuleForm.IsEditing}">
+                <TextBox x:Name="PriorityField" Text="{Binding RuleForm.Priority}" Width="80" />
+                <Button x:Name="PriorityHelp" Classes="help" Content="?" ToolTip.Tip="{x:Static vm:Texts.PriorityHelp}" VerticalAlignment="Center" />
+              </StackPanel>
+
+              <!-- Enter presses the default button; while a rule is open, AddRule saves it -->
+              <Button x:Name="AddRuleButton" Grid.Row="4" Grid.Column="1" Classes="primary" Content="{x:Static vm:Texts.AddRule}"
+                      Command="{Binding AddRuleCommand}" IsDefault="True" IsVisible="{Binding !RuleForm.IsEditing}" />
+              <StackPanel x:Name="EditButtons" Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}"
+                          IsVisible="{Binding RuleForm.IsEditing}">
+                <Button Classes="primary" Content="{x:Static vm:Texts.SaveRule}" Command="{Binding SaveRuleCommand}" />
+                <Button Classes="secondary" Content="{x:Static vm:Texts.CancelEdit}" Command="{Binding CancelEditCommand}" />
+              </StackPanel>
             </Grid>
             <Border Classes="message confirmation" IsVisible="{Binding RuleForm.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
               <TextBlock Text="{Binding RuleForm.Message}" TextWrapping="Wrap" />
@@ -254,29 +269,96 @@
         </Border>
         <Border Classes="card" Grid.Row="3" Grid.Column="1" IsVisible="{Binding HasStatement}">
           <DockPanel>
-            <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.Rules}" />
+            <!-- The heading is a pair of pills: the user's own rules (at start) or the built-in ones -->
+            <ListBox x:Name="RuleViewSwitch" Classes="segmented tabs" DockPanel.Dock="Top" HorizontalAlignment="Left"
+                     ItemsSource="{Binding RuleViews}" SelectedItem="{Binding SelectedRuleView}">
+              <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+              </ListBox.ItemsPanel>
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:RuleViewOption">
+                  <TextBlock Text="{Binding Label}" />
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
             <Border Classes="message error" DockPanel.Dock="Top"
                     x:Name="RulesNotSaving" IsVisible="{Binding RulesNotSaving}">
               <TextBlock Text="{x:Static vm:Texts.RulesNotSaving}" TextWrapping="Wrap" />
             </Border>
-            <Panel>
-              <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoRules}" IsVisible="{Binding !Rules.Count}" />
-              <ItemsControl ItemsSource="{Binding Rules}">
+
+            <!-- The user's own rules, in the order they are tried -->
+            <DockPanel x:Name="MyRules" IsVisible="{Binding !IsBuiltInView}">
+              <Border Classes="message confirmation" DockPanel.Dock="Top" x:Name="RulesListMessage"
+                      IsVisible="{Binding RulesListMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding RulesListMessage}" TextWrapping="Wrap" />
+              </Border>
+              <Border Classes="message error" DockPanel.Dock="Top" x:Name="RulesListError"
+                      IsVisible="{Binding RulesListError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding RulesListError}" TextWrapping="Wrap" />
+              </Border>
+              <Panel>
+                <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoRules}" IsVisible="{Binding !Rules.Count}" />
+                <ScrollViewer Classes="ruleList">
+                  <ItemsControl x:Name="RuleList" ItemsSource="{Binding Rules}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:RuleRow">
+                        <Border Classes="ruleRow" Classes.editing="{Binding IsEditing}">
+                          <Grid ColumnDefinitions="*,*,Auto">
+                            <TextBlock Text="{Binding Condition}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Classes="muted" Text="{Binding Target}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Small}">
+                              <Button Classes="small secondary" Content="{x:Static vm:Texts.Edit}"
+                                      Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).EditRuleCommand}" CommandParameter="{Binding}" />
+                              <Button Classes="small secondary" Content="{x:Static vm:Texts.Delete}"
+                                      Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).AskToDeleteCommand}" CommandParameter="{Binding}" />
+                            </StackPanel>
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </ScrollViewer>
+              </Panel>
+            </DockPanel>
+
+            <!-- The built-in rules, read only, in the order they are tried -->
+            <ScrollViewer Classes="ruleList" x:Name="BuiltInRules" IsVisible="{Binding IsBuiltInView}">
+              <ItemsControl x:Name="BuiltInRuleList" ItemsSource="{Binding BuiltInRules}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="vm:RuleRow">
-                    <Grid ColumnDefinitions="*,*" Margin="{StaticResource Look.Margin.Row}">
-                      <TextBlock Text="{Binding Condition}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" />
-                      <TextBlock Grid.Column="1" Classes="muted" Text="{Binding Target}" TextTrimming="CharacterEllipsis" />
-                    </Grid>
+                    <Border Classes="ruleRow">
+                      <Grid ColumnDefinitions="*,*">
+                        <TextBlock Text="{Binding Condition}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Classes="muted" Text="{Binding Target}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                      </Grid>
+                    </Border>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
-            </Panel>
+            </ScrollViewer>
           </DockPanel>
         </Border>
 
       </Grid>
     </ScrollViewer>
+
+    <!-- "Odstrániť toto pravidlo?": a pop-up over the dimmed window, which waits until it is answered -->
+    <Panel x:Name="DeleteDialog" IsVisible="{Binding RuleToDelete, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <Border Classes="scrim" />
+      <Border x:Name="DeleteDialogBox" Classes="card dialog" KeyboardNavigation.TabNavigation="Cycle" Focusable="True" FocusAdorner="{x:Null}">
+        <StackPanel Spacing="{StaticResource Look.Space.Medium}">
+          <TextBlock Classes="heading" Text="{x:Static vm:Texts.DeleteQuestion}" />
+          <TextBlock x:Name="DeleteDialogRule" Text="{Binding RuleToDelete.Condition, FallbackValue=''}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted" Text="{Binding RuleToDelete.Target, FallbackValue=''}" TextWrapping="Wrap" />
+          <StackPanel Classes="dialogButtons">
+            <Button x:Name="DeleteDialogDelete" Classes="primary" Content="{x:Static vm:Texts.Delete}" Command="{Binding DeleteRuleCommand}" />
+            <Button x:Name="DeleteDialogKeep" Classes="secondary" Content="{x:Static vm:Texts.Keep}" Command="{Binding KeepRuleCommand}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Panel>
 
     <!-- While a file is dragged over the window. It lets the drop through to the window. -->
     <Border x:Name="DropOverlay" Classes="dropOverlay" IsVisible="{Binding IsDraggingOver}" IsHitTestVisible="False">

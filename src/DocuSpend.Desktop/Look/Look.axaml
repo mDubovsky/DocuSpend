@@ -44,6 +44,14 @@
     <Thickness x:Key="Look.Padding.Badge">10,3</Thickness>
     <Thickness x:Key="Look.Padding.Close">10,4</Thickness>
     <x:Double x:Key="Look.FontSize.Title">22</x:Double>
+    <Thickness x:Key="Look.Padding.Help">8,1</Thickness>
+    <Thickness x:Key="Look.Padding.SmallButton">12,3</Thickness>
+    <Thickness x:Key="Look.Padding.RuleRow">8,4</Thickness>
+    <x:Double x:Key="Look.Height.RuleList">320</x:Double>
+    <Thickness x:Key="Look.Padding.Tab">16,6</Thickness>
+    <x:Double x:Key="Look.Width.DialogMin">380</x:Double>
+    <x:Double x:Key="Look.Width.DialogMax">520</x:Double>
+    <Thickness x:Key="Look.Margin.DialogButtons">0,8,0,0</Thickness>
   </Styles.Resources>
 
   <!-- The window: background, and the body text everything inherits -->
@@ -279,6 +287,77 @@
   </Style>
   <Style Selector="Border.dropOverlay TextBlock">
     <Setter Property="Foreground" Value="{DynamicResource Look.Accent}" />
+  </Style>
+
+  <!-- The rule editor (work/024-edit-rules/spec.md) -->
+  <!-- A field with a help mark beside it -->
+  <Style Selector="StackPanel.headingRow">
+    <Setter Property="Orientation" Value="Horizontal" />
+    <Setter Property="Spacing" Value="{StaticResource Look.Space.Small}" />
+  </Style>
+  <!-- The help mark: a small outlined "?" whose tooltip explains; it can be reached with the keyboard -->
+  <Style Selector="Button.help">
+    <Setter Property="VerticalAlignment" Value="Top" />
+    <Setter Property="CornerRadius" Value="{StaticResource Look.Radius.Pill}" />
+    <Setter Property="Padding" Value="{StaticResource Look.Padding.Help}" />
+    <Setter Property="FontSize" Value="{StaticResource Look.FontSize.Label}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Look.Accent}" />
+    <Setter Property="Foreground" Value="{DynamicResource Look.Accent}" />
+  </Style>
+  <Style Selector="Button.help:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Look.Hover}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Look.Accent}" />
+    <Setter Property="Foreground" Value="{DynamicResource Look.Accent}" />
+  </Style>
+  <!-- A rule in "Moje pravidlá"; the one open in the form is marked like a selected row -->
+  <Style Selector="Border.ruleRow">
+    <Setter Property="Padding" Value="{StaticResource Look.Padding.RuleRow}" />
+    <Setter Property="Margin" Value="{StaticResource Look.Margin.Row}" />
+    <Setter Property="CornerRadius" Value="{StaticResource Look.Radius.Pill}" />
+  </Style>
+  <Style Selector="Border.ruleRow.editing">
+    <Setter Property="Background" Value="{DynamicResource Look.AccentTint}" />
+  </Style>
+  <!-- A row's own buttons: secondary, smaller -->
+  <Style Selector="Button.small">
+    <Setter Property="Padding" Value="{StaticResource Look.Padding.SmallButton}" />
+    <Setter Property="FontSize" Value="{StaticResource Look.FontSize.Label}" />
+  </Style>
+
+  <!-- A pop-up question: the window dimmed behind a card in its middle -->
+  <Style Selector="Border.scrim">
+    <Setter Property="Background" Value="{DynamicResource Look.Background}" />
+    <Setter Property="Opacity" Value="0.8" />
+  </Style>
+  <Style Selector="Border.card.dialog">
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="MinWidth" Value="{StaticResource Look.Width.DialogMin}" />
+    <Setter Property="MaxWidth" Value="{StaticResource Look.Width.DialogMax}" />
+  </Style>
+  <Style Selector="StackPanel.dialogButtons">
+    <Setter Property="Orientation" Value="Horizontal" />
+    <Setter Property="Spacing" Value="{StaticResource Look.Space.Medium}" />
+    <Setter Property="Margin" Value="{StaticResource Look.Margin.DialogButtons}" />
+  </Style>
+
+  <!-- A list of rules scrolls within its card instead of making the card taller -->
+  <Style Selector="ScrollViewer.ruleList">
+    <Setter Property="MaxHeight" Value="{StaticResource Look.Height.RuleList}" />
+    <Setter Property="VerticalAlignment" Value="Top" />
+  </Style>
+
+  <!-- The rules card's heading: the segmented choice, at the size of a heading -->
+  <Style Selector="ListBox.segmented.tabs">
+    <Setter Property="Margin" Value="{StaticResource Look.Margin.Heading}" />
+  </Style>
+  <Style Selector="ListBox.segmented.tabs ListBoxItem">
+    <Setter Property="Padding" Value="{StaticResource Look.Padding.Tab}" />
+    <Setter Property="FontSize" Value="{StaticResource Look.FontSize.Body}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
 
 </Styles>

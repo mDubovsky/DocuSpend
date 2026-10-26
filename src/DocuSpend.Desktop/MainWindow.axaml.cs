@@ -35,12 +35,28 @@ public partial class MainWindow : Window
         AddHandler(DragDrop.DragLeaveEvent, OnDragLeave, RoutingStrategies.Bubble, handledEventsToo: true);
         AddHandler(DragDrop.DropEvent, OnDrop, RoutingStrategies.Bubble, handledEventsToo: true);
 
+        // A help mark's tooltip opens on hover by itself; Avalonia 11 has no option to open it on keyboard focus too.
+        AddHandler(GotFocusEvent, (_, e) =>
+        {
+            if (e.Source is Button help && help.Classes.Contains("help") && e.NavigationMethod is NavigationMethod.Tab or NavigationMethod.Directional)
+                ToolTip.SetIsOpen(help, true);
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(LostFocusEvent, (_, e) =>
+        {
+            if (e.Source is Button help && help.Classes.Contains("help"))
+                ToolTip.SetIsOpen(help, false);
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
+
         SpendingPie.DataPointerDown += OnSliceClicked;
         model.Statement.PropertyChanged += OnStatementChanged;
         model.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(MainViewModel.Look))
                 ApplyLook(model.Look);
+            // The deletion question takes the focus on the box itself, with no button chosen and no focus mark, so
+            // Tab moves among its buttons rather than through the dimmed window behind it.
+            if (e.PropertyName == nameof(MainViewModel.RuleToDelete) && model.RuleToDelete is not null)
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => DeleteDialogBox.Focus());
             // The charts are hidden on the start screen. LiveCharts measures a chart only after it has painted a
             // frame since its last measure, and resets that only when the chart scrolls into view, so charts that
             // were hidden stayed empty until scrolled away and back. Once they have been rendered visible, ask both

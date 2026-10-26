@@ -136,8 +136,7 @@ public sealed class OpeningWindowTests : IDisposable
     {
         var (window, model) = Start();
 
-        var binding = Assert.Single(window.KeyBindings);
-        Assert.Equal(new KeyGesture(Key.O, KeyModifiers.Control), binding.Gesture);
+        var binding = Assert.Single(window.KeyBindings, b => b.Gesture == new KeyGesture(Key.O, KeyModifiers.Control));
         Assert.Same(model.OpenCommand, binding.Command);
         window.Close();
     });

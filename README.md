@@ -10,7 +10,7 @@ Give DocuSpend a statement and get charts showing when and how you spent: how mu
 - the account balance through the month;
 - rules you add to sort transactions into categories.
 
-What works today: opening your own statement, with a clear message for a file that can't be read; sorting transactions into categories with built-in rules and rules of your own, which are kept between sessions; and the charts. Editing and deleting rules ([#24](https://github.com/mDubovsky/DocuSpend/issues/24)) is next. What the first version includes: [docs/mvp.md](docs/mvp.md).
+What works today: opening your own statement, with a clear message for a file that can't be read; sorting transactions into categories with built-in rules and rules of your own, which are kept between sessions and can be edited, reordered and deleted; and the charts. Creating your own categories ([#25](https://github.com/mDubovsky/DocuSpend/issues/25)) is next. What the first version includes: [docs/mvp.md](docs/mvp.md).
 
 ## Privacy
 

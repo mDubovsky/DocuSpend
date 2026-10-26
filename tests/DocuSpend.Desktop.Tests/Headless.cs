@@ -3,6 +3,11 @@ using Avalonia;
 using Avalonia.Headless;
 using Avalonia.Threading;
 
+// Every window test runs on the one headless UI thread, so running test classes in parallel gains nothing. It does
+// cost: each waiting class blocks a thread-pool thread, and on a small CI machine the statement reader's background
+// work then waited long enough for a test to time out.
+[assembly: Xunit.v3.Parallelization(Mode = Xunit.Sdk.ParallelMode.None)]
+
 namespace DocuSpend.Desktop.Tests;
 
 /// <summary>The application on Avalonia's headless platform: no screen, no window system, nothing drawn.</summary>
