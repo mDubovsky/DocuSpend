@@ -1,5 +1,9 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
+using Avalonia.Headless;
+using Avalonia.Input;
+using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -100,6 +104,107 @@ public sealed class LookSwitchWindowTests : IDisposable
         Dispatcher.UIThread.RunJobs();
 
         AssertCentred(Chosen(window.RuleViewSwitch));
+        Finish(window);
+    });
+
+    private static Palette PaletteOf(LookChoice look) => look == LookChoice.Dark ? Palette.Dark : Palette.Light;
+
+    private static string? PillColour(ListBoxItem item)
+    {
+        var pill = item.GetVisualDescendants().OfType<ContentPresenter>().First(c => c.Name == "PART_ContentPresenter");
+        return pill.Background is ISolidColorBrush { Color.A: > 0 } brush ? $"#{brush.Color.R:X2}{brush.Color.G:X2}{brush.Color.B:X2}" : null;
+    }
+
+    /// <summary>The window scrolls; the control is brought into view first, as a user would scroll to it.</summary>
+    internal static Point CentreInView(Window window, Control control)
+    {
+        control.BringIntoView();
+        Dispatcher.UIThread.RunJobs();
+        return control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), window)!.Value;
+    }
+
+    private static void PointAt(Window window, Control control)
+    {
+        var centre = CentreInView(window, control);
+        window.MouseMove(centre);
+        Dispatcher.UIThread.RunJobs();
+    }
+
+    /// <summary>A point inside the window that is over neither switch.</summary>
+    private static void PointAway(Window window)
+    {
+        window.MouseMove(new Point(window.Bounds.Width / 2, window.Bounds.Height - 2));
+        Dispatcher.UIThread.RunJobs();
+    }
+
+    /// <summary>Each switch, with the index of a choice that isn't chosen when the window opens.</summary>
+    public static TheoryData<LookChoice, string, int> SwitchesWithAnUnchosenChoice
+    {
+        get
+        {
+            var data = new TheoryData<LookChoice, string, int>();
+            foreach (var look in new[] { LookChoice.Light, LookChoice.Dark })
+            {
+                data.Add(look, nameof(MainWindow.LookSwitch), 0);       // "Podľa systému"
+                data.Add(look, nameof(MainWindow.RuleViewSwitch), 1);   // "Vstavané pravidlá"
+            }
+            return data;
+        }
+    }
+
+    private static ListBox SwitchNamed(MainWindow window, string name) => window.FindControl<ListBox>(name)!;
+
+    [Theory]
+    [MemberData(nameof(SwitchesWithAnUnchosenChoice))]
+    public void A_choice_under_the_pointer_shows_a_pill_that_stands_out_from_the_switch(LookChoice look, string name, int index) =>
+        Headless.Run(() =>
+        {
+            var (window, model) = Start(look);
+            Headless.Wait(model.OpenFileAsync(MainWindowTests.Sample("01-typical-month")));
+            Dispatcher.UIThread.RunJobs();
+            var choice = Choices(SwitchNamed(window, name))[index];
+            Assert.False(choice.IsSelected);
+            Assert.Null(PillColour(choice));
+
+            PointAt(window, choice);
+            Assert.Equal(PaletteOf(look).SwitchHover, PillColour(choice));
+
+            PointAway(window);
+            Assert.Null(PillColour(choice));
+            Finish(window);
+        });
+
+    [Theory]
+    [MemberData(nameof(Variants))]
+    public void The_chosen_choice_keeps_its_accent_pill_under_the_pointer(LookChoice look) => Headless.Run(() =>
+    {
+        var (window, model) = Start(look);
+        Headless.Wait(model.OpenFileAsync(MainWindowTests.Sample("01-typical-month")));
+        Dispatcher.UIThread.RunJobs();
+
+        foreach (var @switch in new[] { window.LookSwitch, window.RuleViewSwitch })
+        {
+            var chosen = Choices(@switch).Single(i => i.IsSelected);
+            PointAt(window, chosen);
+            Assert.Equal(PaletteOf(look).AccentTint, PillColour(chosen));
+        }
+        Finish(window);
+    });
+
+    [Fact]
+    public void Clicking_a_choice_of_the_rules_switch_shows_the_built_in_rules() => Headless.Run(() =>
+    {
+        var (window, model) = Start(LookChoice.Light);
+        Headless.Wait(model.OpenFileAsync(MainWindowTests.Sample("01-typical-month")));
+        Dispatcher.UIThread.RunJobs();
+        var builtIn = Choices(window.RuleViewSwitch)[1];
+
+        var centre = CentreInView(window, builtIn);
+        window.MouseDown(centre, MouseButton.Left);
+        window.MouseUp(centre, MouseButton.Left);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.True(model.IsBuiltInView);
         Finish(window);
     });
 }
