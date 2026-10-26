@@ -26,7 +26,7 @@ public sealed class ScrollBarWindowTests : IDisposable
     /// <summary>The busy month with its largest category selected, so the transaction list overflows, and the built-in rules shown.</summary>
     private (MainWindow Window, MainViewModel Model) Start(LookChoice look = LookChoice.Light)
     {
-        var model = new MainViewModel(new RuleStore(Path.Combine(_folder, "rules.json")));
+        var model = new MainViewModel(new RuleStore(Path.Join(_folder, "rules.json")));
         model.SelectedLook = model.Looks.Single(l => l.Choice == look);
         Headless.Wait(model.OpenFileAsync(MainWindowTests.Sample("02-busy-month")));
         model.Statement.SelectedRow = model.Statement.Categories.MaxBy(row =>

@@ -26,7 +26,7 @@ public sealed class LookSwitchWindowTests : IDisposable
 
     private (MainWindow Window, MainViewModel Model) Start(LookChoice look)
     {
-        var model = new MainViewModel(new RuleStore(Path.Combine(_folder, "rules.json")));
+        var model = new MainViewModel(new RuleStore(Path.Join(_folder, "rules.json")));
         model.SelectedLook = model.Looks.Single(l => l.Choice == look);
         var window = new MainWindow(model);
         window.Show();
