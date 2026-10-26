@@ -50,6 +50,7 @@ internal static class Screens
             main.RuleForm.SelectedCategory = main.RuleForm.Categories.Single(c => c.Id == new CategoryId("food"));
             main.RuleForm.SelectedSubcategory = main.RuleForm.Subcategories[0];
             main.AddRuleCommand.Execute(null);
+            ShowRules(main);
         }),
         new("05-rule-added", main =>
         {
@@ -60,19 +61,24 @@ internal static class Screens
             main.RuleForm.SelectedCategory = main.RuleForm.Categories.Single(c => c.Id == new CategoryId("leisure"));
             main.RuleForm.SelectedSubcategory = main.RuleForm.Subcategories[0];
             main.AddRuleCommand.Execute(null);
+            ShowRules(main);
+        }),
+        new("05-rule-added-statement", main =>
+        {
+            AddRuleOnTheExample(main);
         }),
         new("06-rules-damaged", _ => { }, rules =>
         {
             File.WriteAllText(rules, "{ damaged");
             return null;
         }),
-        new("07-rules-not-saving", AddRuleOnTheExample, rules =>
+        new("07-rules-not-saving", main => { AddRuleOnTheExample(main); ShowRules(main); }, rules =>
         {
             File.WriteAllText(rules, """{ "version": 1, "categories": [], "subcategories": [], "rules": [] }""");
             // Held open with no sharing, as another program might, while the window starts.
             return new FileStream(rules, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
         }),
-        new("08-rule-not-saved", AddRuleOnTheExample, rules =>
+        new("08-rule-not-saved", main => { AddRuleOnTheExample(main); ShowRules(main); }, rules =>
         {
             // A file where the folder should be: the folder can't be created, so the save fails.
             Directory.Delete(Path.GetDirectoryName(rules)!);
@@ -105,13 +111,22 @@ internal static class Screens
         new("14-balance-card-busy", main => Open(main, "02-busy-month"), InWindow: window => HoverDay(window, BusiestDay(window))),
         // The switches and the scroll bars (#19): "Podľa systému" is never the chosen look in these pictures.
         new("15-look-switch-hover", main => Open(main, "01-typical-month"), InWindow: window => PointAt(window, Choice(window.LookSwitch, 0))),
-        new("16-rules-switch-hover", main => Open(main, "01-typical-month"), InWindow: window => PointAt(window, Choice(window.RuleViewSwitch, 1))),
+        new("16-rules-switch-hover", main => { Open(main, "01-typical-month"); ShowRules(main); }, InWindow: window => PointAt(window, Choice(window.RuleViewSwitch, 1))),
+        // The two screens (#21): each at the default window size, and the switch under the pointer.
+        new("18-rules-screen", main =>
+        {
+            AddRulesOfEveryKind(main);
+            main.RuleForm.Message = null;
+        }),
+        new("19-screen-switch-hover", main => Open(main, "01-typical-month"), InWindow: window => PointAt(window, Choice(window.ScreenSwitch, 1))),
         new("17-scroll-bar", main =>
         {
             Open(main, "02-busy-month");
             SelectTheLongestCategory(main);
         }, InWindow: ScrollTransactionsAndPointAtTheHandle),
     ];
+
+    private static void ShowRules(MainViewModel main) => main.SelectedScreen = main.Screens.Single(s => s.Screen == AppScreen.Rules);
 
     private static ListBoxItem Choice(ListBox @switch, int index) => @switch.GetVisualDescendants().OfType<ListBoxItem>().ElementAt(index);
 
@@ -174,6 +189,7 @@ internal static class Screens
         form.Priority = "3";
         main.SaveRuleCommand.Execute(null);
         form.Message = null;
+        ShowRules(main);
     }
 
     private static void AddRuleOnTheExample(MainViewModel main)
@@ -187,8 +203,12 @@ internal static class Screens
         main.AddRuleCommand.Execute(null);
     }
 
-    /// <summary>The ring's centre in the window; the ring runs from 78 to 122 units out from it.</summary>
-    private static Point RingCentre(MainWindow window) => window.SpendingPie.TranslatePoint(new Point(130, 130), window)!.Value;
+    /// <summary>The ring's centre in the window.</summary>
+    private static Point RingCentre(MainWindow window) =>
+        window.SpendingPie.TranslatePoint(new Point(window.SpendingPie.Bounds.Width / 2, window.SpendingPie.Bounds.Height / 2), window)!.Value;
+
+    /// <summary>Midway between the ring's edges: the ring runs from 0.6 to 0.94 of the way out from the centre.</summary>
+    private static double RingRadius(MainWindow window) => 0.77 * window.SpendingPie.Bounds.Width / 2;
 
     /// <summary>Moves the pointer onto the ring at an angle in degrees, clockwise from 3 o'clock, where the ring starts, midway between its edges.</summary>
     private static void HoverRing(MainWindow window, double degrees)
@@ -196,7 +216,7 @@ internal static class Screens
         var centre = RingCentre(window);
         var radians = degrees * Math.PI / 180;
         window.MouseMove(centre);
-        window.MouseMove(new Point(centre.X + 100 * Math.Cos(radians), centre.Y + 100 * Math.Sin(radians)));
+        window.MouseMove(new Point(centre.X + RingRadius(window) * Math.Cos(radians), centre.Y + RingRadius(window) * Math.Sin(radians)));
     }
 
     /// <summary>The angle of the middle of the slice whose category name starts with <paramref name="name"/>.</summary>
@@ -244,8 +264,8 @@ internal static class Screens
             using (screen.Prepare?.Invoke(rules))
                 model = new MainViewModel(new RuleStore(rules), example: SamplePath("01-typical-month"));
             model.SelectedLook = model.Looks.Single(l => l.Choice == choice);
-            // Tall enough that nothing needs scrolling, so the whole window is in one picture.
-            var window = new MainWindow(model) { Width = 1280, Height = 1660 };
+            // The size DocuSpend opens at, so the picture shows what the user sees without scrolling.
+            var window = new MainWindow(model) { Width = 1280, Height = 880 };
             window.Show();
             screen.Arrange(model);
             Settle();
