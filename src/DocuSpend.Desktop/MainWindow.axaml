@@ -26,23 +26,9 @@
         <!-- Opening a statement, the message about one that wasn't opened, and the key figures -->
         <Border Classes="card" Grid.ColumnSpan="2">
           <StackPanel Spacing="{StaticResource Look.Space.Large}">
-            <Grid ColumnDefinitions="*,Auto">
-              <!-- Wraps in a narrow window instead of cutting a control off -->
+            <Grid ColumnDefinitions="*,Auto,*">
+              <!-- Left: opening a statement and what is open. Wraps in a narrow window instead of cutting a control off. -->
               <WrapPanel>
-                <!-- The two screens a statement is shown on -->
-                <ListBox x:Name="ScreenSwitch" Classes="segmented" ItemsSource="{Binding Screens}" SelectedItem="{Binding SelectedScreen}"
-                         IsVisible="{Binding HasStatement}" VerticalAlignment="Center" Margin="{StaticResource Look.Margin.HeaderItem}">
-                  <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                      <StackPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                  </ListBox.ItemsPanel>
-                  <ListBox.ItemTemplate>
-                    <DataTemplate x:DataType="vm:AppScreenOption">
-                      <TextBlock Text="{Binding Label}" />
-                    </DataTemplate>
-                  </ListBox.ItemTemplate>
-                </ListBox>
                 <Button x:Name="OpenButton" Classes="secondary" Content="{x:Static vm:Texts.OpenStatement}" Command="{Binding OpenCommand}"
                         IsVisible="{Binding HasStatement}" VerticalAlignment="Center" Margin="{StaticResource Look.Margin.HeaderItem}" />
                 <TextBlock Classes="muted" Text="{Binding Statement.Period}" VerticalAlignment="Center" IsVisible="{Binding HasStatement}"
@@ -53,10 +39,24 @@
                 <TextBlock Classes="muted" Text="{x:Static vm:Texts.Reading}" VerticalAlignment="Center" IsVisible="{Binding IsReading}"
                            Margin="{StaticResource Look.Margin.HeaderItem}" />
               </WrapPanel>
+              <!-- Middle: the two screens a statement is shown on -->
+              <ListBox x:Name="ScreenSwitch" Grid.Column="1" Classes="segmented" ItemsSource="{Binding Screens}" SelectedItem="{Binding SelectedScreen}"
+                       IsVisible="{Binding HasStatement}" VerticalAlignment="Center" Margin="{StaticResource Look.Margin.HeaderCentre}">
+                <ListBox.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:AppScreenOption">
+                    <TextBlock Text="{Binding Label}" />
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
               <!-- Light or dark: follow Windows, or always one of them -->
-              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}">
-                <TextBlock Classes="muted" Text="{x:Static vm:Texts.Look}" VerticalAlignment="Center" />
-                <ListBox x:Name="LookSwitch" Classes="segmented" ItemsSource="{Binding Looks}" SelectedItem="{Binding SelectedLook}">
+              <WrapPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <TextBlock Classes="muted" Text="{x:Static vm:Texts.Look}" VerticalAlignment="Center" Margin="{StaticResource Look.Margin.HeaderItem}" />
+                <ListBox x:Name="LookSwitch" Classes="segmented" ItemsSource="{Binding Looks}" SelectedItem="{Binding SelectedLook}" VerticalAlignment="Center">
                   <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
                       <StackPanel Orientation="Horizontal" />
@@ -68,7 +68,7 @@
                     </DataTemplate>
                   </ListBox.ItemTemplate>
                 </ListBox>
-              </StackPanel>
+              </WrapPanel>
             </Grid>
             <Border x:Name="OpenMessage" Classes="message error" IsVisible="{Binding OpenMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
               <Grid ColumnDefinitions="*,Auto">

@@ -48,7 +48,7 @@ Rules are needed only now and then. Someone who opens a statement to see where t
 - **This item only moves what exists**, as the issue says. Any change to how rules work is a separate item.
 - **A rule changed on the rules screen applies to the open statement at once**, as today and as the issue asks.
 - **The rules screen is reached only with a statement open**, decided by the maintainer. Today the rules are shown only with a statement, and the "how many transactions it catches" message needs one; rules without a statement can be a later item.
-- **The screens are switched by a pair of pills in the window's header, next to "Otvoriť výpis…", named "Výpis" and "Pravidlá"**, decided by the maintainer. It matches the switches the look already has and keeps the header the one place for actions; the spec settles the exact wording.
+- **The screens are switched by a pair of pills in the middle of the window's header, named "Výpis" and "Pravidlá"**, decided by the maintainer. "Otvoriť výpis…" stays at the very left and "Vzhľad" at the very right (after the screenshot review). It matches the switches the look already has and keeps the header the one place for actions; the spec settles the exact wording.
 - **Opening another statement always shows the statement screen**, decided by the maintainer. Opening a statement means the user wants to see it.
 - **"Fits without scrolling" holds for the default window size only**, decided by the maintainer. The window can be made much smaller (down to its minimum), and below the default size it may scroll as it does today.
 

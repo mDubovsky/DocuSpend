@@ -22,7 +22,7 @@ Measured on 26 October 2026, on this branch:
 
 ### The window, in `DocuSpend.Desktop`
 - **The header card** (both screens):
-  - Its first row becomes a `WrapPanel` holding the switch, "Otvoriť výpis…", the period, the example badge and "Výpis sa číta…". The look switch stays in its own column on the right. At the default width this is one line; in a narrow window it wraps instead of cutting a control off.
+  - Its first row is a grid of three columns. On the left a `WrapPanel` holds "Otvoriť výpis…", the period, the example badge and "Výpis sa číta…"; in the middle is the switch; on the right a `WrapPanel` holds "Vzhľad" and the look switch. At the default width this is one line; in a narrow window the side groups wrap inside their columns instead of cutting a control off.
   - The switch is `ListBox.segmented` named `ScreenSwitch`, like `LookSwitch`, shown while `HasStatement`. It gets the #19 hover with no new style.
   - The messages stay where they are. The key figures show only while `ShowsStatement`.
 - **The content fills the window.** The outer `ScrollViewer` stays. Inside it, a `Border` carries the window margin as padding, has its `Height` bound to the scroll viewer's height, and has a `MinHeight` from the look (`Look.Height.ContentMin`). Below that height the window scrolls, as the spec allows.

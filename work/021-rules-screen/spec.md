@@ -6,9 +6,8 @@ Intent: [intent.md](intent.md)
 
 ### Two screens
 - With a statement open, the window has two screens: **"Výpis"** (the statement) and **"Pravidlá"** (the rules). Before any statement is open there is only the start screen ([#12](../012-open-statement/spec.md)), unchanged, with no switch.
-- The **header** is the same on both screens and stays where it is: the switch, "Otvoriť výpis…", the statement's period, the "Ukážka s vymyslenými údajmi" badge when the example is open, "Výpis sa číta…" while reading, and "Vzhľad" with the light and dark switch on the right.
-- The switch is a pair of pills, **"Výpis"** and **"Pravidlá"**, at the left of the header, before "Otvoriť výpis…". It has the look of the light and dark switch, including its hover ([#19](../019-look-switch-scroll-bars/spec.md)). The chosen screen's pill is highlighted. Choosing the other pill switches the screen; choosing the highlighted one does nothing.
-- When a statement is first opened, from the start screen or the example, the window shows "Výpis".
+- The **header** is the same on both screens and stays where it is. On the left: "Otvoriť výpis…", the statement's period, the "Ukážka s vymyslenými údajmi" badge when the example is open, and "Výpis sa číta…" while reading. In the middle: the switch. On the right: "Vzhľad" with the light and dark switch.
+- The switch is a pair of pills, **"Výpis"** and **"Pravidlá"**, in the middle of the header. It has the look of the light and dark switch, including its hover ([#19](../019-look-switch-scroll-bars/spec.md)). The chosen screen's pill is highlighted. Choosing the other pill switches the screen; choosing the highlighted one does nothing.
 - **Opening another statement always shows "Výpis"**, whichever screen it was opened from: with the button, with Ctrl+O, or by dropping a file.
 
 ### The statement screen ("Výpis")
@@ -38,8 +37,7 @@ The statement screen, at the default window size. Nothing below the lists; the w
 
 ```
 +--------------------------------------------------------------------------------+
-| (Výpis|Pravidlá) [Otvoriť výpis…] 1. 9. 2026 – 30. 9. 2026 (Ukážka…)            |
-|                                         Vzhľad (Podľa systému|Svetlý|Tmavý)     |
+| [Otvoriť výpis…] 1. 9. 2026 – 30. 9. 2026 (Ukážka…)   (Výpis|Pravidlá)   Vzhľad (…) |
 | [! Message about a file that wasn't opened, or rules that weren't loaded  [x]] |
 | Výdavky spolu        Počiatočný zostatok     Konečný zostatok                  |
 | 1 234,56 €           2 000,00 €              1 500,00 €                        |
@@ -59,8 +57,7 @@ The rules screen. The header is the same, without the key figures.
 
 ```
 +--------------------------------------------------------------------------------+
-| (Výpis|Pravidlá) [Otvoriť výpis…] 1. 9. 2026 – 30. 9. 2026 (Ukážka…)            |
-|                                         Vzhľad (Podľa systému|Svetlý|Tmavý)     |
+| [Otvoriť výpis…] 1. 9. 2026 – 30. 9. 2026 (Ukážka…)   (Výpis|Pravidlá)   Vzhľad (…) |
 | [! Message about a file that wasn't opened, or rules that weren't loaded  [x]] |
 +---------------------------------------+----------------------------------------+
 | Nové pravidlo                         | (Moje pravidlá|Vstavané pravidlá)      |
@@ -75,7 +72,7 @@ The rules screen. The header is the same, without the key figures.
                                         +----------------------------------------+
 ```
 
-The header's two lines above are one line when the window is wide enough; at the default width everything in it is on one line. The pop-up box for deleting a rule is unchanged: over the whole dimmed window.
+The header is one line at the default width; in a narrow window the left and right groups wrap inside their columns, and the switch stays in the middle. The pop-up box for deleting a rule is unchanged: over the whole dimmed window.
 
 ## Acceptance criteria
 
@@ -148,7 +145,7 @@ Look, privacy and hand checks:
 - **At least five rows in each list at the default size**, so "fits without scrolling" can't be met by lists too short to use.
 - **The extra height of a taller window goes to the lists**, not the charts: they are what grows with the statement.
 - **Messages about the whole application show on both screens; messages about a rule change stay with the change.** The header's messages (a file not opened, rules not loaded) can arrive on either screen. A change's confirmation or failure, and "Zmeny pravidiel sa teraz neukladajú.", only make sense next to the rules; the rules-not-loaded message in the header already tells the user on "Výpis" that their rules aren't there. This narrows the intent's "loading or saving rules, visible whichever screen is shown" to loading.
-- **The switch's pills are at the left of the header, before "Otvoriť výpis…"**, so the screens read first and the actions after; the intent placed them next to the button.
+- **The switch is in the middle of the header, "Otvoriť výpis…" at the very left and "Vzhľad" at the very right**, as the maintainer chose after the screenshot review. The intent placed the switch next to the button; the middle keeps both ends where they were.
 - **A failed open doesn't switch screens.** Nothing changed, so the user stays where they were, with the message.
 - **The chosen screen isn't remembered between sessions**: a statement isn't kept either ([#12](../012-open-statement/spec.md)), so every start begins on the start screen.
 
