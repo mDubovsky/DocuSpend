@@ -7,7 +7,7 @@ Spec: [spec.md](spec.md)
 **No new dependency, and no change to what is saved.** Everything is built from what DocuSpend already uses: Avalonia 11.3.22 with its Fluent theme, and CommunityToolkit.Mvvm. The saved file stays version 1, so `SavedRules`, `RuleStore` and `rules-v1.json` don't change. The privacy checks and the reviewed lists don't change either.
 
 Verified on 26 October 2026, in a scratch project on .NET 10 referencing Avalonia 11.3.22 and Avalonia.Themes.Fluent 11.3.22 from the local package cache:
-- **`Expander`** exists, with `IsExpanded` (false by default) and expanded and collapsed events. It is the fold-out section for "Vstavané pravidlá".
+- **`Expander`** exists, with `IsExpanded` (false by default) and expanded and collapsed events. It was the fold-out section for "Vstavané pravidlá" until the screenshot review replaced it with two views (below).
 - **`CheckBox`** exists. It is the tick boxes for transaction types.
 - **`ToolTip`** has `Tip`, `IsOpen`, `ShowDelay`, `BetweenShowDelay`, `ShowOnDisabled` and opening and closing events, but **no option to open on keyboard focus**. The window opens the help mark's tooltip itself on keyboard focus (`ToolTip.SetIsOpen`) and closes it when focus leaves.
 
@@ -34,8 +34,9 @@ The work has three parts: the categorization, the screen logic and the window.
   - `Reset()` goes back to an empty "Nové pravidlo".
   - Amounts go into the fields with a new `SlovakFormat.AmountInput(decimal)`: Slovak digits with a decimal comma, keeping the decimal's own places ("12,50") and no "€". A test checks that `TryParseAmount` reads every such text back to the same value, so saving unchanged changes nothing.
 - **`MainViewModel`:**
-  - **`Rules`** becomes rows in the order tried (`RulesInOrder()`, user rules only). Each `RuleRow` is a small observable item with the rule's identifier, its number, its condition (`Describe`), its target, `IsEditing` and `IsAskingToDelete`.
-  - **`BuiltInRules`**: rows for the default rules in order, each with "256" (a `Texts` constant tied to `MaxUserPriority + 1`) and no commands.
+  - **`Rules`** becomes rows in the order tried (`RulesInOrder()`, user rules only). Each `RuleRow` is a record with the rule's identifier, its number (kept for the order and tests, not shown), its condition (`Describe`), its target, `IsEditing` and `IsAskingToDelete`.
+  - **`BuiltInRules`**: rows for the default rules in order, with no number and no commands.
+  - **`RuleViews` and `SelectedRuleView`**: the two views of the rules card, "Moje pravidlá" first and chosen at start, like `Looks` and `SelectedLook`.
   - **Commands:**
     - `EditRuleCommand(row)` opens the rule in the form;
     - `SaveRuleCommand` applies `ChangeUserRule` and sets the form's message from the rule's count, as `AddRule` does;
@@ -55,20 +56,20 @@ The work has three parts: the categorization, the screen logic and the window.
 ### The window, in `DocuSpend.Desktop`
 - **The form card:** the heading binds to the form's heading. The kind choice shows the six kinds, each kind's fields show under it, and types show as a column of tick boxes. A "Priorita" row with its field and help mark shows while editing. Under the fields are "Pridať pravidlo", or "Uložiť zmeny" and "Zrušiť".
 - **"Moje pravidlá":**
-  - The heading has a help mark.
-  - Each row has the number, the condition, the target, and "Upraviť" and "Odstrániť" as small secondary buttons. While the row asks, they are replaced by "Odstrániť toto pravidlo?" with "Odstrániť" and "Ponechať". The row of the rule being edited is marked with the selected-row look the lists already use.
+  - The heading is the two views as a segmented choice (`ListBox.segmented`, as the look switch), with a `tabs` class for heading-sized pills.
+  - Each row has the condition, the target, and "Upraviť" and "Odstrániť" as small secondary buttons. While the row asks, they are replaced by "Odstrániť toto pravidlo?" with "Odstrániť" and "Ponechať". The row of the rule being edited is marked with the selected-row look the lists already use.
   - The list has a maximum height from the look and scrolls inside the card.
-- **"Vstavané pravidlá"** is an `Expander` below, closed at start, whose rows show "256", the condition and the target.
-- **The help mark** is a small focusable "?" with `ToolTip.Tip` bound to `Texts.PriorityHelp`. The window opens its tooltip on keyboard focus and closes it on focus loss (see above).
+- **"Vstavané pravidlá"** is the card's second view, whose rows show the condition and the target.
+- **The help mark** (by "Priorita" only) is a small focusable "?" with `ToolTip.Tip` bound to `Texts.PriorityHelp`. The window opens its tooltip on keyboard focus and closes it on focus loss (see above).
 - **Escape** takes back an open deletion question: a window key binding to `KeepRuleCommand`, which can run only while a question is open.
-- **The look:** new styles (help mark, small row buttons, the expander's header, the marked row) and their sizes go in `Look/Look.axaml` with the existing resources; colours come from `Palette` only. If a new colour is needed, it goes in `Palette.cs` with its contrast test. The test that forbids literal values in screens stays as it is.
+- **The look:** new styles (help mark, small row buttons, the heading pills, the marked row) and their sizes go in `Look/Look.axaml` with the existing resources; colours come from `Palette` only. If a new colour is needed, it goes in `Palette.cs` with its contrast test. The test that forbids literal values in screens stays as it is.
 - **Screenshots:** `tools/DocuSpend.Screenshots` gets new screens:
   - `09-rules-list`: rules of every kind, two sharing a number;
   - `10-rule-delete-question`;
   - `11-rule-editing`, with the help tooltip open;
-  - `12-built-in-rules`, opened.
+  - `12-built-in-rules`, the second view chosen.
 
-  `05-rule-added` and `07`/`08` change too, since the list now shows numbers and buttons.
+  `05-rule-added` and `07`/`08` change too, since the list now shows buttons.
 
 ### Alternatives considered
 - **Editing inside the row** instead of in the form: lost in the spec (decisions). It would duplicate every field in a narrow card.
@@ -109,7 +110,7 @@ Test-first for logic; one commit per step, each after the maintainer approves it
    - several ticked types make one condition.
 
    Window test: every kind's fields show for that kind only.
-3. **The list in the order tried, with numbers and the help mark** (`MainViewModel.Rules`, the window). Tests:
+3. **The list in the order tried, and the help mark** (`MainViewModel.Rules`, the window). Tests:
    - the order for numbers 3, 1, 1;
    - a new rule is first;
    - the help text;
@@ -131,9 +132,9 @@ Test-first for logic; one commit per step, each after the maintainer approves it
    - deleting the rule in the form resets it;
    - deleting the last rule, then adding, gives 1;
    - the deletion texts while saving is off and after a failed save.
-6. **"Vstavané pravidlá"** (`BuiltInRules`, the expander). Tests:
-   - closed at start;
-   - every default rule in order with "256";
+6. **"Vstavané pravidlá"** (`BuiltInRules`; after the screenshot review, the two views). Tests:
+   - "Moje pravidlá" at start, and switching both ways;
+   - every default rule in order, with no number;
    - no buttons;
    - no change to a user rule changes the default rules.
 
@@ -141,14 +142,14 @@ Test-first for logic; one commit per step, each after the maintainer approves it
 7. **Screenshots.** **Stop for review:** the maintainer compares every screen, in both looks, against `work/011-modern-look/screenshots/` and approves the new ones. Fixes to the look go in this step.
 8. **Hand check.** **Stop:** the maintainer edits, renumbers and deletes rules with a real statement open, restarts and finds them as left; and checks the tooltip on the screen if the screenshot couldn't show it (see risks).
 9. **Docs and done:**
-   - the glossary's **Priority** gets the 1 to 255 bound and the 256 shown for built-in rules;
+   - the glossary's **Priority** gets the 1 to 255 bound, and that built-in rules count as 256 in the tooltip;
    - `README.md` and `AGENTS.md` change only where they describe the rules screen;
    - the spec is updated for anything the build changed;
    - the intent becomes `done`.
 
 ## Risks and unknowns
 - **A tooltip is a popup, which a headless screenshot of the window may not show.** Fallback: the window test checks the tooltip's text and that it opens. The screenshot shows the form in edit mode without it, and the maintainer checks the tooltip on screen in the hand check.
-- **The Fluent `Expander` and `CheckBox` may not follow the palette** in one of the looks, like the scroll bars in [#19](https://github.com/mDubovsky/DocuSpend/issues/19). Fallback: style their parts in `Look.axaml` from the palette; the screenshot review catches what is missed.
+- **The Fluent `CheckBox` (and the `Expander`, before the review replaced it) may not follow the palette** in one of the looks, like the scroll bars in [#19](https://github.com/mDubovsky/DocuSpend/issues/19). Fallback: style their parts in `Look.axaml` from the palette; the screenshot review catches what is missed.
 - **Changing the list's order breaks tests that assumed creation order** (from #13). They change with step 3, because the spec changes the order. The saved file's order is unaffected (creation order, as before).
 - **Escape inside a text box** goes to the text box first. The question can only be open while the focus is on the row's buttons or elsewhere, so this matters only if the user clicks into the form; then the question is taken back anyway, since editing the form starts something else. If it doesn't feel right in the hand check, the window can also take the question back when the form gets focus.
 - **The row's buttons may not fit a narrow card** with long conditions. The condition and the target are cut with "…" first, and the screenshot review checks the default window size.
@@ -168,10 +169,10 @@ Test-first for logic; one commit per step, each after the maintainer approves it
 | An edited rule keeps its identifier and creation order; ties stay newest first | `ConfigRuleTests` (step 1), `MainViewModelTests` (step 4) |
 | "Zrušiť" changes nothing and empties the form | `MainViewModelTests` (step 4) |
 | An edited rule is back as edited after a restart | `MainViewModelTests` with a second view model on the same file (step 4) |
-| Numbers 3, 1, 1 are listed third, second, first, with numbers | `MainViewModelTests`; `RulesWindowTests` (step 3) |
+| Numbers 3, 1, 1 are listed third, second, first, with no numbers | `MainViewModelTests`; `RulesWindowTests` (step 3) |
 | A renumbered rule moves, and the categorization follows | `MainViewModelTests` (step 4) |
 | A rule added through the form is first | `MainViewModelTests` (step 3) |
-| The help marks show the tooltip on hover and keyboard focus | `RulesWindowTests` (step 3); hand check if not visible in screenshots |
+| The help mark by "Priorita" shows the tooltip on hover and keyboard focus | `RulesWindowTests` (step 3); hand check if not visible in screenshots |
 | "Odstrániť" asks and doesn't delete | `MainViewModelTests`; `RulesWindowTests` (step 5) |
 | "Ponechať", Escape and starting another action keep the rule | `MainViewModelTests`; `RulesWindowTests` for Escape (step 5) |
 | Deleting removes, recategorizes, shows "Pravidlo je odstránené." and isn't back after a restart | `MainViewModelTests` (step 5) |
@@ -181,13 +182,13 @@ Test-first for logic; one commit per step, each after the maintainer approves it
 | A folder that can't be written: edit and deletion apply with the failed-save texts, and the next change saves all | `MainViewModelTests` with a file where the folder should be (steps 4, 5) |
 | Saving off: the "only until closed" texts, and the file unchanged | `MainViewModelTests` with a newer-version file (steps 4, 5) |
 | A file saved after edits and deletions is of the same shape; the first-shape file still loads | `MainViewModelTests` reading the file with `SavedRules`; the existing `FirstShapeTests`, unchanged |
-| "Vstavané pravidlá" closed at start; opened, every default rule in order with 256 and no buttons | `MainViewModelTests`; `RulesWindowTests` (step 6) |
+| "Moje pravidlá" at start; "Vstavané pravidlá" lists every default rule in order, no number, no buttons; switching back | `RuleEditorTests`; `RuleEditorWindowTests` (step 6) |
 | No change to user rules changes the default rules | `ConfigRuleTests` (step 1), `MainViewModelTests` (step 6) |
 | All privacy checks pass with no new entries | `dotnet test` (every step) |
 | No new text is in English | `TextsTests`: every new text equals the Slovak quoted in the spec, letter for letter (each step that adds texts) |
 | Hand check: edit, renumber, delete with a real statement, restart, find them as left | maintainer, step 8 |
 | Screenshots approved in both looks | maintainer, step 7 |
-| Edge: a saved rule above 255 loads, shows its number, wins over built-in, and needs 1–255 to save | `ConfigRuleTests`, `MainViewModelTests` (steps 1, 4) |
+| Edge: a saved rule above 255 loads, shows its number in the form, wins over built-in, and needs 1–255 to save | `ConfigRuleTests`, `MainViewModelTests` (steps 1, 4) |
 | Edge: 200 rules scroll in the card, and an edit and a deletion are quick | `MainViewModelTests` timing (step 6); screenshot review for scrolling (step 7) |
 | Edge: long texts cut with "…" | screenshot review (step 7) |
 | Edge: "Upraviť" over a half-typed rule, another "Upraviť" while editing, " 2 ", another statement opened while editing, two identical rules | `MainViewModelTests`, `RuleFormViewModelTests` (step 4) |

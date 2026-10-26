@@ -626,14 +626,14 @@ public sealed class RuleEditorTests : IDisposable
     // Built-in rules
 
     [Fact]
-    public async Task Every_built_in_rule_is_listed_in_the_order_tried_with_256()
+    public async Task Every_built_in_rule_is_listed_in_the_order_tried_and_my_rules_show_at_start()
     {
         var main = await StartWith((Text("alfa"), Games, 2));
 
         var defaults = main.Statement.Config.RulesInOrder().Where(r => r.Source == RuleSource.Default).ToList();
         Assert.Equal(defaults.Select(r => r.Id), main.BuiltInRules.Select(r => r.Id));
-        Assert.All(main.BuiltInRules, r => Assert.Equal("256", r.Priority));
-        Assert.Equal(Texts.BuiltInPriority, (CategorizationConfig.MaxUserPriority + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Assert.Equal(RuleView.Mine, main.SelectedRuleView.View);
+        Assert.False(main.IsBuiltInView);
         Assert.Equal(MainViewModel.Describe(defaults[0].Condition), main.BuiltInRules[0].Condition);
         Assert.Equal("Vstavané pravidlá", Texts.BuiltInRules);
     }

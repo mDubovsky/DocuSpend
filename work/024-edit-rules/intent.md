@@ -16,10 +16,10 @@ The MVP includes "a very basic editor to list, edit, and delete rules and change
 - **Every kind of condition can be made on screen.** The form for a rule offers all six kinds the MVP lists (transaction type, text, counterparty name, counterparty account, amount, variable symbol), for adding and editing alike. Until now it offered three.
 - **Every user rule can be edited.** The user can change its condition (including the kind of condition) and its target sub-category, with the same choices and the same checks as when adding a rule. It stays the same rule: it keeps its identifier ([decision 0004](../../docs/decisions/0004-stable-category-and-rule-identifiers.md)) and its place among rules with the same priority number.
 - **Every user rule can be deleted**, after confirming, so a slip of the mouse never loses a rule.
-- **Every user rule's priority can be changed.** The user sees each rule's priority number and can give it a different one. The number starts at the rule's current value, so a user who doesn't care about numbers never has to touch it, and a help mark next to it explains in a short Slovak tooltip what the number means (1 wins, own rules always beat built-in ones, the newest wins between equal numbers). The list shows the rules in the order they are tried, so the rule that wins is the one higher up.
+- **Every user rule's priority can be changed.** While editing a rule, the user sees its priority number and can give it a different one. The lists show no numbers. The number starts at the rule's current value, so a user who doesn't care about numbers never has to touch it, and a help mark next to it explains in a short Slovak tooltip what the number means (1 wins, own rules always beat built-in ones, the newest wins between equal numbers). The list shows the rules in the order they are tried, so the rule that wins is the one higher up.
 - **The user sees what a change did.** After an edit, the user is told how many transactions of the open statement the rule now catches, as when adding a rule.
 - **Changes take effect straight away.** After any edit, deletion or priority change, the open statement is categorized again, and the change is saved the same way as adding a rule ([#13](../013-keep-rules/intent.md)), including telling the user when it can't be saved.
-- **Default rules can be seen, not changed.** The user can see them in a list of their own, "Vstavané pravidlá", below their own rules and closed until opened, so the whole order is visible without crowding the user's rules. They can't be edited, deleted or renumbered. User rules always win over them, as before.
+- **Default rules can be seen, not changed.** The rules card's heading is a pair of pills, "Moje pravidlá" (shown at start) and "Vstavané pravidlá"; the second switches the card to the built-in rules, so they never crowd the user's own. They can't be edited, deleted or renumbered. User rules always win over them, as before.
 - **Nothing new is saved.** What is kept between sessions doesn't change shape; this item only changes which rules it holds.
 
 ## Success criteria
@@ -31,7 +31,7 @@ The MVP includes "a very basic editor to list, edit, and delete rules and change
 - A user changes a rule's priority number, and the order in which rules are tried, the list's order, and the categorization follow it; after a restart they are the same.
 - The priority number starts at the rule's current value, and its help mark shows a Slovak tooltip explaining what the number does.
 - Two rules sharing a priority number still decide newest first after either is edited or renumbered.
-- Default rules are listed under "Vstavané pravidlá", closed at first, and offer no way to edit, delete or renumber them.
+- "Moje pravidlá" is shown at start; switching to "Vstavané pravidlá" lists the default rules, which offer no way to edit, delete or renumber them.
 - A change that can't be saved is reported as it is for a new rule, and still applies until DocuSpend closes.
 - Nothing in this item adds networking, telemetry or an unreviewed dependency ([decision 0006](../../docs/decisions/0006-privacy-approach-and-network-boundary.md)), and the saved file's shape is unchanged.
 - The maintainer edits, renumbers and deletes rules while viewing a real statement, restarts DocuSpend and finds the rules as they left them, as a hand check.
@@ -56,7 +56,8 @@ The MVP includes "a very basic editor to list, edit, and delete rules and change
 - **Priority is changed by typing a number only**, as the MVP and the issue describe. Priority numbers can be confusing, so the field starts at the rule's current value and a help mark explains it in a tooltip. Moving rules up and down can come later if numbers turn out awkward.
 - **After an edit, the user is told how many transactions the rule now catches**, as after adding one. It is the quickest way to see whether the edit did what the user meant.
 - **The editor doesn't wait for [#21](https://github.com/mDubovsky/DocuSpend/issues/21).** It is built in "Moje pravidlá" where the list is today; #21 moves the whole card, editor included.
-- **Default rules are listed under "Vstavané pravidlá"**, below the user's rules and closed until opened, so they don't crowd the user's own rules. The maintainer chose "vstavané" (built-in) over "predvolené".
+- **The rules card switches between "Moje pravidlá" and "Vstavané pravidlá"**, two pills in its heading with the user's own shown at start, decided by the maintainer after the screenshot review. The built-in rules are there to look at now and then, not to crowd the user's own. The maintainer chose "vstavané" (built-in) over "predvolené".
+- **Priority numbers show only while a rule is edited**, decided by the maintainer after the screenshot review. The list's order already says which rule wins.
 
 ## Open questions
 None.

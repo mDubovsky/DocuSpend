@@ -86,7 +86,11 @@ internal static class Screens
             AddRulesOfEveryKind(main);
             main.EditRuleCommand.Execute(main.Rules[2]);
         }, InWindow: window => ToolTip.SetIsOpen(window.FindControl<Control>("PriorityHelp")!, true)),
-        new("12-built-in-rules", AddRulesOfEveryKind, InWindow: window => window.FindControl<Expander>("BuiltInRules")!.IsExpanded = true),
+        new("12-built-in-rules", main =>
+        {
+            AddRulesOfEveryKind(main);
+            main.SelectedRuleView = main.RuleViews[1];
+        }),
     ];
 
     /// <summary>Opens the example and adds a rule of each kind through the form, then renumbers one, as a user would.</summary>

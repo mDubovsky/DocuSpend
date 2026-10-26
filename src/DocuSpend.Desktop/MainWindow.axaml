@@ -269,71 +269,82 @@
         </Border>
         <Border Classes="card" Grid.Row="3" Grid.Column="1" IsVisible="{Binding HasStatement}">
           <DockPanel>
-            <StackPanel Classes="headingRow" DockPanel.Dock="Top">
-              <TextBlock Classes="heading" Text="{x:Static vm:Texts.Rules}" />
-              <Button x:Name="RulesHelp" Classes="help" Content="?" ToolTip.Tip="{x:Static vm:Texts.PriorityHelp}" />
-            </StackPanel>
+            <!-- The heading is a pair of pills: the user's own rules (at start) or the built-in ones -->
+            <ListBox x:Name="RuleViewSwitch" Classes="segmented tabs" DockPanel.Dock="Top" HorizontalAlignment="Left"
+                     ItemsSource="{Binding RuleViews}" SelectedItem="{Binding SelectedRuleView}">
+              <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+              </ListBox.ItemsPanel>
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:RuleViewOption">
+                  <TextBlock Text="{Binding Label}" />
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
             <Border Classes="message error" DockPanel.Dock="Top"
                     x:Name="RulesNotSaving" IsVisible="{Binding RulesNotSaving}">
               <TextBlock Text="{x:Static vm:Texts.RulesNotSaving}" TextWrapping="Wrap" />
             </Border>
-            <Border Classes="message confirmation" DockPanel.Dock="Top" x:Name="RulesListMessage"
-                    IsVisible="{Binding RulesListMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-              <TextBlock Text="{Binding RulesListMessage}" TextWrapping="Wrap" />
-            </Border>
-            <Border Classes="message error" DockPanel.Dock="Top" x:Name="RulesListError"
-                    IsVisible="{Binding RulesListError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-              <TextBlock Text="{Binding RulesListError}" TextWrapping="Wrap" />
-            </Border>
-            <!-- The built-in rules, closed until opened, below the user's own -->
-            <Expander x:Name="BuiltInRules" Classes="builtInRules" DockPanel.Dock="Bottom" Header="{x:Static vm:Texts.BuiltInRules}">
-              <ScrollViewer Classes="ruleList">
-                <ItemsControl x:Name="BuiltInRuleList" ItemsSource="{Binding BuiltInRules}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:RuleRow">
-                      <Border Classes="ruleRow">
-                        <Grid ColumnDefinitions="Auto,*,*">
-                          <TextBlock Classes="priority" Text="{Binding Priority}" VerticalAlignment="Center" />
-                          <TextBlock Grid.Column="1" Text="{Binding Condition}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" VerticalAlignment="Center" />
-                          <TextBlock Grid.Column="2" Classes="muted" Text="{Binding Target}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                        </Grid>
-                      </Border>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </ScrollViewer>
-            </Expander>
-            <Panel>
-              <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoRules}" IsVisible="{Binding !Rules.Count}" />
-              <ScrollViewer Classes="ruleList">
-                <ItemsControl x:Name="RuleList" ItemsSource="{Binding Rules}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:RuleRow">
-                      <Border Classes="ruleRow" Classes.editing="{Binding IsEditing}">
-                        <Grid ColumnDefinitions="Auto,*,*,Auto">
-                          <TextBlock Classes="priority" Text="{Binding Priority}" VerticalAlignment="Center" />
-                          <TextBlock Grid.Column="1" Text="{Binding Condition}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" VerticalAlignment="Center" />
-                          <TextBlock Grid.Column="2" Classes="muted" Text="{Binding Target}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" VerticalAlignment="Center" />
-                          <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Small}" IsVisible="{Binding !IsAskingToDelete}">
-                            <Button Classes="small secondary" Content="{x:Static vm:Texts.Edit}"
-                                    Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).EditRuleCommand}" CommandParameter="{Binding}" />
-                            <Button Classes="small secondary" Content="{x:Static vm:Texts.Delete}"
-                                    Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).AskToDeleteCommand}" CommandParameter="{Binding}" />
-                          </StackPanel>
-                          <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Small}" IsVisible="{Binding IsAskingToDelete}">
-                            <TextBlock Classes="question" Text="{x:Static vm:Texts.DeleteQuestion}" VerticalAlignment="Center" />
-                            <Button Classes="small primary" Content="{x:Static vm:Texts.Delete}"
-                                    Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).DeleteRuleCommand}" />
-                            <Button Classes="small secondary" Content="{x:Static vm:Texts.Keep}"
-                                    Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).KeepRuleCommand}" />
-                          </StackPanel>
-                        </Grid>
-                      </Border>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </ScrollViewer>
-            </Panel>
+
+            <!-- The user's own rules, in the order they are tried -->
+            <DockPanel x:Name="MyRules" IsVisible="{Binding !IsBuiltInView}">
+              <Border Classes="message confirmation" DockPanel.Dock="Top" x:Name="RulesListMessage"
+                      IsVisible="{Binding RulesListMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding RulesListMessage}" TextWrapping="Wrap" />
+              </Border>
+              <Border Classes="message error" DockPanel.Dock="Top" x:Name="RulesListError"
+                      IsVisible="{Binding RulesListError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding RulesListError}" TextWrapping="Wrap" />
+              </Border>
+              <Panel>
+                <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoRules}" IsVisible="{Binding !Rules.Count}" />
+                <ScrollViewer Classes="ruleList">
+                  <ItemsControl x:Name="RuleList" ItemsSource="{Binding Rules}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:RuleRow">
+                        <Border Classes="ruleRow" Classes.editing="{Binding IsEditing}">
+                          <Grid ColumnDefinitions="*,*,Auto">
+                            <TextBlock Text="{Binding Condition}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Classes="muted" Text="{Binding Target}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Small}" IsVisible="{Binding !IsAskingToDelete}">
+                              <Button Classes="small secondary" Content="{x:Static vm:Texts.Edit}"
+                                      Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).EditRuleCommand}" CommandParameter="{Binding}" />
+                              <Button Classes="small secondary" Content="{x:Static vm:Texts.Delete}"
+                                      Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).AskToDeleteCommand}" CommandParameter="{Binding}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Small}" IsVisible="{Binding IsAskingToDelete}">
+                              <TextBlock Classes="question" Text="{x:Static vm:Texts.DeleteQuestion}" VerticalAlignment="Center" />
+                              <Button Classes="small primary" Content="{x:Static vm:Texts.Delete}"
+                                      Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).DeleteRuleCommand}" />
+                              <Button Classes="small secondary" Content="{x:Static vm:Texts.Keep}"
+                                      Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).KeepRuleCommand}" />
+                            </StackPanel>
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </ScrollViewer>
+              </Panel>
+            </DockPanel>
+
+            <!-- The built-in rules, read only, in the order they are tried -->
+            <ScrollViewer Classes="ruleList" x:Name="BuiltInRules" IsVisible="{Binding IsBuiltInView}">
+              <ItemsControl x:Name="BuiltInRuleList" ItemsSource="{Binding BuiltInRules}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:RuleRow">
+                    <Border Classes="ruleRow">
+                      <Grid ColumnDefinitions="*,*">
+                        <TextBlock Text="{Binding Condition}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Classes="muted" Text="{Binding Target}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
           </DockPanel>
         </Border>
 

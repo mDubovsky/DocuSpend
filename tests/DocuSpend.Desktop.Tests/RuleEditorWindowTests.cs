@@ -70,10 +70,12 @@ public sealed class RuleEditorWindowTests : IDisposable
     });
 
     [Fact]
-    public void The_help_mark_by_my_rules_explains_the_numbers_on_hover_and_on_keyboard_focus() => Headless.Run(() =>
+    public void The_help_mark_by_the_priority_explains_the_numbers_on_hover_and_on_keyboard_focus() => Headless.Run(() =>
     {
-        var (window, _) = StartWithStatement();
-        var help = (Button)Named(window, "RulesHelp");
+        var (window, model) = StartWithStatement();
+        AddRule(model, "Pekáreň");
+        Press(RowButton(window, 0, "Upraviť"));
+        var help = (Button)Named(window, "PriorityHelp");
 
         Assert.Equal(Texts.PriorityHelp, ToolTip.GetTip(help));
         Assert.False(ToolTip.GetIsOpen(help));
@@ -177,28 +179,36 @@ public sealed class RuleEditorWindowTests : IDisposable
     });
 
     [Fact]
-    public void Vstavane_pravidla_is_closed_at_start_and_opened_lists_every_default_rule_with_256_and_no_buttons() => Headless.Run(() =>
+    public void The_card_switches_between_my_rules_at_start_and_the_built_in_rules_which_have_no_buttons() => Headless.Run(() =>
     {
         var (window, model) = StartWithStatement();
-        var section = (Expander)Named(window, "BuiltInRules");
+        var tabs = (ListBox)Named(window, "RuleViewSwitch");
 
-        Assert.False(section.IsExpanded);
-        Assert.Equal("Vstavané pravidlá", section.Header);
+        Assert.Equal(["Moje pravidlá", "Vstavané pravidlá"], model.RuleViews.Select(v => v.Label));
+        Assert.Same(model.RuleViews[0], tabs.SelectedItem);
+        Assert.True(Named(window, "MyRules").IsEffectivelyVisible);
+        Assert.False(Named(window, "BuiltInRules").IsEffectivelyVisible);
 
-        section.IsExpanded = true;
+        tabs.SelectedItem = model.RuleViews[1];
         Dispatcher.UIThread.RunJobs();
 
+        Assert.True(model.IsBuiltInView);
+        Assert.False(Named(window, "MyRules").IsEffectivelyVisible);
         var list = Named(window, "BuiltInRuleList");
         Assert.True(list.IsEffectivelyVisible);
         var rows = list.GetLogicalDescendants().OfType<Border>().Where(b => b.Classes.Contains("ruleRow")).ToList();
         Assert.Equal(model.Statement.Config.DefaultRules.Count, rows.Count);
-        Assert.All(rows, r => Assert.Equal("256", r.GetLogicalDescendants().OfType<TextBlock>().First().Text));
+        Assert.Equal(model.BuiltInRules[0].Condition, rows[0].GetLogicalDescendants().OfType<TextBlock>().First().Text);
         Assert.Empty(list.GetLogicalDescendants().OfType<Button>());
+
+        tabs.SelectedItem = model.RuleViews[0];
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(Named(window, "MyRules").IsEffectivelyVisible);
         window.Close();
     });
 
     [Fact]
-    public void Each_rule_in_the_list_shows_its_number() => Headless.Run(() =>
+    public void The_lists_show_no_priority_numbers() => Headless.Run(() =>
     {
         var (window, model) = StartWithStatement();
         model.RuleForm.Text = "Pekáreň";
@@ -207,8 +217,11 @@ public sealed class RuleEditorWindowTests : IDisposable
         model.AddRuleCommand.Execute(null);
         Dispatcher.UIThread.RunJobs();
 
-        var numbers = window.GetLogicalDescendants().OfType<TextBlock>().Where(t => t.Classes.Contains("priority") && t.IsEffectivelyVisible);
-        Assert.Equal(["1"], numbers.Select(t => t.Text));
+        var row = Named(window, "RuleList").GetLogicalDescendants().OfType<Border>().Single(b => b.Classes.Contains("ruleRow"));
+        Assert.DoesNotContain(row.GetLogicalDescendants().OfType<TextBlock>(), t => t.Text == "1");
+        model.SelectedRuleView = model.RuleViews[1];
+        Dispatcher.UIThread.RunJobs();
+        Assert.DoesNotContain(window.GetLogicalDescendants().OfType<TextBlock>(), t => t.Text == "256" && t.IsEffectivelyVisible);
         window.Close();
     });
 }

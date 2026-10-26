@@ -8,7 +8,15 @@ using DocuSpend.Statements.Reading;
 
 namespace DocuSpend.Presentation;
 
-/// <summary>A rule in a list: its number, what it matches and where it puts it.</summary>
+/// <summary>The two lists the rules card switches between (spec: the rules card).</summary>
+public enum RuleView { Mine, BuiltIn }
+
+public sealed record RuleViewOption(RuleView View, string Label);
+
+/// <summary>
+/// A rule in a list: what it matches and where it puts it. <paramref name="Priority"/> is the user rule's number,
+/// which the list keeps for its order but shows only in the form; empty for a built-in rule.
+/// </summary>
 public sealed record RuleRow(RuleId Id, string Priority, string Condition, string Target, bool IsEditing = false, bool IsAskingToDelete = false);
 
 /// <summary>
@@ -35,7 +43,8 @@ public sealed partial class MainViewModel : ObservableObject
         RulesMessage = Texts.RulesProblemMessage(load.Problem, load.MovedTo);
         RulesNotSaving = !store.IsSaving;
         Rules = UserRows();
-        BuiltInRules = Statement.Config.DefaultRules.Select(r => Row(r, Texts.BuiltInPriority)).ToList();
+        BuiltInRules = Statement.Config.DefaultRules.Select(r => Row(r, "")).ToList();
+        SelectedRuleView = RuleViews[0];
         var saved = settings?.LoadLook() ?? LookChoice.System;
         _loadingLook = true;
         SelectedLook = Looks.Single(l => l.Choice == saved);
@@ -163,10 +172,23 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// The default rules in the order they are tried, each shown with <see cref="Texts.BuiltInPriority"/>: every user
-    /// rule wins over them (spec: "Vstavané pravidlá"). They never change while DocuSpend runs.
+    /// The default rules in the order they are tried, without numbers: every user rule wins over them (spec: the rules
+    /// card). They never change while DocuSpend runs.
     /// </summary>
     public IReadOnlyList<RuleRow> BuiltInRules { get; }
+
+    public IReadOnlyList<RuleViewOption> RuleViews { get; } =
+    [
+        new(RuleView.Mine, Texts.Rules),
+        new(RuleView.BuiltIn, Texts.BuiltInRules),
+    ];
+
+    /// <summary>Which list the rules card shows: the user's own at start, or the built-in ones.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsBuiltInView))]
+    public partial RuleViewOption SelectedRuleView { get; set; }
+
+    public bool IsBuiltInView => SelectedRuleView.View == RuleView.BuiltIn;
 
     /// <summary>The user rules in the order they are tried: the one higher up wins (spec: "Moje pravidlá").</summary>
     [ObservableProperty]

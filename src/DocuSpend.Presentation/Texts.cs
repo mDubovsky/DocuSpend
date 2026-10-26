@@ -109,8 +109,6 @@ public static class Texts
     public const string Rules = "Moje pravidlá";
     public const string BuiltInRules = "Vstavané pravidlá";
 
-    /// <summary>The number shown for every built-in rule: one more than any user rule may have, since every user rule wins.</summary>
-    public const string BuiltInPriority = "256";
     public const string NoRules = "Zatiaľ žiadne pravidlá.";
 
     /// <summary>The help mark by "Moje pravidlá" and by "Priorita" (spec of #24).</summary>

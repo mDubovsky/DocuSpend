@@ -45,11 +45,10 @@
     <Thickness x:Key="Look.Padding.Close">10,4</Thickness>
     <x:Double x:Key="Look.FontSize.Title">22</x:Double>
     <Thickness x:Key="Look.Padding.Help">8,1</Thickness>
-    <x:Double x:Key="Look.Width.Priority">34</x:Double>
     <Thickness x:Key="Look.Padding.SmallButton">12,3</Thickness>
     <Thickness x:Key="Look.Padding.RuleRow">8,4</Thickness>
     <x:Double x:Key="Look.Height.RuleList">320</x:Double>
-    <Thickness x:Key="Look.Margin.BuiltInRules">0,14,0,0</Thickness>
+    <Thickness x:Key="Look.Padding.Tab">16,6</Thickness>
   </Styles.Resources>
 
   <!-- The window: background, and the body text everything inherits -->
@@ -288,7 +287,7 @@
   </Style>
 
   <!-- The rule editor (work/024-edit-rules/spec.md) -->
-  <!-- A heading with a help mark beside it -->
+  <!-- A field with a help mark beside it -->
   <Style Selector="StackPanel.headingRow">
     <Setter Property="Orientation" Value="Horizontal" />
     <Setter Property="Spacing" Value="{StaticResource Look.Space.Small}" />
@@ -310,13 +309,6 @@
     <Setter Property="BorderBrush" Value="{DynamicResource Look.Accent}" />
     <Setter Property="Foreground" Value="{DynamicResource Look.Accent}" />
   </Style>
-  <!-- A rule's priority number, in a column of its own -->
-  <Style Selector="TextBlock.priority">
-    <Setter Property="MinWidth" Value="{StaticResource Look.Width.Priority}" />
-    <Setter Property="Foreground" Value="{DynamicResource Look.Muted}" />
-    <Setter Property="FontWeight" Value="SemiBold" />
-  </Style>
-
   <!-- A rule in "Moje pravidlá"; the one open in the form is marked like a selected row -->
   <Style Selector="Border.ruleRow">
     <Setter Property="Padding" Value="{StaticResource Look.Padding.RuleRow}" />
@@ -342,35 +334,15 @@
     <Setter Property="MaxHeight" Value="{StaticResource Look.Height.RuleList}" />
     <Setter Property="VerticalAlignment" Value="Top" />
   </Style>
-  <!-- "Vstavané pravidlá": a quiet section that opens below the user's rules -->
-  <Style Selector="Expander.builtInRules">
-    <Setter Property="Margin" Value="{StaticResource Look.Margin.BuiltInRules}" />
-    <Setter Property="HorizontalAlignment" Value="Stretch" />
-    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-    <Setter Property="Background" Value="Transparent" />
-    <Setter Property="BorderBrush" Value="{DynamicResource Look.CardEdge}" />
-    <Setter Property="Foreground" Value="{DynamicResource Look.Text}" />
-  </Style>
 
-  <!-- Its header in the card's own colours, not Fluent's, in every state -->
-  <Style Selector="Expander.builtInRules /template/ ToggleButton#ExpanderHeader /template/ Border#ToggleButtonBackground">
-    <Setter Property="Background" Value="{DynamicResource Look.Card}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource Look.CardEdge}" />
+  <!-- The rules card's heading: the segmented choice, at the size of a heading -->
+  <Style Selector="ListBox.segmented.tabs">
+    <Setter Property="Margin" Value="{StaticResource Look.Margin.Heading}" />
   </Style>
-  <Style Selector="Expander.builtInRules /template/ ToggleButton#ExpanderHeader:pointerover /template/ Border#ToggleButtonBackground">
-    <Setter Property="Background" Value="{DynamicResource Look.Hover}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource Look.CardEdge}" />
-  </Style>
-  <Style Selector="Expander.builtInRules /template/ ToggleButton#ExpanderHeader:pressed /template/ Border#ToggleButtonBackground">
-    <Setter Property="Background" Value="{DynamicResource Look.Hover}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource Look.CardEdge}" />
-  </Style>
-  <Style Selector="Expander.builtInRules /template/ ToggleButton#ExpanderHeader /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Foreground" Value="{DynamicResource Look.Text}" />
-  </Style>
-  <Style Selector="Expander.builtInRules /template/ Border#ExpanderContent">
-    <Setter Property="Background" Value="Transparent" />
-    <Setter Property="BorderBrush" Value="{DynamicResource Look.CardEdge}" />
+  <Style Selector="ListBox.segmented.tabs ListBoxItem">
+    <Setter Property="Padding" Value="{StaticResource Look.Padding.Tab}" />
+    <Setter Property="FontSize" Value="{StaticResource Look.FontSize.Body}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
 
 </Styles>
