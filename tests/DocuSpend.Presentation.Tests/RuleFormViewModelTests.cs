@@ -5,7 +5,7 @@ using DocuSpend.Statements.Model;
 
 namespace DocuSpend.Presentation.Tests;
 
-/// <summary>The rule form: three kinds of condition and a target, validated with Slovak messages (spec: adding a rule).</summary>
+/// <summary>The rule form: six kinds of condition and a target, validated with Slovak messages (spec: adding a rule).</summary>
 public class RuleFormViewModelTests
 {
     private static readonly SubcategoryId Games = new("leisure.games");
@@ -55,11 +55,11 @@ public class RuleFormViewModelTests
     }
 
     [Fact]
-    public void A_type_rule_is_built_from_the_chosen_type()
+    public void A_type_rule_is_built_from_the_ticked_type()
     {
         var form = Form();
         form.SelectedKind = ConditionKind.Type;
-        form.SelectedType = form.Types.Single(t => t.Type == TransactionType.InstantTransfer);
+        form.Types.Single(t => t.Type == TransactionType.InstantTransfer).IsChecked = true;
         Target(form, Games);
 
         var draft = form.TryBuild();
@@ -131,7 +131,8 @@ public class RuleFormViewModelTests
     {
         var form = Form();
 
-        Assert.Equal([ConditionKind.Text, ConditionKind.Amount, ConditionKind.Type], form.Kinds.Select(k => k.Kind));
+        Assert.Equal(Enum.GetValues<ConditionKind>(), form.Kinds.Select(k => k.Kind));
+        Assert.Equal(["Text v popise", "Protistrana", "Účet protistrany", "Suma", "Typ transakcie", "Variabilný symbol"], form.Kinds.Select(k => k.Label));
         Assert.All(form.Kinds, k => Assert.False(string.IsNullOrWhiteSpace(k.Label)));
         Assert.All(form.TextModes, m => Assert.False(string.IsNullOrWhiteSpace(m.Label)));
         Assert.Equal(Enum.GetValues<TransactionType>().Length, form.Types.Count);
@@ -151,5 +152,111 @@ public class RuleFormViewModelTests
 
         Assert.Null(form.Error);
         Assert.Equal("", form.Text);
+    }
+
+    // The kinds the form didn't offer before #24
+
+    [Theory]
+    [InlineData(TextMode.Contains)]
+    [InlineData(TextMode.EqualTo)]
+    public void A_counterparty_name_rule_is_built_with_its_mode(TextMode mode)
+    {
+        var form = Form();
+        form.SelectedKind = ConditionKind.CounterpartyName;
+        form.SelectedTextMode = form.TextModes.Single(m => m.Mode == mode);
+        form.Text = "  Ján Vzorový ";
+        Target(form, Games);
+
+        Assert.Equal(new CounterpartyNameCondition("Ján Vzorový", mode), form.TryBuild()?.Condition);
+    }
+
+    [Fact]
+    public void A_counterparty_account_rule_is_built_from_the_account_without_surrounding_spaces()
+    {
+        var form = Form();
+        form.SelectedKind = ConditionKind.CounterpartyAccount;
+        form.Account = " SK31 1200 0000 1987 4263 7541 ";
+        Target(form, Games);
+
+        Assert.Equal(new CounterpartyAccountCondition("SK31 1200 0000 1987 4263 7541"), form.TryBuild()?.Condition);
+    }
+
+    [Fact]
+    public void A_variable_symbol_rule_is_built_from_the_symbol_without_surrounding_spaces()
+    {
+        var form = Form();
+        form.SelectedKind = ConditionKind.VariableSymbol;
+        form.Symbol = " 0326 ";
+        Target(form, Games);
+
+        Assert.Equal(new VariableSymbolCondition("0326"), form.TryBuild()?.Condition);
+    }
+
+    [Fact]
+    public void A_type_rule_takes_every_ticked_type()
+    {
+        var form = Form();
+        form.SelectedKind = ConditionKind.Type;
+        form.Types.Single(t => t.Type == TransactionType.Transfer).IsChecked = true;
+        form.Types.Single(t => t.Type == TransactionType.CardPayment).IsChecked = true;
+        Target(form, Games);
+
+        Assert.Equal(new TypeCondition([TransactionType.CardPayment, TransactionType.Transfer]), form.TryBuild()?.Condition);
+    }
+
+    public static TheoryData<ConditionKind, string, RefusalKind> Missing => new()
+    {
+        { ConditionKind.CounterpartyName, "", RefusalKind.EmptyText },
+        { ConditionKind.CounterpartyName, "   ", RefusalKind.EmptyText },
+        { ConditionKind.CounterpartyAccount, "", RefusalKind.EmptyAccount },
+        { ConditionKind.CounterpartyAccount, "   ", RefusalKind.EmptyAccount },
+        { ConditionKind.VariableSymbol, "", RefusalKind.EmptySymbol },
+        { ConditionKind.VariableSymbol, "   ", RefusalKind.EmptySymbol },
+        { ConditionKind.Type, "", RefusalKind.NoTypeChosen },
+    };
+
+    [Theory]
+    [MemberData(nameof(Missing))]
+    public void A_missing_value_gives_its_slovak_reason(ConditionKind kind, string value, RefusalKind refusal)
+    {
+        var form = Form();
+        form.SelectedKind = kind;
+        form.Text = form.Account = form.Symbol = value;
+        Target(form, Games);
+
+        Assert.Null(form.TryBuild());
+        Assert.Equal(Texts.Refusal(refusal), form.Error);
+    }
+
+    [Fact]
+    public void Only_the_fields_of_the_chosen_kind_show()
+    {
+        var form = Form();
+        var shown = new Dictionary<ConditionKind, (bool Text, bool Account, bool Amount, bool Type, bool Symbol)>();
+        foreach (var kind in Enum.GetValues<ConditionKind>())
+        {
+            form.SelectedKind = kind;
+            shown[kind] = (form.IsText, form.IsAccount, form.IsAmount, form.IsType, form.IsSymbol);
+        }
+
+        Assert.Equal((true, false, false, false, false), shown[ConditionKind.Text]);
+        Assert.Equal((true, false, false, false, false), shown[ConditionKind.CounterpartyName]);
+        Assert.Equal((false, true, false, false, false), shown[ConditionKind.CounterpartyAccount]);
+        Assert.Equal((false, false, true, false, false), shown[ConditionKind.Amount]);
+        Assert.Equal((false, false, false, true, false), shown[ConditionKind.Type]);
+        Assert.Equal((false, false, false, false, true), shown[ConditionKind.VariableSymbol]);
+    }
+
+    [Fact]
+    public void Clearing_empties_every_kind_of_value()
+    {
+        var form = Form();
+        form.Text = form.Account = form.Symbol = form.AmountFrom = form.AmountTo = "x";
+        form.Types[0].IsChecked = true;
+
+        form.Clear();
+
+        Assert.All([form.Text, form.Account, form.Symbol, form.AmountFrom, form.AmountTo], v => Assert.Equal("", v));
+        Assert.All(form.Types, t => Assert.False(t.IsChecked));
     }
 }

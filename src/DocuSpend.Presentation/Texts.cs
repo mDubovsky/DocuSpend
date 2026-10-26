@@ -83,6 +83,9 @@ public static class Texts
     public const string KindText = "Text v popise";
     public const string KindAmount = "Suma";
     public const string KindType = "Typ transakcie";
+    public const string KindCounterpartyName = "Protistrana";
+    public const string KindCounterpartyAccount = "Účet protistrany";
+    public const string KindVariableSymbol = "Variabilný symbol";
     public const string ModeContains = "obsahuje";
     public const string ModeEqualTo = "rovná sa";
     public const string AmountFrom = "Od";

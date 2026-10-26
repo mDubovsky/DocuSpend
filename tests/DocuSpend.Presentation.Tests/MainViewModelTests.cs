@@ -99,7 +99,7 @@ public sealed class MainViewModelTests : IDisposable
     {
         var main = await Start();
         main.RuleForm.SelectedKind = ConditionKind.Type;
-        main.RuleForm.SelectedType = main.RuleForm.Types[0];
+        main.RuleForm.Types[0].IsChecked = true;
         Target(main.RuleForm, Games);
         main.AddRuleCommand.Execute(null);
 
@@ -189,7 +189,7 @@ public sealed class MainViewModelTests : IDisposable
     {
         var main = await Start("02-busy-month");
         main.RuleForm.SelectedKind = ConditionKind.Type;
-        main.RuleForm.SelectedType = main.RuleForm.Types[0];
+        main.RuleForm.Types[0].IsChecked = true;
         Target(main.RuleForm, Games);
         main.AddRuleCommand.Execute(null);
         main.RuleForm.SelectedKind = ConditionKind.Amount;

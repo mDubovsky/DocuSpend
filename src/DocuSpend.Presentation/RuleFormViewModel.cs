@@ -5,21 +5,31 @@ using DocuSpend.Statements.Model;
 
 namespace DocuSpend.Presentation;
 
-/// <summary>The kinds of condition the spike's form offers: free text, a typed number and a fixed choice.</summary>
-public enum ConditionKind { Text, Amount, Type }
+/// <summary>The six kinds of condition a user rule can have (item 003), in the order the form offers them.</summary>
+public enum ConditionKind { Text, CounterpartyName, CounterpartyAccount, Amount, Type, VariableSymbol }
 
 public sealed record KindOption(ConditionKind Kind, string Label);
 
 public sealed record TextModeOption(TextMode Mode, string Label);
 
-public sealed record TypeOption(TransactionType Type, string Label);
+/// <summary>One transaction type with its tick box; a type condition takes every ticked type.</summary>
+public sealed partial class TypeChoice(TransactionType type, string label) : ObservableObject
+{
+    public TransactionType Type { get; } = type;
+
+    public string Label { get; } = label;
+
+    [ObservableProperty]
+    public partial bool IsChecked { get; set; }
+}
 
 /// <summary>A rule the user asked for: one condition and the sub-category it puts transactions in.</summary>
 public sealed record RuleDraft(Condition Condition, SubcategoryId Target);
 
 /// <summary>
-/// The form for adding one user rule (spec: adding a rule). It builds a condition and checks it with the
-/// categorizer's own validation, so the form and the categorizer can't disagree; the messages are Slovak.
+/// The form for one user rule (work/024-edit-rules/spec.md: the form offers every kind of condition). It builds a
+/// condition and checks it with the categorizer's own validation, so the form and the categorizer can't disagree;
+/// the messages are Slovak.
 /// </summary>
 public sealed partial class RuleFormViewModel : ObservableObject
 {
@@ -34,8 +44,11 @@ public sealed partial class RuleFormViewModel : ObservableObject
     public IReadOnlyList<KindOption> Kinds { get; } =
     [
         new(ConditionKind.Text, Texts.KindText),
+        new(ConditionKind.CounterpartyName, Texts.KindCounterpartyName),
+        new(ConditionKind.CounterpartyAccount, Texts.KindCounterpartyAccount),
         new(ConditionKind.Amount, Texts.KindAmount),
         new(ConditionKind.Type, Texts.KindType),
+        new(ConditionKind.VariableSymbol, Texts.KindVariableSymbol),
     ];
 
     public IReadOnlyList<TextModeOption> TextModes { get; } =
@@ -44,13 +57,13 @@ public sealed partial class RuleFormViewModel : ObservableObject
         new(TextMode.EqualTo, Texts.ModeEqualTo),
     ];
 
-    public IReadOnlyList<TypeOption> Types { get; } =
-        Enum.GetValues<TransactionType>().Select(t => new TypeOption(t, Texts.TypeName(t))).ToList();
+    public IReadOnlyList<TypeChoice> Types { get; } =
+        Enum.GetValues<TransactionType>().Select(t => new TypeChoice(t, Texts.TypeName(t))).ToList();
 
     public IReadOnlyList<Category> Categories { get; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsText), nameof(IsAmount), nameof(IsType), nameof(SelectedKindOption))]
+    [NotifyPropertyChangedFor(nameof(IsText), nameof(IsAccount), nameof(IsAmount), nameof(IsType), nameof(IsSymbol), nameof(SelectedKindOption))]
     public partial ConditionKind SelectedKind { get; set; }
 
     /// <summary>The selected kind as a list item, for a choice box.</summary>
@@ -60,9 +73,12 @@ public sealed partial class RuleFormViewModel : ObservableObject
         set => SelectedKind = value?.Kind ?? ConditionKind.Text;
     }
 
-    public bool IsText => SelectedKind == ConditionKind.Text;
+    /// <summary>The mode and the text show: for text in the description and for the counterparty's name.</summary>
+    public bool IsText => SelectedKind is ConditionKind.Text or ConditionKind.CounterpartyName;
+    public bool IsAccount => SelectedKind == ConditionKind.CounterpartyAccount;
     public bool IsAmount => SelectedKind == ConditionKind.Amount;
     public bool IsType => SelectedKind == ConditionKind.Type;
+    public bool IsSymbol => SelectedKind == ConditionKind.VariableSymbol;
 
     [ObservableProperty]
     public partial string Text { get; set; } = "";
@@ -71,13 +87,16 @@ public sealed partial class RuleFormViewModel : ObservableObject
     public partial TextModeOption SelectedTextMode { get; set; }
 
     [ObservableProperty]
+    public partial string Account { get; set; } = "";
+
+    [ObservableProperty]
     public partial string AmountFrom { get; set; } = "";
 
     [ObservableProperty]
     public partial string AmountTo { get; set; } = "";
 
     [ObservableProperty]
-    public partial TypeOption? SelectedType { get; set; }
+    public partial string Symbol { get; set; } = "";
 
     [ObservableProperty]
     public partial Category? SelectedCategory { get; set; }
@@ -120,8 +139,9 @@ public sealed partial class RuleFormViewModel : ObservableObject
     /// <summary>Empties the values after a rule was added; the kind and the target stay, for the next rule.</summary>
     public void Clear()
     {
-        Text = AmountFrom = AmountTo = "";
-        SelectedType = null;
+        Text = Account = AmountFrom = AmountTo = Symbol = "";
+        foreach (var type in Types)
+            type.IsChecked = false;
         Error = null;
     }
 
@@ -131,12 +151,18 @@ public sealed partial class RuleFormViewModel : ObservableObject
         {
             case ConditionKind.Text:
                 return new TextCondition(Text.Trim(), SelectedTextMode.Mode);
+            case ConditionKind.CounterpartyName:
+                return new CounterpartyNameCondition(Text.Trim(), SelectedTextMode.Mode);
+            case ConditionKind.CounterpartyAccount:
+                return new CounterpartyAccountCondition(Account.Trim());
             case ConditionKind.Amount:
                 if (!TryAmount(AmountFrom, out var min) || !TryAmount(AmountTo, out var max))
                     return Fail<Condition>(Texts.AmountNotANumber);
                 return new AmountCondition(min, max);
             case ConditionKind.Type:
-                return new TypeCondition(SelectedType is null ? [] : [SelectedType.Type]);
+                return new TypeCondition(Types.Where(t => t.IsChecked).Select(t => t.Type));
+            case ConditionKind.VariableSymbol:
+                return new VariableSymbolCondition(Symbol.Trim());
             default:
                 throw new InvalidOperationException($"Unknown kind {SelectedKind}.");
         }

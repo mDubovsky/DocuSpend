@@ -194,7 +194,7 @@
                     </DataTemplate>
                   </ComboBox.ItemTemplate>
                 </ComboBox>
-                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding RuleForm.IsText}">
+                <StackPanel x:Name="TextFields" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding RuleForm.IsText}">
                   <ComboBox ItemsSource="{Binding RuleForm.TextModes}" SelectedItem="{Binding RuleForm.SelectedTextMode}" MinWidth="120">
                     <ComboBox.ItemTemplate>
                       <DataTemplate x:DataType="vm:TextModeOption">
@@ -204,21 +204,22 @@
                   </ComboBox>
                   <TextBox Text="{Binding RuleForm.Text}" MinWidth="240" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding RuleForm.IsAmount}">
+                <StackPanel x:Name="AmountFields" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding RuleForm.IsAmount}">
                   <TextBlock Classes="muted" Text="{x:Static vm:Texts.AmountFrom}" VerticalAlignment="Center" />
                   <TextBox Text="{Binding RuleForm.AmountFrom}" Width="110" />
                   <TextBlock Classes="muted" Text="{x:Static vm:Texts.AmountTo}" VerticalAlignment="Center" />
                   <TextBox Text="{Binding RuleForm.AmountTo}" Width="110" />
                   <TextBlock Classes="muted" Text="€" VerticalAlignment="Center" />
                 </StackPanel>
-                <ComboBox ItemsSource="{Binding RuleForm.Types}" SelectedItem="{Binding RuleForm.SelectedType}" MinWidth="240"
-                          IsVisible="{Binding RuleForm.IsType}">
-                  <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="vm:TypeOption">
-                      <TextBlock Text="{Binding Label}" />
+                <TextBox x:Name="AccountField" Text="{Binding RuleForm.Account}" MinWidth="300" IsVisible="{Binding RuleForm.IsAccount}" />
+                <ItemsControl x:Name="TypeChoices" ItemsSource="{Binding RuleForm.Types}" IsVisible="{Binding RuleForm.IsType}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TypeChoice">
+                      <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" />
                     </DataTemplate>
-                  </ComboBox.ItemTemplate>
-                </ComboBox>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBox x:Name="SymbolField" Text="{Binding RuleForm.Symbol}" MinWidth="200" IsVisible="{Binding RuleForm.IsSymbol}" />
               </StackPanel>
 
               <TextBlock Grid.Row="1" Classes="muted" Text="{x:Static vm:Texts.TargetCategory}" VerticalAlignment="Center" />
