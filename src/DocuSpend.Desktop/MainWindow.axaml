@@ -347,7 +347,7 @@
     <!-- "Odstrániť toto pravidlo?": a pop-up over the dimmed window, which waits until it is answered -->
     <Panel x:Name="DeleteDialog" IsVisible="{Binding RuleToDelete, Converter={x:Static ObjectConverters.IsNotNull}}">
       <Border Classes="scrim" />
-      <Border Classes="card dialog" KeyboardNavigation.TabNavigation="Cycle">
+      <Border x:Name="DeleteDialogBox" Classes="card dialog" KeyboardNavigation.TabNavigation="Cycle" Focusable="True" FocusAdorner="{x:Null}">
         <StackPanel Spacing="{StaticResource Look.Space.Medium}">
           <TextBlock Classes="heading" Text="{x:Static vm:Texts.DeleteQuestion}" />
           <TextBlock x:Name="DeleteDialogRule" Text="{Binding RuleToDelete.Condition, FallbackValue=''}" TextWrapping="Wrap" />

@@ -42,7 +42,7 @@ Each is checked as the categorization already checks it, with its existing Slova
 - Saving without changing anything is allowed and changes nothing but the message.
 
 ### Deleting a rule
-- "Odstrániť" doesn't delete yet. A **pop-up box** opens in the middle of the window, which is dimmed behind it and waits until the box is answered. The box asks **"Odstrániť toto pravidlo?"**, shows the rule's condition and target, and has two buttons, **"Odstrániť"** and **"Ponechať"**. "Ponechať" has the focus, so a stray Enter or Space keeps the rule.
+- "Odstrániť" doesn't delete yet. A **pop-up box** opens in the middle of the window, which is dimmed behind it and waits until the box is answered. The box asks **"Odstrániť toto pravidlo?"**, shows the rule's condition and target, and has two buttons, **"Odstrániť"** and **"Ponechať"**. No button is chosen when it opens; Tab moves between the two.
 - "Ponechať" closes the box and keeps the rule. So does Escape.
 - "Odstrániť" deletes the rule, saves, and categorizes the open statement again. Transactions it decided go to whatever rule now matches them, or to Nezaradené. "Moje pravidlá" says **"Pravidlo je odstránené."** until the next change.
 - If the rule being deleted is open in the form, the form goes back to "Nové pravidlo", empty.
@@ -88,7 +88,7 @@ Priority and order:
 - [ ] The help mark by "Priorita" shows the tooltip text above, on hover and on keyboard focus.
 
 Deleting:
-- [ ] Given "Odstrániť", then the rule is still there and a pop-up box asks "Odstrániť toto pravidlo?" about that rule, with "Ponechať" focused.
+- [ ] Given "Odstrániť", then the rule is still there and a pop-up box asks "Odstrániť toto pravidlo?" about that rule, with neither button chosen.
 - [ ] Given that question, when the user presses "Ponechať" or Escape, then the box closes and the rule stays.
 - [ ] Given that question, when the user presses "Odstrániť", then the rule is gone from the list, the statement is categorized without it, "Pravidlo je odstránené." shows, and after a restart the rule is not back.
 - [ ] Given the rule open in the form is deleted, then the form is "Nové pravidlo", empty.
@@ -135,7 +135,7 @@ Privacy and hand checks:
 
 - **The list shows rules in the order they are tried**, not in creation order as before. With the numbers hidden, "higher up wins" is how the list is read, and a new rule on top appears first.
 - **Editing reuses the "Nové pravidlo" form** rather than editing in the row. The fields are the same, so the checks and the texts are the same, and one place to edit keeps a narrow card readable.
-- **The deletion question is a pop-up box over the dimmed window**, as the maintainer chose after the screenshot review, instead of a question inside the row, which squeezed the rule's text. It is drawn in the window, not as a separate window, so it follows the light and dark look; it names the rule, since the row is hidden behind it.
+- **The deletion question is a pop-up box over the dimmed window**, as the maintainer chose after the screenshot review, instead of a question inside the row, which squeezed the rule's text. It is drawn in the window, not as a separate window, so it follows the light and dark look, and nothing in it is chosen at start, as the maintainer asked; it names the rule, since the row is hidden behind it.
 - **A user rule's priority is from 1 to 255**, as the maintainer chose: far more than anyone needs, and it leaves 256 to stand for the built-in rules. The existing refusal text changes to name the bound. Adding on top never goes past it, since it reuses the lowest number in use.
 - **Priority numbers show only in the form, while a rule is edited**, as the maintainer chose after the screenshot review. The list's order already says which rule wins. The tooltip still names 256 for the built-in rules: their own numbers are separate from the user's and never compete with them, and one number just below every user rule says what is true, that any user rule wins.
 - **The form offers all six kinds of condition**, as the maintainer chose. The MVP already lists them for user rules, and editing needs the form to show any rule a saved file can hold. A type rule takes several types, since the categorization allows it and a built-in rule already uses it.

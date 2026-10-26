@@ -155,7 +155,9 @@ public sealed class RuleEditorWindowTests : IDisposable
         Assert.True(Shows(window, "Odstrániť toto pravidlo?"));
         Assert.Equal("Text obsahuje „Pekáreň“", ((TextBlock)Named(window, "DeleteDialogRule")).Text);
         Assert.Equal(2, model.Rules.Count);
-        Assert.True(DialogButton(window, "DeleteDialogKeep").IsFocused);
+        Assert.True(Named(window, "DeleteDialogBox").IsFocused);
+        Assert.False(DialogButton(window, "DeleteDialogKeep").IsFocused);
+        Assert.False(DialogButton(window, "DeleteDialogDelete").IsFocused);
 
         Press(DialogButton(window, "DeleteDialogDelete"));
 
