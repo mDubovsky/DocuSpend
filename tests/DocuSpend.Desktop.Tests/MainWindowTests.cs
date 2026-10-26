@@ -63,6 +63,7 @@ public sealed class MainWindowTests : IDisposable
     public void A_rule_typed_into_the_form_is_added_and_listed() => Headless.Run(() =>
     {
         var (window, model) = Open();
+        Headless.ShowRules(model);
         var form = model.RuleForm;
         var boxes = All<ComboBox>(window).ToList();
 

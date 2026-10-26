@@ -197,6 +197,7 @@ public sealed class OpeningWindowTests : IDisposable
         var (window, model) = Start();
         Headless.Wait(model.OpenFileAsync(MainWindowTests.Sample("01-typical-month")));
         Dispatcher.UIThread.RunJobs();
+        Headless.ShowRules(model);
         var box = All<TextBox>(window).First(t => t.IsEffectivelyVisible);
         box.BringIntoView();
         Dispatcher.UIThread.RunJobs();

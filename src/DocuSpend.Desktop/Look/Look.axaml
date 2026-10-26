@@ -47,7 +47,10 @@
     <Thickness x:Key="Look.Padding.Help">8,1</Thickness>
     <Thickness x:Key="Look.Padding.SmallButton">12,3</Thickness>
     <Thickness x:Key="Look.Padding.RuleRow">8,4</Thickness>
-    <x:Double x:Key="Look.Height.RuleList">320</x:Double>
+    <x:Double x:Key="Look.Height.Chart">240</x:Double>
+    <x:Double x:Key="Look.Size.Ring">220</x:Double>
+    <x:Double x:Key="Look.Height.ContentMin">760</x:Double>
+    <Thickness x:Key="Look.Margin.HeaderItem">0,0,12,0</Thickness>
     <Thickness x:Key="Look.Padding.Tab">16,6</Thickness>
     <x:Double x:Key="Look.Width.DialogMin">380</x:Double>
     <x:Double x:Key="Look.Width.DialogMax">520</x:Double>
@@ -470,9 +473,8 @@
     <Setter Property="Margin" Value="{StaticResource Look.Margin.DialogButtons}" />
   </Style>
 
-  <!-- A list of rules scrolls within its card instead of making the card taller -->
+  <!-- A list of rules fills its card and scrolls inside it -->
   <Style Selector="ScrollViewer.ruleList">
-    <Setter Property="MaxHeight" Value="{StaticResource Look.Height.RuleList}" />
     <Setter Property="VerticalAlignment" Value="Top" />
   </Style>
 

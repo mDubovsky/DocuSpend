@@ -60,9 +60,12 @@ public partial class MainWindow : Window
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => DeleteDialogBox.Focus());
             // The charts are hidden on the start screen. LiveCharts measures a chart only after it has painted a
             // frame since its last measure, and resets that only when the chart scrolls into view, so charts that
-            // were hidden stayed empty until scrolled away and back. Once they have been rendered visible, ask both
+            // were hidden stayed empty until scrolled away and back. That is also the case when the user comes back from the
+            // rules screen. Once they have been rendered visible, ask both
             // to update.
-            if (e.PropertyName == nameof(MainViewModel.HasStatement) && model.HasStatement)
+            if (e.PropertyName == nameof(MainViewModel.ShowsStatement))
+                HideHoverCards();
+            if (e.PropertyName == nameof(MainViewModel.ShowsStatement) && model.ShowsStatement)
                 RequestAnimationFrame(_ => RequestAnimationFrame(_ =>
                 {
                     SpendingPie.CoreChart.Update();

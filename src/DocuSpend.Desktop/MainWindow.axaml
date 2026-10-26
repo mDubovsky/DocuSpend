@@ -19,22 +19,40 @@
 
   <!-- Only the arrangement lives here; every colour, size and spacing comes from Look/Look.axaml. -->
   <Panel>
-    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-      <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*" Margin="{StaticResource Look.Margin.Window}" MinWidth="700">
+    <ScrollViewer x:Name="ContentScroller" HorizontalScrollBarVisibility="Disabled">
+      <Border x:Name="ContentArea" Height="{Binding Bounds.Height, ElementName=ContentScroller}" MinHeight="{StaticResource Look.Height.ContentMin}">
+      <Grid RowDefinitions="Auto,*" ColumnDefinitions="*,*" Margin="{StaticResource Look.Margin.Window}" MinWidth="700">
 
         <!-- Opening a statement, the message about one that wasn't opened, and the key figures -->
         <Border Classes="card" Grid.ColumnSpan="2">
           <StackPanel Spacing="{StaticResource Look.Space.Large}">
             <Grid ColumnDefinitions="*,Auto">
-              <StackPanel Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}">
+              <!-- Wraps in a narrow window instead of cutting a control off -->
+              <WrapPanel>
+                <!-- The two screens a statement is shown on -->
+                <ListBox x:Name="ScreenSwitch" Classes="segmented" ItemsSource="{Binding Screens}" SelectedItem="{Binding SelectedScreen}"
+                         IsVisible="{Binding HasStatement}" VerticalAlignment="Center" Margin="{StaticResource Look.Margin.HeaderItem}">
+                  <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                  </ListBox.ItemsPanel>
+                  <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AppScreenOption">
+                      <TextBlock Text="{Binding Label}" />
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
                 <Button x:Name="OpenButton" Classes="secondary" Content="{x:Static vm:Texts.OpenStatement}" Command="{Binding OpenCommand}"
-                        IsVisible="{Binding HasStatement}" />
-                <TextBlock Classes="muted" Text="{Binding Statement.Period}" VerticalAlignment="Center" IsVisible="{Binding HasStatement}" />
-                <Border Classes="badge" IsVisible="{Binding IsExample}" VerticalAlignment="Center">
+                        IsVisible="{Binding HasStatement}" VerticalAlignment="Center" Margin="{StaticResource Look.Margin.HeaderItem}" />
+                <TextBlock Classes="muted" Text="{Binding Statement.Period}" VerticalAlignment="Center" IsVisible="{Binding HasStatement}"
+                           Margin="{StaticResource Look.Margin.HeaderItem}" />
+                <Border Classes="badge" IsVisible="{Binding IsExample}" VerticalAlignment="Center" Margin="{StaticResource Look.Margin.HeaderItem}">
                   <TextBlock Text="{x:Static vm:Texts.ExampleLabel}" />
                 </Border>
-                <TextBlock Classes="muted" Text="{x:Static vm:Texts.Reading}" VerticalAlignment="Center" IsVisible="{Binding IsReading}" />
-              </StackPanel>
+                <TextBlock Classes="muted" Text="{x:Static vm:Texts.Reading}" VerticalAlignment="Center" IsVisible="{Binding IsReading}"
+                           Margin="{StaticResource Look.Margin.HeaderItem}" />
+              </WrapPanel>
               <!-- Light or dark: follow Windows, or always one of them -->
               <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}">
                 <TextBlock Classes="muted" Text="{x:Static vm:Texts.Look}" VerticalAlignment="Center" />
@@ -65,7 +83,7 @@
                 <Button Grid.Column="1" Classes="close" Content="{x:Static vm:Texts.Close}" Command="{Binding CloseRulesMessageCommand}" />
               </Grid>
             </Border>
-            <WrapPanel IsVisible="{Binding HasStatement}">
+            <WrapPanel IsVisible="{Binding ShowsStatement}">
               <StackPanel Margin="{StaticResource Look.Margin.KeyFigure}">
                 <TextBlock Classes="label" Text="{x:Static vm:Texts.SpendingTotal}" />
                 <TextBlock Classes="keyNumber main" Text="{Binding Statement.SpendingTotal}" />
@@ -83,7 +101,7 @@
         </Border>
 
         <!-- The start screen: what to do before any statement is open -->
-        <Border x:Name="StartScreen" Classes="card start" Grid.Row="1" Grid.ColumnSpan="2" IsVisible="{Binding !HasStatement}">
+        <Border x:Name="StartScreen" Classes="card start" Grid.Row="1" Grid.ColumnSpan="2" VerticalAlignment="Top" IsVisible="{Binding !HasStatement}">
           <StackPanel Spacing="{StaticResource Look.Space.Medium}" HorizontalAlignment="Center">
             <TextBlock Classes="title" Text="{x:Static vm:Texts.StartHeading}" HorizontalAlignment="Center" />
             <TextBlock Text="{x:Static vm:Texts.StartHint}" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
@@ -96,21 +114,24 @@
           </StackPanel>
         </Border>
 
+        <!-- "Výpis": the key figures are in the header; here are the two charts, then the categories and transactions -->
+        <Grid x:Name="StatementScreen" Grid.Row="1" Grid.ColumnSpan="2" RowDefinitions="Auto,*" ColumnDefinitions="*,*" IsVisible="{Binding ShowsStatement}">
+
         <!-- The two charts -->
-        <Border Classes="card" Grid.Row="1" Grid.Column="0" IsVisible="{Binding HasStatement}">
+        <Border Classes="card" Grid.Row="0" Grid.Column="0">
           <DockPanel>
             <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.SpendingChart}" />
-            <Panel Height="300">
+            <Panel Height="{StaticResource Look.Height.Chart}">
               <!-- The ring has a fixed square of its own, so a long legend never squeezes it. -->
-              <Grid ColumnDefinitions="260,*" IsVisible="{Binding Statement.HasSpending}">
-                <Panel Width="260" Height="260" VerticalAlignment="Center">
+              <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding Statement.HasSpending}">
+                <Panel Width="{StaticResource Look.Size.Ring}" Height="{StaticResource Look.Size.Ring}" VerticalAlignment="Center">
                   <lvc:PieChart x:Name="SpendingPie" LegendPosition="Hidden" TooltipPosition="Hidden" />
                   <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                     <TextBlock Classes="label" Text="{x:Static vm:Texts.SpendingTotal}" HorizontalAlignment="Center" />
                     <TextBlock Classes="ringTotal" Text="{Binding Statement.SpendingTotal}" HorizontalAlignment="Center" />
                   </StackPanel>
                 </Panel>
-                <ScrollViewer Grid.Column="1" Margin="{StaticResource Look.Margin.Legend}" VerticalAlignment="Center" MaxHeight="300">
+                <ScrollViewer Grid.Column="1" Margin="{StaticResource Look.Margin.Legend}" VerticalAlignment="Center" MaxHeight="{StaticResource Look.Height.Chart}">
                   <ItemsControl x:Name="Legend" ItemsSource="{Binding Statement.Slices}">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate x:DataType="vm:PieSlice">
@@ -132,18 +153,18 @@
             </Panel>
           </DockPanel>
         </Border>
-        <Border Classes="card" Grid.Row="1" Grid.Column="1" IsVisible="{Binding HasStatement}">
+        <Border Classes="card" Grid.Row="0" Grid.Column="1">
           <DockPanel>
             <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.BalanceChart}" />
-            <lvc:CartesianChart x:Name="BalanceLine" Height="300" TooltipPosition="Hidden" />
+            <lvc:CartesianChart x:Name="BalanceLine" Height="{StaticResource Look.Height.Chart}" TooltipPosition="Hidden" />
           </DockPanel>
         </Border>
 
         <!-- Categories and the selected category's transactions -->
-        <Border Classes="card" Grid.Row="2" Grid.Column="0" IsVisible="{Binding HasStatement}">
+        <Border Classes="card" Grid.Row="1" Grid.Column="0">
           <DockPanel>
             <TextBlock Classes="heading" DockPanel.Dock="Top" Text="{x:Static vm:Texts.Categories}" />
-            <ListBox ItemsSource="{Binding Statement.Categories}" SelectedItem="{Binding Statement.SelectedRow}" MinHeight="200" MaxHeight="440">
+            <ListBox ItemsSource="{Binding Statement.Categories}" SelectedItem="{Binding Statement.SelectedRow}">
               <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="vm:CategoryRow">
                   <Grid ColumnDefinitions="*,Auto,120">
@@ -156,7 +177,7 @@
             </ListBox>
           </DockPanel>
         </Border>
-        <Border Classes="card" Grid.Row="2" Grid.Column="1" IsVisible="{Binding HasStatement}">
+        <Border Classes="card" Grid.Row="1" Grid.Column="1">
           <DockPanel>
             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Small}">
               <TextBlock Classes="heading" Text="{x:Static vm:Texts.Transactions}" />
@@ -165,7 +186,7 @@
             <Panel>
               <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoCategorySelected}"
                          IsVisible="{Binding Statement.SelectedRow, Converter={x:Static ObjectConverters.IsNull}}" />
-              <ListBox ItemsSource="{Binding Statement.Transactions}" MinHeight="200" MaxHeight="440"
+              <ListBox ItemsSource="{Binding Statement.Transactions}"
                        IsVisible="{Binding Statement.SelectedRow, Converter={x:Static ObjectConverters.IsNotNull}}">
                 <ListBox.ItemTemplate>
                   <DataTemplate x:DataType="vm:TransactionRow">
@@ -182,8 +203,11 @@
           </DockPanel>
         </Border>
 
-        <!-- A new rule, and the saved ones -->
-        <Border Classes="card" Grid.Row="3" Grid.Column="0" IsVisible="{Binding HasStatement}">
+        </Grid>
+
+        <!-- "Pravidlá": a new rule, and the saved ones -->
+        <Grid x:Name="RulesScreen" Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,*" IsVisible="{Binding ShowsRules}">
+        <Border Classes="card" Grid.Row="0" Grid.Column="0" VerticalAlignment="Top">
           <StackPanel Spacing="{StaticResource Look.Space.Medium}">
             <TextBlock x:Name="FormHeading" Classes="heading" Text="{Binding RuleForm.Heading}" />
             <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="{StaticResource Look.Space.Medium}">
@@ -267,7 +291,7 @@
             </Border>
           </StackPanel>
         </Border>
-        <Border Classes="card" Grid.Row="3" Grid.Column="1" IsVisible="{Binding HasStatement}">
+        <Border Classes="card" Grid.Row="0" Grid.Column="1">
           <DockPanel>
             <!-- The heading is a pair of pills: the user's own rules (at start) or the built-in ones -->
             <ListBox x:Name="RuleViewSwitch" Classes="segmented tabs" DockPanel.Dock="Top" HorizontalAlignment="Left"
@@ -340,8 +364,10 @@
             </ScrollViewer>
           </DockPanel>
         </Border>
+        </Grid>
 
       </Grid>
+      </Border>
     </ScrollViewer>
 
     <!-- The charts' hover cards and the dot on the balance line. Above the content, so nothing cuts a card; it lets the pointer through to the charts. -->

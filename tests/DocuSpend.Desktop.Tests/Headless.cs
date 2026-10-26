@@ -48,6 +48,13 @@ internal static class Headless
         task.GetAwaiter().GetResult();
     }
 
+    /// <summary>Chooses "Pravidlá", as a user does with the switch: the rule form and the rules card show only there.</summary>
+    public static void ShowRules(DocuSpend.Presentation.MainViewModel model)
+    {
+        model.SelectedScreen = model.Screens.Single(s => s.Screen == DocuSpend.Presentation.AppScreen.Rules);
+        Dispatcher.UIThread.RunJobs();
+    }
+
     public static void Run(Action test)
     {
         ExceptionDispatchInfo? failure = null;

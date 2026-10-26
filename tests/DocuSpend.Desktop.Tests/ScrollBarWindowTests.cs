@@ -98,9 +98,14 @@ public sealed class ScrollBarWindowTests : IDisposable
     {
         var (window, model) = Start();
 
-        var bars = EveryBar(window).ToList();
-        Assert.True(bars.Count >= 6, $"Expected the window's, the legend's, the lists' and the rule list's bars; found {bars.Count}.");
-        Assert.All(bars, bar => AssertTheLooksBar(window, bar, Palette.Light));
+        // Each screen's bars: the legend's and the two lists' on the statement screen, the rule lists' on the other.
+        var statementBars = EveryBar(window).ToList();
+        Assert.True(statementBars.Count >= 3, $"Expected the legend's and the lists' bars; found {statementBars.Count}.");
+        Assert.All(statementBars, bar => AssertTheLooksBar(window, bar, Palette.Light));
+        Headless.ShowRules(model);
+        var ruleBars = EveryBar(window).Except(statementBars).ToList();
+        Assert.True(ruleBars.Count >= 1, $"Expected the rule lists' bars; found {ruleBars.Count}.");
+        Assert.All(ruleBars, bar => AssertTheLooksBar(window, bar, Palette.Light));
 
         var categories = window.GetVisualDescendants().OfType<ComboBox>().Single(c => ReferenceEquals(c.ItemsSource, model.RuleForm.Categories));
         categories.BringIntoView();
@@ -123,13 +128,14 @@ public sealed class ScrollBarWindowTests : IDisposable
         var (window, model) = Start();
 
         var (_, overflowing) = InView(Transactions(window, model));
-        var (_, builtInRules) = InView(window.FindControl<ScrollViewer>("BuiltInRules")!);
         var (_, fitting) = InView(window.LookSwitch);
-
         Assert.True(overflowing.IsVisible);
+        Assert.False(overflowing.IsPointerOver);
+
+        Headless.ShowRules(model);
+        var (_, builtInRules) = InView(window.FindControl<ScrollViewer>("BuiltInRules")!);
         Assert.True(builtInRules.IsVisible);
         Assert.False(fitting.IsVisible);
-        Assert.False(overflowing.IsPointerOver);
         Finish(window);
     });
 
