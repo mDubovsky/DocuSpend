@@ -13,6 +13,11 @@ public enum RuleView { Mine, BuiltIn }
 
 public sealed record RuleViewOption(RuleView View, string Label);
 
+/// <summary>The two screens a statement is shown on: the statement itself and its rules (spec of #21).</summary>
+public enum AppScreen { Statement, Rules }
+
+public sealed record AppScreenOption(AppScreen Screen, string Label);
+
 /// <summary>
 /// A rule in a list: what it matches and where it puts it. <paramref name="Priority"/> is the user rule's number,
 /// which the list keeps for its order but shows only in the form; empty for a built-in rule.
@@ -45,6 +50,7 @@ public sealed partial class MainViewModel : ObservableObject
         Rules = UserRows();
         BuiltInRules = Statement.Config.DefaultRules.Select(r => Row(r, "")).ToList();
         SelectedRuleView = RuleViews[0];
+        SelectedScreen = Screens[0];
         var saved = settings?.LoadLook() ?? LookChoice.System;
         _loadingLook = true;
         SelectedLook = Looks.Single(l => l.Choice == saved);
@@ -77,11 +83,29 @@ public sealed partial class MainViewModel : ObservableObject
 
     public RuleFormViewModel RuleForm { get; }
 
+    public IReadOnlyList<AppScreenOption> Screens { get; } =
+    [
+        new(AppScreen.Statement, Texts.StatementScreen),
+        new(AppScreen.Rules, Texts.RulesScreen),
+    ];
+
+    /// <summary>Which screen a statement is shown on: "Výpis" at start, and after every statement that is opened.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsStatement), nameof(ShowsRules))]
+    public partial AppScreenOption SelectedScreen { get; set; }
+
+    /// <summary>The statement screen shows: a statement is open and "Výpis" is chosen.</summary>
+    public bool ShowsStatement => HasStatement && SelectedScreen.Screen == AppScreen.Statement;
+
+    /// <summary>The rules screen shows: a statement is open and "Pravidlá" is chosen.</summary>
+    public bool ShowsRules => HasStatement && SelectedScreen.Screen == AppScreen.Rules;
+
     /// <summary>Where "Otvoriť výpis…" asks for a file; the window sets it.</summary>
     public IStatementPicker? Picker { get; set; }
 
     /// <summary>False on the start screen; true once a statement has been opened.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsStatement), nameof(ShowsRules))]
     public partial bool HasStatement { get; private set; }
 
     /// <summary>The statement shown is the example, with invented data, and is labelled so.</summary>
@@ -149,6 +173,7 @@ public sealed partial class MainViewModel : ObservableObject
                 return;
             }
             Statement.Show(statement);
+            SelectedScreen = Screens[0];
             HasStatement = true;
             IsExample = isExample;
             OpenMessage = null;
