@@ -9,7 +9,7 @@ using DocuSpend.Statements.Reading;
 namespace DocuSpend.Presentation;
 
 /// <summary>A rule in a list: its number, what it matches and where it puts it.</summary>
-public sealed record RuleRow(RuleId Id, string Priority, string Condition, string Target, bool IsEditing = false);
+public sealed record RuleRow(RuleId Id, string Priority, string Condition, string Target, bool IsEditing = false, bool IsAskingToDelete = false);
 
 /// <summary>
 /// The window: the start screen or the statement the user opened, the message about a file that wasn't opened, the
@@ -183,6 +183,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void AddRule()
     {
+        TakeBackQuestion();
         // Enter in the form presses its default button; while a rule is open, that means saving it.
         if (RuleForm.IsEditing)
         {
@@ -207,6 +208,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void EditRule(RuleRow row)
     {
+        TakeBackQuestion();
         if (Statement.Config.UserRules.FirstOrDefault(r => r.Id == row.Id) is not { } rule)
             return;
         RuleForm.Edit(rule);
@@ -220,6 +222,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void SaveRule()
     {
+        TakeBackQuestion();
         if (RuleForm.EditingRule is not { } id || RuleForm.TryBuild() is not { } draft || RuleForm.TryPriority() is not { } priority)
             return;
         var outcome = Statement.Config.ChangeUserRule(id, draft.Condition, draft.Target, priority);
@@ -237,9 +240,73 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void CancelEdit()
     {
+        TakeBackQuestion();
         RuleForm.Reset();
         RuleForm.Message = null;
         Rules = UserRows();
+    }
+
+    /// <summary>The rule whose row asks "Odstrániť toto pravidlo?", or null; only one row asks at a time.</summary>
+    private RuleId? _asking;
+
+    /// <summary>What the last deletion did, in "Moje pravidlá", until the next change; or null (spec: deleting a rule).</summary>
+    [ObservableProperty]
+    public partial string? RulesListMessage { get; private set; }
+
+    /// <summary>That the last deletion won't be kept, until the next change; or null.</summary>
+    [ObservableProperty]
+    public partial string? RulesListError { get; private set; }
+
+    /// <summary>"Odstrániť" in a row: the row asks first, and nothing is deleted yet.</summary>
+    [RelayCommand]
+    private void AskToDelete(RuleRow row)
+    {
+        _asking = row.Id;
+        Rules = UserRows();
+        KeepRuleCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>"Ponechať", or Escape: the row asks no more and the rule stays.</summary>
+    [RelayCommand(CanExecute = nameof(IsAsking))]
+    private void KeepRule()
+    {
+        TakeBackQuestion();
+        Rules = UserRows();
+    }
+
+    private bool IsAsking() => _asking is not null;
+
+    /// <summary>
+    /// "Odstrániť" after the question: deletes the rule, saves, and categorizes the statement again. A deletion that
+    /// can't be saved still applies until DocuSpend closes, and the list says the rule will come back.
+    /// </summary>
+    [RelayCommand]
+    private void DeleteRule()
+    {
+        if (_asking is not { } id)
+            return;
+        TakeBackQuestion();
+        var outcome = Statement.Config.RemoveUserRule(id);
+        if (!outcome.IsSuccess)
+        {
+            Rules = UserRows();
+            return;
+        }
+        if (RuleForm.EditingRule == id)
+        {
+            RuleForm.Reset();
+            RuleForm.Message = null;
+        }
+        var saved = ApplyUserChange(outcome.Value!);
+        RulesListMessage = Texts.RuleDeleted;
+        RulesListError = saved ? null : RulesNotSaving ? Texts.DeleteOnlyThisSession : Texts.DeleteSaveFailed;
+    }
+
+    /// <summary>Starting anything else takes an open deletion question back (spec: deleting a rule).</summary>
+    private void TakeBackQuestion()
+    {
+        _asking = null;
+        KeepRuleCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>
@@ -259,6 +326,7 @@ public sealed partial class MainViewModel : ObservableObject
     /// </summary>
     private bool ApplyUserChange(CategorizationConfig config)
     {
+        RulesListMessage = RulesListError = null;
         var saved = _store.Save(config);
         Statement.Config = config;
         Rules = UserRows();
@@ -272,7 +340,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         var (category, subcategory) = Statement.Config.Catalog.FindSubcategory(rule.Target)!.Value;
         return new RuleRow(rule.Id, priority, Describe(rule.Condition), $"{category.Name} › {subcategory.Name}",
-            IsEditing: rule.Id == RuleForm.EditingRule);
+            IsEditing: rule.Id == RuleForm.EditingRule, IsAskingToDelete: rule.Id == _asking);
     }
 
     /// <summary>A condition in Slovak, as the rules list shows it.</summary>

@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
@@ -130,6 +131,48 @@ public sealed class RuleEditorWindowTests : IDisposable
         Press(cancel);
         Assert.Equal("Nové pravidlo", ((TextBlock)Named(window, "FormHeading")).Text);
         Assert.True(Named(window, "AddRuleButton").IsEffectivelyVisible);
+        window.Close();
+    });
+
+    private static bool Shows(Window window, string text) =>
+        window.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == text && t.IsEffectivelyVisible);
+
+    [Fact]
+    public void Odstranit_asks_in_the_row_and_Odstranit_again_deletes() => Headless.Run(() =>
+    {
+        var (window, model) = StartWithStatement();
+        AddRule(model, "Pekáreň");
+        AddRule(model, "Kino");
+
+        Press(RowButton(window, 1, "Odstrániť"));
+
+        Assert.True(Shows(window, "Odstrániť toto pravidlo?"));
+        Assert.Equal(2, model.Rules.Count);
+        Assert.Throws<InvalidOperationException>(() => RowButton(window, 1, "Upraviť"));
+        Press(RowButton(window, 1, "Odstrániť"));
+
+        Assert.Equal(["Text obsahuje „Kino“"], model.Rules.Select(r => r.Condition));
+        Assert.False(Shows(window, "Odstrániť toto pravidlo?"));
+        Assert.True(Named(window, "RulesListMessage").IsEffectivelyVisible);
+        Assert.True(Shows(window, "Pravidlo je odstránené."));
+        window.Close();
+    });
+
+    [Fact]
+    public void Ponechat_and_Escape_take_the_question_back() => Headless.Run(() =>
+    {
+        var (window, model) = StartWithStatement();
+        AddRule(model, "Pekáreň");
+
+        Press(RowButton(window, 0, "Odstrániť"));
+        Press(RowButton(window, 0, "Ponechať"));
+        Assert.False(Shows(window, "Odstrániť toto pravidlo?"));
+
+        Press(RowButton(window, 0, "Odstrániť"));
+        window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, null);
+        Dispatcher.UIThread.RunJobs();
+        Assert.False(Shows(window, "Odstrániť toto pravidlo?"));
+        Assert.Single(model.Rules);
         window.Close();
     });
 

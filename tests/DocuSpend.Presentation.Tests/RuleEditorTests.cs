@@ -459,6 +459,170 @@ public sealed class RuleEditorTests : IDisposable
         Assert.Equal("255", main.Rules.Single().Priority);
     }
 
+    // Deleting
+
+    [Fact]
+    public async Task Odstranit_only_asks_first()
+    {
+        var main = await StartWith((Text("alfa"), Games, 2), (Text("beta"), Rent, 1));
+
+        main.AskToDeleteCommand.Execute(Row(main, "Text obsahuje „alfa“"));
+
+        Assert.Equal(2, main.Statement.Config.UserRules.Count);
+        Assert.Equal([false, true], main.Rules.Select(r => r.IsAskingToDelete));
+        Assert.True(main.KeepRuleCommand.CanExecute(null));
+        Assert.Equal("Odstrániť toto pravidlo?", Texts.DeleteQuestion);
+    }
+
+    [Fact]
+    public async Task Only_one_row_asks_at_a_time()
+    {
+        var main = await StartWith((Text("alfa"), Games, 2), (Text("beta"), Rent, 1));
+
+        main.AskToDeleteCommand.Execute(main.Rules[0]);
+        main.AskToDeleteCommand.Execute(main.Rules[1]);
+
+        Assert.Equal([false, true], main.Rules.Select(r => r.IsAskingToDelete));
+    }
+
+    public static TheoryData<string> OtherActions => new(["keep", "add", "edit", "cancel"]);
+
+    [Theory]
+    [MemberData(nameof(OtherActions))]
+    public async Task Keeping_or_starting_anything_else_takes_the_question_back(string action)
+    {
+        var main = await StartWith((Text("alfa"), Games, 2), (Text("beta"), Rent, 1));
+        main.AskToDeleteCommand.Execute(main.Rules[0]);
+
+        switch (action)
+        {
+            case "keep": main.KeepRuleCommand.Execute(null); break;
+            case "add": main.RuleForm.Text = "gama"; Target(main.RuleForm, Games); main.AddRuleCommand.Execute(null); break;
+            case "edit": main.EditRuleCommand.Execute(main.Rules[1]); break;
+            case "cancel": main.CancelEditCommand.Execute(null); break;
+        }
+
+        Assert.All(main.Rules, r => Assert.False(r.IsAskingToDelete));
+        Assert.False(main.KeepRuleCommand.CanExecute(null));
+        Assert.Contains(main.Rules, r => r.Condition == "Text obsahuje „beta“");
+        main.DeleteRuleCommand.Execute(null);
+        Assert.Contains(main.Rules, r => r.Condition == "Text obsahuje „beta“");
+    }
+
+    [Fact]
+    public async Task A_deleted_rule_is_gone_the_statement_is_categorized_without_it_and_it_is_not_back_after_a_restart()
+    {
+        var main = await StartWith((Text("nič"), Games, 1));
+        var (description, _) = AnyCardPayment(main);
+        main.EditRuleCommand.Execute(main.Rules[0]);
+        main.RuleForm.Text = description;
+        main.SaveRuleCommand.Execute(null);
+        var without = Categorizer.Categorize(Samples.Read("01-typical-month"), CategorizationConfig.Default);
+        main.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(MainViewModel.RulesListMessage) && main.RulesListMessage is not null)
+                Assert.DoesNotContain("user-", File.ReadAllText(RulesFile));
+        };
+
+        main.AskToDeleteCommand.Execute(main.Rules[0]);
+        main.DeleteRuleCommand.Execute(null);
+
+        Assert.Empty(main.Rules);
+        Assert.Equal(without.Transactions.Select(t => t.Placement), main.Statement.Categorized!.Transactions.Select(t => t.Placement));
+        Assert.Equal("Pravidlo je odstránené.", main.RulesListMessage);
+        Assert.Null(main.RulesListError);
+        Assert.Empty((await Restart()).Rules);
+    }
+
+    [Fact]
+    public async Task The_deletion_message_lasts_until_the_next_change()
+    {
+        var main = await StartWith((Text("alfa"), Games, 2), (Text("beta"), Rent, 1));
+        main.AskToDeleteCommand.Execute(main.Rules[0]);
+        main.DeleteRuleCommand.Execute(null);
+        Assert.NotNull(main.RulesListMessage);
+
+        main.EditRuleCommand.Execute(main.Rules[0]);
+        Assert.NotNull(main.RulesListMessage);
+        main.SaveRuleCommand.Execute(null);
+
+        Assert.Null(main.RulesListMessage);
+    }
+
+    [Fact]
+    public async Task Deleting_the_rule_open_in_the_form_empties_the_form()
+    {
+        var main = await StartWith((Text("alfa"), Games, 2));
+        main.EditRuleCommand.Execute(main.Rules[0]);
+
+        main.AskToDeleteCommand.Execute(main.Rules[0]);
+        main.DeleteRuleCommand.Execute(null);
+
+        Assert.False(main.RuleForm.IsEditing);
+        Assert.Equal("", main.RuleForm.Text);
+    }
+
+    [Fact]
+    public async Task After_the_last_rule_is_deleted_the_list_is_empty_and_the_next_rule_gets_number_1()
+    {
+        var main = await StartWith((Text("alfa"), Games, 7));
+        main.AskToDeleteCommand.Execute(main.Rules[0]);
+        main.DeleteRuleCommand.Execute(null);
+        Assert.Empty(main.Rules);
+
+        main.RuleForm.Text = "beta";
+        Target(main.RuleForm, Games);
+        main.AddRuleCommand.Execute(null);
+
+        Assert.Equal("1", main.Rules.Single().Priority);
+    }
+
+    [Fact]
+    public async Task A_deletion_while_saving_is_off_applies_and_says_the_rule_will_come_back()
+    {
+        Directory.CreateDirectory(_folder);
+        const string Newer = """{ "version": 2 }""";
+        File.WriteAllText(RulesFile, Newer);
+        var main = await Restart();
+        main.RuleForm.Text = "kino";
+        Target(main.RuleForm, Games);
+        main.AddRuleCommand.Execute(null);
+
+        main.AskToDeleteCommand.Execute(main.Rules[0]);
+        main.DeleteRuleCommand.Execute(null);
+
+        Assert.Empty(main.Rules);
+        Assert.Equal("Pravidlo je odstránené.", main.RulesListMessage);
+        Assert.Equal("Pravidlo sa po zatvorení DocuSpend vráti.", main.RulesListError);
+        Assert.Equal(Newer, File.ReadAllText(RulesFile));
+    }
+
+    [Fact]
+    public async Task A_deletion_that_cannot_be_saved_applies_says_so_and_the_next_change_saves_it()
+    {
+        var folder = Path.Combine(_folder, "DocuSpend");
+        var file = Path.Combine(folder, "rules.json");
+        var config = CategorizationConfig.Default.AddUserRule(Text("alfa"), Games, 1).Value!.AddUserRule(Text("beta"), Rent, 1).Value!;
+        Assert.True(new RuleStore(file).Save(config));
+        var main = new MainViewModel(new RuleStore(file));
+        await main.OpenFileAsync(Samples.Path("01-typical-month"));
+        Directory.Delete(folder, recursive: true);
+        File.WriteAllText(folder, "");
+
+        main.AskToDeleteCommand.Execute(Row(main, "Text obsahuje „alfa“"));
+        main.DeleteRuleCommand.Execute(null);
+
+        Assert.Equal(["Text obsahuje „beta“"], main.Rules.Select(r => r.Condition));
+        Assert.Equal("Odstránenie sa nepodarilo uložiť, preto sa pravidlo po zatvorení DocuSpend vráti. Pri ďalšej zmene sa DocuSpend pokúsi uložiť znova.",
+            main.RulesListError);
+
+        File.Delete(folder);
+        main.EditRuleCommand.Execute(main.Rules[0]);
+        main.SaveRuleCommand.Execute(null);
+
+        Assert.Equal(["Text obsahuje „beta“"], new MainViewModel(new RuleStore(file)).Rules.Select(r => r.Condition));
+    }
+
     [Fact]
     public void The_priority_help_says_what_the_numbers_mean() =>
         Assert.Equal(

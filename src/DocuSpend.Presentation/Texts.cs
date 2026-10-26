@@ -85,6 +85,11 @@ public static class Texts
     public const string Priority = "Priorita";
     public const string Edit = "Upraviť";
     public const string Delete = "Odstrániť";
+    public const string DeleteQuestion = "Odstrániť toto pravidlo?";
+    public const string Keep = "Ponechať";
+    public const string RuleDeleted = "Pravidlo je odstránené.";
+    public const string DeleteOnlyThisSession = "Pravidlo sa po zatvorení DocuSpend vráti.";
+    public const string DeleteSaveFailed = "Odstránenie sa nepodarilo uložiť, preto sa pravidlo po zatvorení DocuSpend vráti. Pri ďalšej zmene sa DocuSpend pokúsi uložiť znova.";
     public const string ChangeOnlyThisSession = "Zmena platí len do zatvorenia DocuSpend.";
     public const string ChangeSaveFailed = "Zmenu sa nepodarilo uložiť, preto po zatvorení DocuSpend neostane. Pri ďalšej zmene sa DocuSpend pokúsi uložiť znova.";
     public const string Condition = "Podmienka";

@@ -330,4 +330,9 @@
     <Setter Property="FontSize" Value="{StaticResource Look.FontSize.Label}" />
   </Style>
 
+  <!-- A row asking before it deletes its rule -->
+  <Style Selector="TextBlock.question">
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
 </Styles>
