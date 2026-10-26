@@ -27,7 +27,7 @@ public sealed class ScreensWindowTests : IDisposable
     private (MainWindow Window, MainViewModel Model) StartWithStatement(string sample = "02-busy-month")
     {
         var model = new MainViewModel(new RuleStore(RulesFile));
-        var window = new MainWindow(model) { Width = 1280, Height = 880 };
+        var window = new MainWindow(model) { Width = 1280, Height = 940 };
         window.Show();
         Headless.Wait(model.OpenFileAsync(MainWindowTests.Sample(sample)));
         Dispatcher.UIThread.RunJobs();
@@ -125,7 +125,7 @@ public sealed class ScreensWindowTests : IDisposable
     public void The_period_and_the_example_badge_show_on_the_rules_screen_too() => Headless.Run(() =>
     {
         var model = new MainViewModel(new RuleStore(RulesFile), example: MainWindowTests.Sample("01-typical-month"));
-        var window = new MainWindow(model) { Width = 1280, Height = 880 };
+        var window = new MainWindow(model) { Width = 1280, Height = 940 };
         window.Show();
         Headless.Wait(model.OpenExampleCommand.ExecuteAsync(null));
         Choose(window, model, AppScreen.Rules);

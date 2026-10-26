@@ -30,13 +30,13 @@ Measured on 26 October 2026, on this branch:
   - `StatementScreen`: a grid with the charts (`Auto`) and the lists (`*`). The two lists lose their `MinHeight` and `MaxHeight` and fill their cards.
   - `RulesScreen`: one `*` row, with the form card on the left (top-aligned, as tall as its fields) and the rules card on the right (full height). `ScrollViewer.ruleList` loses its maximum height and fills the card.
   - The start screen stays as it is.
-- **Sizes into the look.** The chart and ring sizes that are literals in `MainWindow.axaml` today become `Look.Height.Chart` (240) and `Look.Size.Ring` (220) in `Look/Look.axaml`, with `Look.Height.ContentMin`. `Look.Height.RuleList` goes.
+- **Sizes into the look.** The chart and ring sizes that are literals in `MainWindow.axaml` today become `Look.Height.Chart` (300) and `Look.Size.Ring` (260) in `Look/Look.axaml`, with `Look.Height.ContentMin`. `Look.Height.RuleList` goes.
 - **Switching screens** hides the charts' hover cards (`HideHoverCards`). On returning to "Výpis", it runs the existing two-frame chart update, which becomes one method used for both the start screen and the switch.
 - **Nothing else changes:** the deletion pop-up, the drop overlay, Escape and Ctrl+O cover the whole window on both screens, as today.
 
 ### Tests and screenshots
 - The window tests that use the form or the rules card today (`MainWindowTests`, `RulesWindowTests`, `RuleEditorWindowTests`, `LookSwitchWindowTests`, `ScrollBarWindowTests`) choose "Pravidlá" first. A hidden control can't be clicked or seen, so they would fail otherwise. That is the point: it shows the rules really moved.
-- The screenshot tool draws at **1280 × 880**, the default size, instead of 1280 × 1660, so the pictures show what fits. The rules screens (`04`, `05`, `07`–`12`, `16`) choose "Pravidlá". New screens:
+- The screenshot tool draws at **1280 × 940**, the default size, instead of 1280 × 1660, so the pictures show what fits. The rules screens (`04`, `05`, `07`–`12`, `16`) choose "Pravidlá". New screens:
   - `18-rules-screen`: a few rules, the form empty;
   - `19-screen-switch-hover`: the pointer on "Pravidlá".
 
@@ -87,7 +87,7 @@ Test-first for logic; one commit per step, committed when it is done and every t
 
    `LookSwitchWindowTests`' hover theory gets the screen switch.
 3. **Fit the default window** (fill-height content, the sizes in the look). Window tests:
-   - at 1280 × 880, for samples `01` to `05` in both looks, the window has nothing to scroll, and each list's height holds at least five of its rows (`02` with its longest category selected, so the transactions list overflows and scrolls inside);
+   - at 1280 × 940, for samples `01` to `05` in both looks, the window has nothing to scroll, and each list's height holds at least five of its rows (`02` with its longest category selected, so the transactions list overflows and scrolls inside);
    - at 1280 × 1200 the lists are taller and the window still has nothing to scroll;
    - at 720 × 520 the window scrolls, and every header control lies whole inside the content's width;
    - on "Pravidlá", the rules list fills its card, and with 200 rules it scrolls inside it.
@@ -101,9 +101,9 @@ Test-first for logic; one commit per step, committed when it is done and every t
    - the intent becomes `done`.
 
 ## Risks and unknowns
-- **Five rows may not fit with Windows' real fonts at 240 points either**, for example at a display scale other than 100 %, which shrinks the window's points. Fallback: the screenshot review sets the chart height, down to about 220. A scale above 100 % on a small screen shrinks the window below the default size, where the spec allows scrolling.
-- **A message in the header takes height from the lists.** The message about a file that wasn't opened, or about rules that weren't loaded, is about 50 points tall, so the lists show about four rows until it is closed. The spec's five rows are with no message; its edge cases now say so.
-- **The legend is taller than a 240-point chart** in a month with many categories (`02` has nine). The legend already scrolls inside its own area; the screenshot review checks it reads well.
+
+- **Found in the screenshot review: nine categories didn't fit the legend of a 240-point chart.** The ninth row sat under the legend's scroll bar. The maintainer kept the lists as they were and asked for a bigger window instead: the charts are back at 300 points (the ring at 260), the default window is 1280 × 940, and `Look.Height.ContentMin` is 820. The hover-card screenshots' positions now follow the ring's own size.
+- **A month with more than nine categories** still scrolls the legend inside its own area, as it did before this item.
 - **The hover-card screenshots (`13`, `14`) point at fixed places in the charts**, and smaller charts move them. Fallback: adjust the positions in `Screens.cs` in step 4; the hover-card window tests compute their positions from the charts and shouldn't change.
 - **A scroll offset may be reset when a hidden list is measured again.** The window test in step 2 catches it. Fallback: the window remembers each list's offset on leaving "Výpis" and restores it on return.
 - **Binding the content's height to the scroll viewer could flicker or loop on resize.** It didn't in the headless test, and the hand check covers a real window. Fallback: set the height in `SizeChanged`.
@@ -119,7 +119,7 @@ Test-first for logic; one commit per step, committed when it is done and every t
 | The header shows the same controls in the same places on both screens | `ScreensWindowTests`: same controls visible, same bounds (step 2) |
 | Opening from "Pravidlá" by button, Ctrl+O and drop shows "Výpis" | `ScreensTests` (button through the picker, drop); `ScreensWindowTests` (Ctrl+O, drop) (steps 1, 2) |
 | The statement screen has the key figures, charts and lists, and no rule parts | `ScreensWindowTests` (step 2) |
-| 1280 × 880, samples `01`–`05`, both looks: nothing to scroll, five rows per list | window test in step 3; screenshots (step 4) and hand check (step 5) with real fonts |
+| 1280 × 940, samples `01`–`05`, both looks: nothing to scroll, five rows per list | window test in step 3; screenshots (step 4) and hand check (step 5) with real fonts |
 | More than fits: the window doesn't scroll, the lists do | window test with `02`'s longest category (step 3) |
 | A taller window: more rows, nothing to scroll | window test at 1280 × 1200 (step 3) |
 | The charts' hover cards work as before | `HoverCardWindowTests`, unchanged and passing (every step) |

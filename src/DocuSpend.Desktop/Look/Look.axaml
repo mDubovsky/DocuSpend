@@ -47,9 +47,9 @@
     <Thickness x:Key="Look.Padding.Help">8,1</Thickness>
     <Thickness x:Key="Look.Padding.SmallButton">12,3</Thickness>
     <Thickness x:Key="Look.Padding.RuleRow">8,4</Thickness>
-    <x:Double x:Key="Look.Height.Chart">240</x:Double>
-    <x:Double x:Key="Look.Size.Ring">220</x:Double>
-    <x:Double x:Key="Look.Height.ContentMin">760</x:Double>
+    <x:Double x:Key="Look.Height.Chart">300</x:Double>
+    <x:Double x:Key="Look.Size.Ring">260</x:Double>
+    <x:Double x:Key="Look.Height.ContentMin">820</x:Double>
     <Thickness x:Key="Look.Margin.HeaderItem">0,0,12,0</Thickness>
     <Thickness x:Key="Look.Margin.HeaderCentre">12,0</Thickness>
     <Thickness x:Key="Look.Padding.Tab">16,6</Thickness>

@@ -14,7 +14,7 @@ Intent: [intent.md](intent.md)
 - It shows, from the top: the header with the key figures ("Výdavky spolu", the opening and closing balance), as today; the two charts side by side; the categories ("Kategórie") and the transactions of the selected category side by side.
 - It has **no rule form and no rule list**.
 - **At the default window size it fits the window without scrolling.** The two lists take the height that is left, and each shows at least five rows. A list longer than that scrolls inside its card, as today. A taller window gives the lists more rows; the charts keep their height.
-- The charts may be shorter than today to make that room. Both stay fully readable: the pie with its total in the middle and its legend beside it, the balance line with its axes. Their hover cards work as today ([#20](../020-chart-hover-cards/spec.md)).
+- The charts keep today's height (300), and the default window is 940 points tall, so the busy month's nine categories all show in the pie's legend.
 
 ### The rules screen ("Pravidlá")
 - It shows the header (without the key figures), then, side by side, the **"Nové pravidlo" form** on the left and the **rules card** on the right, with its "Moje pravidlá" and "Vstavané pravidlá" pills.
@@ -44,7 +44,7 @@ The statement screen, at the default window size. Nothing below the lists; the w
 +---------------------------------------+----------------------------------------+
 | Výdavky podľa kategórií               | Zostatok na účte                       |
 |   ( pie, total in the middle )  legend|   balance line                         |
-|   (shorter than today if needed)      |                                        |
+|   (same height as today)              |                                        |
 +---------------------------------------+----------------------------------------+
 | Kategórie                             | Transakcie                             |
 |  Potraviny          12   -345,67 €    |  12. 9.  LIDL ...           -23,45 €   |
@@ -85,7 +85,7 @@ Two screens:
 
 Statement screen:
 - [ ] Given the statement screen, then it shows the key figures, both charts, "Kategórie" and the transactions card, and no rule form, rules card, "Moje pravidlá" or "Vstavané pravidlá".
-- [ ] Given the default window size (1280 × 880), each valid sample (`01` to `05`), and both looks, then the window has nothing to scroll, and the categories and transactions lists each show at least five rows.
+- [ ] Given the default window size (1280 × 940), each valid sample (`01` to `05`), and both looks, then the window has nothing to scroll, and the categories and transactions lists each show at least five rows.
 - [ ] Given a statement with more categories and transactions than fit, at the default size, then the window still has nothing to scroll and the lists scroll inside their cards.
 - [ ] Given the window made taller than the default, then the lists show more rows and the window still has nothing to scroll.
 - [ ] The charts' hover cards work on the statement screen as before (#20's window tests still pass).
@@ -141,7 +141,7 @@ Look, privacy and hand checks:
 ## Decisions
 
 - **The key figures belong to the statement screen.** They describe the month, which the rules screen isn't about; the header still shows the period and the example badge there, so the user knows which statement the rules act on.
-- **The charts may be shorter than today.** At the default size the header, the charts and two lists with five rows each don't fit at today's chart height (300 points); the lists are where the detail is, and a pie and a month's balance line read well a little smaller. The plan sets the height, and the screenshot review settles it.
+- **The charts keep their height (300) and the default window grows from 880 to 940 points**, as the maintainer chose after the screenshot review: with charts shortened to 240 the legend of the busy month lost its ninth category under a scroll bar, and the lists were not to shrink. The lists keep the five-plus rows they had.
 - **At least five rows in each list at the default size**, so "fits without scrolling" can't be met by lists too short to use.
 - **The extra height of a taller window goes to the lists**, not the charts: they are what grows with the statement.
 - **Messages about the whole application show on both screens; messages about a rule change stay with the change.** The header's messages (a file not opened, rules not loaded) can arrive on either screen. A change's confirmation or failure, and "Zmeny pravidiel sa teraz neukladajú.", only make sense next to the rules; the rules-not-loaded message in the header already tells the user on "Výpis" that their rules aren't there. This narrows the intent's "loading or saving rules, visible whichever screen is shown" to loading.

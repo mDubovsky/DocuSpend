@@ -265,7 +265,7 @@ internal static class Screens
                 model = new MainViewModel(new RuleStore(rules), example: SamplePath("01-typical-month"));
             model.SelectedLook = model.Looks.Single(l => l.Choice == choice);
             // The size DocuSpend opens at, so the picture shows what the user sees without scrolling.
-            var window = new MainWindow(model) { Width = 1280, Height = 880 };
+            var window = new MainWindow(model) { Width = 1280, Height = 940 };
             window.Show();
             screen.Arrange(model);
             Settle();

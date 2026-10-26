@@ -22,7 +22,7 @@ public sealed class FitWindowTests : IDisposable
 
     private const int WantedRows = 5;
 
-    private (MainWindow Window, MainViewModel Model) Open(string sample, double width = 1280, double height = 880,
+    private (MainWindow Window, MainViewModel Model) Open(string sample, double width = 1280, double height = 940,
         LookChoice look = LookChoice.Light, bool longestCategory = false)
     {
         var model = new MainViewModel(new RuleStore(Path.Join(_folder, "rules.json")));
