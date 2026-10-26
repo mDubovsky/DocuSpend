@@ -108,6 +108,10 @@ Test-first for logic; one commit per step, committed when it is done and every t
 - **A scroll offset may be reset when a hidden list is measured again.** The window test in step 2 catches it. Fallback: the window remembers each list's offset on leaving "Výpis" and restores it on return.
 - **Binding the content's height to the scroll viewer could flicker or loop on resize.** It didn't in the headless test, and the hand check covers a real window. Fallback: set the height in `SizeChanged`.
 - **Tests that click hidden controls fail with unclear messages.** Each test that uses rules chooses "Pravidlá" in its own setup helper, so the reason is in one place.
+- **Found in the build: the header's right group lost its vertical centring.** Moving "Vzhľad" and the look switch into a wrapping panel put them at the top of the row, which `LookSwitchWindowTests` caught. Both groups are centred vertically again, and the side groups wrap inside their columns so the header fits at the smallest window size.
+- **Found in the build: the old window tests used rule controls that are now on the other screen.** Seven test classes (the form, the rules card, the look switches, the scroll bars, a drop onto the form) choose "Pravidlá" first, through `Headless.ShowRules`. The scroll bar test now checks each screen's bars in turn.
+- **Found in the screenshot review: the switch's place and the legend.** The maintainer moved the switch to the middle of the header, with "Otvoriť výpis…" at the very left and "Vzhľad" at the very right, and asked for the default window to grow instead of the charts to shrink (see the legend bullet above). The spec, intent and this plan describe what was built.
+- **Found in the hand check:** nothing; the maintainer approved it as built.
 
 ## Verification
 
