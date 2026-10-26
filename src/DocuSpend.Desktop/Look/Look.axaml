@@ -144,16 +144,19 @@
     <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
 
-  <!-- A segmented choice (light or dark): a pill holding pills, the chosen one in the accent tint -->
+  <!-- A segmented choice (light or dark): a pill holding pills, the chosen one in the accent tint. It keeps its own
+       height in a taller row, so its pills keep their shape and their text stays centred (#19). -->
   <Style Selector="ListBox.segmented">
     <Setter Property="Background" Value="{DynamicResource Look.Hover}" />
     <Setter Property="CornerRadius" Value="{StaticResource Look.Radius.Pill}" />
     <Setter Property="Padding" Value="{StaticResource Look.Padding.Segmented}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
   <Style Selector="ListBox.segmented ListBoxItem">
     <Setter Property="Padding" Value="{StaticResource Look.Padding.Segment}" />
     <Setter Property="Margin" Value="0" />
     <Setter Property="FontSize" Value="{StaticResource Look.FontSize.Label}" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
   <Style Selector="ListBox.segmented ListBoxItem:selected TextBlock">
     <Setter Property="FontWeight" Value="SemiBold" />
