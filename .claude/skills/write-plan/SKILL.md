@@ -26,7 +26,7 @@ Copy `work/_templates/plan.md`. Write `Spec: [spec.md](spec.md)` under the title
 - **Alternatives considered:** each with the reason it lost.
 - **Layout:** the new folders and files.
 - **Prerequisites:** items that must be merged, and anything the human must provide or do (push, review, a hand check).
-- **Steps:** small, ordered, test-first for logic. One commit per step, each after the human's approval. Mark the steps that stop for a review (privacy findings, screenshots, colours, hand checks). The last step updates the docs and sets the intent to `done`.
+- **Steps:** small, ordered, test-first for logic. One commit per step; once the plan is approved, steps are committed without asking (AGENTS.md rule 1). Mark the steps that stop for a review (privacy findings, screenshots, colours, hand checks). The last step updates the docs and sets the intent to `done`, with the `finish-item` skill.
 - **Risks and unknowns:** with the fallback for each.
 - **Verification:** a table mapping every acceptance criterion of the spec to its automated test or named hand check. No criterion may be left without one.
 
@@ -34,4 +34,4 @@ Copy `work/_templates/plan.md`. Write `Spec: [spec.md](spec.md)` under the title
 
 1. Summarize the approach, the verified facts that shaped it, and the stop points; call out any decision the human must make (for example between two versions) and ask with a recommendation.
 2. Revise until approved. **After approval:** set the intent's `status:` to `planned`, commit on the item branch: `Add plan for <short title> (#N)`. Never push.
-3. Start building only after that. Set `status: in-progress` with the first build commit, and commit each step only after the human approves it. If the build changes the plan or the spec, update them in the same change.
+3. Start building only after that. Set `status: in-progress` with the first build commit, and commit each step as soon as it is done and every test passes, without asking (AGENTS.md rule 1). Stop only at the steps the plan marks as review stops, or for a decision the human must make; then carry on after their answer. If the build changes the plan or the spec, update them in the same change.

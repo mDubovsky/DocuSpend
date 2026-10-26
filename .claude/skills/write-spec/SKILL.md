@@ -18,6 +18,7 @@ Turn an approved intent into `work/NNN-slug/spec.md`: what DocuSpend will do, ob
 Copy `work/_templates/spec.md`. Write `Intent: [intent.md](intent.md)` under the title.
 
 - **Behavior:** what the user (or contributor, or visitor, if the item is for them) can do and observe, grouped by sub-headings. Describe what they see, in their terms; quote visible Slovak texts exactly when they matter (decision 0003).
+- **Screens:** for an item that adds or changes anything on screen, a rough text sketch of each new or changed screen or card, in a fenced block: what is shown where, what is hidden until asked for (a number, a second list, a detail), and how each question or confirmation appears (inside a row, under a field, or as a pop-up box over the window). Sketch the choices that are cheap to change now and costly after the build. Say in the summary to the human that the sketches are there to look at, so layout is settled before any code is written.
 - **Acceptance criteria:** a checklist, one observable criterion per line, in the "given …, when …, then …" form where it helps. Each must be checkable: mark the ones that can only be checked by hand, and say who checks them. Cover every success criterion of the intent.
 - **Edge cases and errors:** odd, missing or invalid input; empty months; many items; long names; failures to read or write; what the user sees in each case. Nothing may fail silently or produce a wrong result without saying so.
 - **Out of scope:** pointing to the issue or item that covers each part when there is one.
@@ -28,7 +29,7 @@ Write plainly and briefly, like the existing specs. Prefer one exact sentence to
 
 ## With the human
 
-1. Summarize the spec in a few bullets, then list the decisions you made that they should check, so they don't have to read the whole file to find them.
+1. Summarize the spec in a few bullets, then list the decisions you made that they should check, so they don't have to read the whole file to find them. If the spec has screen sketches, show them in the summary too: layout changes after the build cost the most rework.
 2. Revise until approved. If the human later changes behavior during the build (a review of screenshots, a hand check), update the spec in the same change: the spec describes what was built.
 3. **After approval:** set the intent's `status:` to `specced`, and commit both on the item branch: `Add spec for <short title> (#N)`. Never push.
 4. The next step is `write-plan`.
