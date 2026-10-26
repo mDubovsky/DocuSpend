@@ -20,7 +20,8 @@ public sealed record Palette(
     string Error,
     string ErrorTint,
     string Grid,
-    string SwitchHover)
+    string SwitchHover,
+    string ScrollThumb)
 {
     /// <summary>White cards on a pale grey-blue, with a blue-violet accent.</summary>
     public static Palette Light { get; } = new(
@@ -39,7 +40,8 @@ public sealed record Palette(
         Error: "#C02A37",
         ErrorTint: "#FDECEE",
         Grid: "#E6E8F0",
-        SwitchHover: "#DCDFEA");
+        SwitchHover: "#DCDFEA",
+        ScrollThumb: "#7E84A2");
 
     /// <summary>
     /// Deep navy, slightly lighter cards, the same accent lightened to stand out on dark. Buttons use a deeper violet
@@ -61,7 +63,8 @@ public sealed record Palette(
         Error: "#FF8A93",
         ErrorTint: "#3B1F2E",
         Grid: "#2A2F4D",
-        SwitchHover: "#3A3F63");
+        SwitchHover: "#3A3F63",
+        ScrollThumb: "#7077A0");
 
     /// <summary>Every colour by its name, as the window's resources are named.</summary>
     public IReadOnlyList<KeyValuePair<string, string>> All() =>
@@ -71,6 +74,7 @@ public sealed record Palette(
         new(nameof(AccentTint), AccentTint), new(nameof(Text), Text), new(nameof(Muted), Muted),
         new(nameof(Positive), Positive), new(nameof(PositiveTint), PositiveTint), new(nameof(Error), Error),
         new(nameof(ErrorTint), ErrorTint), new(nameof(Grid), Grid), new(nameof(SwitchHover), SwitchHover),
+        new(nameof(ScrollThumb), ScrollThumb),
     ];
 
     public string Get(string name) => All().Single(c => c.Key == name).Value;
