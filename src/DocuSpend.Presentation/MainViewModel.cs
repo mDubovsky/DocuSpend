@@ -17,7 +17,7 @@ public sealed record RuleViewOption(RuleView View, string Label);
 /// A rule in a list: what it matches and where it puts it. <paramref name="Priority"/> is the user rule's number,
 /// which the list keeps for its order but shows only in the form; empty for a built-in rule.
 /// </summary>
-public sealed record RuleRow(RuleId Id, string Priority, string Condition, string Target, bool IsEditing = false, bool IsAskingToDelete = false);
+public sealed record RuleRow(RuleId Id, string Priority, string Condition, string Target, bool IsEditing = false);
 
 /// <summary>
 /// The window: the start screen or the statement the user opened, the message about a file that wasn't opened, the
@@ -275,8 +275,13 @@ public sealed partial class MainViewModel : ObservableObject
         Rules = UserRows();
     }
 
-    /// <summary>The rule whose row asks "Odstrániť toto pravidlo?", or null; only one row asks at a time.</summary>
-    private RuleId? _asking;
+    /// <summary>
+    /// The rule the pop-up asks about, "Odstrániť toto pravidlo?", or null when no question is open (spec: deleting a
+    /// rule). While it is open the rest of the window waits.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(KeepRuleCommand))]
+    public partial RuleRow? RuleToDelete { get; private set; }
 
     /// <summary>What the last deletion did, in "Moje pravidlá", until the next change; or null (spec: deleting a rule).</summary>
     [ObservableProperty]
@@ -286,24 +291,15 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     public partial string? RulesListError { get; private set; }
 
-    /// <summary>"Odstrániť" in a row: the row asks first, and nothing is deleted yet.</summary>
+    /// <summary>"Odstrániť" in a row: a pop-up asks first, and nothing is deleted yet.</summary>
     [RelayCommand]
-    private void AskToDelete(RuleRow row)
-    {
-        _asking = row.Id;
-        Rules = UserRows();
-        KeepRuleCommand.NotifyCanExecuteChanged();
-    }
+    private void AskToDelete(RuleRow row) => RuleToDelete = row;
 
-    /// <summary>"Ponechať", or Escape: the row asks no more and the rule stays.</summary>
+    /// <summary>"Ponechať", or Escape: the pop-up closes and the rule stays.</summary>
     [RelayCommand(CanExecute = nameof(IsAsking))]
-    private void KeepRule()
-    {
-        TakeBackQuestion();
-        Rules = UserRows();
-    }
+    private void KeepRule() => TakeBackQuestion();
 
-    private bool IsAsking() => _asking is not null;
+    private bool IsAsking() => RuleToDelete is not null;
 
     /// <summary>
     /// "Odstrániť" after the question: deletes the rule, saves, and categorizes the statement again. A deletion that
@@ -312,7 +308,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void DeleteRule()
     {
-        if (_asking is not { } id)
+        if (RuleToDelete?.Id is not { } id)
             return;
         TakeBackQuestion();
         var outcome = Statement.Config.RemoveUserRule(id);
@@ -331,12 +327,8 @@ public sealed partial class MainViewModel : ObservableObject
         RulesListError = saved ? null : RulesNotSaving ? Texts.DeleteOnlyThisSession : Texts.DeleteSaveFailed;
     }
 
-    /// <summary>Starting anything else takes an open deletion question back (spec: deleting a rule).</summary>
-    private void TakeBackQuestion()
-    {
-        _asking = null;
-        KeepRuleCommand.NotifyCanExecuteChanged();
-    }
+    /// <summary>Closes an open deletion question; any other change closes it too.</summary>
+    private void TakeBackQuestion() => RuleToDelete = null;
 
     /// <summary>
     /// The form's confirmation after a rule was added or changed: how many transactions it now catches, and whether
@@ -369,7 +361,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         var (category, subcategory) = Statement.Config.Catalog.FindSubcategory(rule.Target)!.Value;
         return new RuleRow(rule.Id, priority, Describe(rule.Condition), $"{category.Name} › {subcategory.Name}",
-            IsEditing: rule.Id == RuleForm.EditingRule, IsAskingToDelete: rule.Id == _asking);
+            IsEditing: rule.Id == RuleForm.EditingRule);
     }
 
     /// <summary>A condition in Slovak, as the rules list shows it.</summary>

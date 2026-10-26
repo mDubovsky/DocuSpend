@@ -462,27 +462,16 @@ public sealed class RuleEditorTests : IDisposable
     // Deleting
 
     [Fact]
-    public async Task Odstranit_only_asks_first()
+    public async Task Odstranit_only_asks_first_about_that_rule()
     {
         var main = await StartWith((Text("alfa"), Games, 2), (Text("beta"), Rent, 1));
 
         main.AskToDeleteCommand.Execute(Row(main, "Text obsahuje „alfa“"));
 
         Assert.Equal(2, main.Statement.Config.UserRules.Count);
-        Assert.Equal([false, true], main.Rules.Select(r => r.IsAskingToDelete));
+        Assert.Equal(Row(main, "Text obsahuje „alfa“"), main.RuleToDelete);
         Assert.True(main.KeepRuleCommand.CanExecute(null));
         Assert.Equal("Odstrániť toto pravidlo?", Texts.DeleteQuestion);
-    }
-
-    [Fact]
-    public async Task Only_one_row_asks_at_a_time()
-    {
-        var main = await StartWith((Text("alfa"), Games, 2), (Text("beta"), Rent, 1));
-
-        main.AskToDeleteCommand.Execute(main.Rules[0]);
-        main.AskToDeleteCommand.Execute(main.Rules[1]);
-
-        Assert.Equal([false, true], main.Rules.Select(r => r.IsAskingToDelete));
     }
 
     public static TheoryData<string> OtherActions => new(["keep", "add", "edit", "cancel"]);
@@ -502,7 +491,7 @@ public sealed class RuleEditorTests : IDisposable
             case "cancel": main.CancelEditCommand.Execute(null); break;
         }
 
-        Assert.All(main.Rules, r => Assert.False(r.IsAskingToDelete));
+        Assert.Null(main.RuleToDelete);
         Assert.False(main.KeepRuleCommand.CanExecute(null));
         Assert.Contains(main.Rules, r => r.Condition == "Text obsahuje „beta“");
         main.DeleteRuleCommand.Execute(null);

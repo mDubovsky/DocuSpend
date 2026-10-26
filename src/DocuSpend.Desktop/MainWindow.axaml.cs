@@ -53,6 +53,9 @@ public partial class MainWindow : Window
         {
             if (e.PropertyName == nameof(MainViewModel.Look))
                 ApplyLook(model.Look);
+            // The deletion question takes the focus, on "Ponechať", so a stray Enter or Space keeps the rule.
+            if (e.PropertyName == nameof(MainViewModel.RuleToDelete) && model.RuleToDelete is not null)
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => DeleteDialogKeep.Focus(NavigationMethod.Tab));
             // The charts are hidden on the start screen. LiveCharts measures a chart only after it has painted a
             // frame since its last measure, and resets that only when the chart scrolls into view, so charts that
             // were hidden stayed empty until scrolled away and back. Once they have been rendered visible, ask both

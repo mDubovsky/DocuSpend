@@ -57,10 +57,11 @@ The work has three parts: the categorization, the screen logic and the window.
 - **The form card:** the heading binds to the form's heading. The kind choice shows the six kinds, each kind's fields show under it, and types show as a column of tick boxes. A "Priorita" row with its field and help mark shows while editing. Under the fields are "Pridať pravidlo", or "Uložiť zmeny" and "Zrušiť".
 - **"Moje pravidlá":**
   - The heading is the two views as a segmented choice (`ListBox.segmented`, as the look switch), with a `tabs` class for heading-sized pills.
-  - Each row has the condition, the target, and "Upraviť" and "Odstrániť" as small secondary buttons. While the row asks, they are replaced by "Odstrániť toto pravidlo?" with "Odstrániť" and "Ponechať". The row of the rule being edited is marked with the selected-row look the lists already use.
+  - Each row has the condition, the target, and "Upraviť" and "Odstrániť" as small secondary buttons. "Odstrániť" opens the deletion pop-up (below). The row of the rule being edited is marked with the selected-row look the lists already use.
   - The list has a maximum height from the look and scrolls inside the card.
 - **"Vstavané pravidlá"** is the card's second view, whose rows show the condition and the target.
 - **The help mark** (by "Priorita" only) is a small focusable "?" with `ToolTip.Tip` bound to `Texts.PriorityHelp`. The window opens its tooltip on keyboard focus and closes it on focus loss (see above).
+- **The deletion pop-up** (after the screenshot review): a panel over the whole window, a dimmed `scrim` from the window background and a `card dialog` in the middle with the question, the rule, "Odstrániť" and "Ponechať". It shows while `RuleToDelete` (the row asked about) is set. The window focuses "Ponechať" when it opens, and Tab cycles inside the box.
 - **Escape** takes back an open deletion question: a window key binding to `KeepRuleCommand`, which can run only while a question is open.
 - **The look:** new styles (help mark, small row buttons, the heading pills, the marked row) and their sizes go in `Look/Look.axaml` with the existing resources; colours come from `Palette` only. If a new colour is needed, it goes in `Palette.cs` with its contrast test. The test that forbids literal values in screens stays as it is.
 - **Screenshots:** `tools/DocuSpend.Screenshots` gets new screens:
@@ -127,7 +128,7 @@ Test-first for logic; one commit per step, each after the maintainer approves it
    Window test: the heading, the fields, the priority row and the marked row.
 5. **Deleting** (the question, `Delete`/`Keep`, Escape). Tests:
    - asking doesn't delete;
-   - keeping, Escape and starting something else take the question back;
+   - keeping and Escape close the question;
    - deleting recategorizes, shows "Pravidlo je odstránené.", saves, and is gone after a restart;
    - deleting the rule in the form resets it;
    - deleting the last rule, then adding, gives 1;
@@ -151,7 +152,7 @@ Test-first for logic; one commit per step, each after the maintainer approves it
 - **A tooltip is a popup, which a headless screenshot of the window may not show.** Fallback: the window test checks the tooltip's text and that it opens. The screenshot shows the form in edit mode without it, and the maintainer checks the tooltip on screen in the hand check.
 - **The Fluent `CheckBox` (and the `Expander`, before the review replaced it) may not follow the palette** in one of the looks, like the scroll bars in [#19](https://github.com/mDubovsky/DocuSpend/issues/19). Fallback: style their parts in `Look.axaml` from the palette; the screenshot review catches what is missed.
 - **Changing the list's order breaks tests that assumed creation order** (from #13). They change with step 3, because the spec changes the order. The saved file's order is unaffected (creation order, as before).
-- **Escape inside a text box** goes to the text box first. The question can only be open while the focus is on the row's buttons or elsewhere, so this matters only if the user clicks into the form; then the question is taken back anyway, since editing the form starts something else. If it doesn't feel right in the hand check, the window can also take the question back when the form gets focus.
+- **Escape inside a text box** goes to the text box first. With the pop-up, the focus is in the box while the question is open, so this no longer arises.
 - **The row's buttons may not fit a narrow card** with long conditions. The condition and the target are cut with "…" first, and the screenshot review checks the default window size.
 
 ## Verification
@@ -174,7 +175,7 @@ Test-first for logic; one commit per step, each after the maintainer approves it
 | A rule added through the form is first | `MainViewModelTests` (step 3) |
 | The help mark by "Priorita" shows the tooltip on hover and keyboard focus | `RulesWindowTests` (step 3); hand check if not visible in screenshots |
 | "Odstrániť" asks and doesn't delete | `MainViewModelTests`; `RulesWindowTests` (step 5) |
-| "Ponechať", Escape and starting another action keep the rule | `MainViewModelTests`; `RulesWindowTests` for Escape (step 5) |
+| "Ponechať" and Escape close the pop-up and keep the rule | `RuleEditorTests`; `RuleEditorWindowTests` (step 5, and after the review) |
 | Deleting removes, recategorizes, shows "Pravidlo je odstránené." and isn't back after a restart | `MainViewModelTests` (step 5) |
 | Deleting the rule in the form resets the form | `MainViewModelTests` (step 5) |
 | Deleting the last rule shows "Zatiaľ žiadne pravidlá." and the next rule gets 1 | `MainViewModelTests` (step 5) |

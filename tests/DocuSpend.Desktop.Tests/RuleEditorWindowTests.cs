@@ -139,41 +139,47 @@ public sealed class RuleEditorWindowTests : IDisposable
     private static bool Shows(Window window, string text) =>
         window.GetLogicalDescendants().OfType<TextBlock>().Any(t => t.Text == text && t.IsEffectivelyVisible);
 
+    private static Button DialogButton(Window window, string name) => (Button)Named(window, name);
+
     [Fact]
-    public void Odstranit_asks_in_the_row_and_Odstranit_again_deletes() => Headless.Run(() =>
+    public void Odstranit_opens_a_pop_up_about_that_rule_and_its_Odstranit_deletes() => Headless.Run(() =>
     {
         var (window, model) = StartWithStatement();
         AddRule(model, "Pekáreň");
         AddRule(model, "Kino");
+        Assert.False(Named(window, "DeleteDialog").IsEffectivelyVisible);
 
         Press(RowButton(window, 1, "Odstrániť"));
 
+        Assert.True(Named(window, "DeleteDialog").IsEffectivelyVisible);
         Assert.True(Shows(window, "Odstrániť toto pravidlo?"));
+        Assert.Equal("Text obsahuje „Pekáreň“", ((TextBlock)Named(window, "DeleteDialogRule")).Text);
         Assert.Equal(2, model.Rules.Count);
-        Assert.Throws<InvalidOperationException>(() => RowButton(window, 1, "Upraviť"));
-        Press(RowButton(window, 1, "Odstrániť"));
+        Assert.True(DialogButton(window, "DeleteDialogKeep").IsFocused);
+
+        Press(DialogButton(window, "DeleteDialogDelete"));
 
         Assert.Equal(["Text obsahuje „Kino“"], model.Rules.Select(r => r.Condition));
-        Assert.False(Shows(window, "Odstrániť toto pravidlo?"));
+        Assert.False(Named(window, "DeleteDialog").IsEffectivelyVisible);
         Assert.True(Named(window, "RulesListMessage").IsEffectivelyVisible);
         Assert.True(Shows(window, "Pravidlo je odstránené."));
         window.Close();
     });
 
     [Fact]
-    public void Ponechat_and_Escape_take_the_question_back() => Headless.Run(() =>
+    public void Ponechat_and_Escape_close_the_pop_up_and_keep_the_rule() => Headless.Run(() =>
     {
         var (window, model) = StartWithStatement();
         AddRule(model, "Pekáreň");
 
         Press(RowButton(window, 0, "Odstrániť"));
-        Press(RowButton(window, 0, "Ponechať"));
-        Assert.False(Shows(window, "Odstrániť toto pravidlo?"));
+        Press(DialogButton(window, "DeleteDialogKeep"));
+        Assert.False(Named(window, "DeleteDialog").IsEffectivelyVisible);
 
         Press(RowButton(window, 0, "Odstrániť"));
         window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, null);
         Dispatcher.UIThread.RunJobs();
-        Assert.False(Shows(window, "Odstrániť toto pravidlo?"));
+        Assert.False(Named(window, "DeleteDialog").IsEffectivelyVisible);
         Assert.Single(model.Rules);
         window.Close();
     });
