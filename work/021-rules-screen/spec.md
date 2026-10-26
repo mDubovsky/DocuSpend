@@ -121,6 +121,7 @@ Look, privacy and hand checks:
 ## Edge cases and errors
 
 - **A window smaller than the default.** Down to its minimum size (720 × 520), the lists get shorter down to a few rows, and below that the window scrolls, as today. Nothing in the header is cut off or unreachable: it may wrap onto a second line.
+- **A message at the top of the header.** It takes its height from the lists, which may show fewer than five rows until it is closed; the window still doesn't scroll at the default size. The five rows are with no message shown.
 - **A window wider than the default.** The cards widen; nothing else changes.
 - **Switching while the pop-up box for deleting a rule is open.** It can't be done: the box covers the window until it is answered, as today.
 - **A hover card showing when the screen switches.** It disappears; no hover card or dot shows on the rules screen.
