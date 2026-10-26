@@ -46,6 +46,8 @@
     <x:Double x:Key="Look.FontSize.Title">22</x:Double>
     <Thickness x:Key="Look.Padding.Help">8,1</Thickness>
     <x:Double x:Key="Look.Width.Priority">34</x:Double>
+    <Thickness x:Key="Look.Padding.SmallButton">12,3</Thickness>
+    <Thickness x:Key="Look.Padding.RuleRow">8,4</Thickness>
   </Styles.Resources>
 
   <!-- The window: background, and the body text everything inherits -->
@@ -311,6 +313,21 @@
     <Setter Property="MinWidth" Value="{StaticResource Look.Width.Priority}" />
     <Setter Property="Foreground" Value="{DynamicResource Look.Muted}" />
     <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <!-- A rule in "Moje pravidlá"; the one open in the form is marked like a selected row -->
+  <Style Selector="Border.ruleRow">
+    <Setter Property="Padding" Value="{StaticResource Look.Padding.RuleRow}" />
+    <Setter Property="Margin" Value="{StaticResource Look.Margin.Row}" />
+    <Setter Property="CornerRadius" Value="{StaticResource Look.Radius.Pill}" />
+  </Style>
+  <Style Selector="Border.ruleRow.editing">
+    <Setter Property="Background" Value="{DynamicResource Look.AccentTint}" />
+  </Style>
+  <!-- A row's own buttons: secondary, smaller -->
+  <Style Selector="Button.small">
+    <Setter Property="Padding" Value="{StaticResource Look.Padding.SmallButton}" />
+    <Setter Property="FontSize" Value="{StaticResource Look.FontSize.Label}" />
   </Style>
 
 </Styles>

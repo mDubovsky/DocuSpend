@@ -183,8 +183,8 @@
         <!-- A new rule, and the saved ones -->
         <Border Classes="card" Grid.Row="3" Grid.Column="0" IsVisible="{Binding HasStatement}">
           <StackPanel Spacing="{StaticResource Look.Space.Medium}">
-            <TextBlock Classes="heading" Text="{x:Static vm:Texts.NewRule}" />
-            <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="{StaticResource Look.Space.Medium}">
+            <TextBlock x:Name="FormHeading" Classes="heading" Text="{Binding RuleForm.Heading}" />
+            <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="{StaticResource Look.Space.Medium}">
               <TextBlock Classes="muted" Text="{x:Static vm:Texts.Condition}" VerticalAlignment="Center" />
               <StackPanel Grid.Column="1" Spacing="{StaticResource Look.Space.Medium}">
                 <ComboBox ItemsSource="{Binding RuleForm.Kinds}" SelectedItem="{Binding RuleForm.SelectedKindOption}" MinWidth="200">
@@ -242,8 +242,20 @@
                 </ComboBox.ItemTemplate>
               </ComboBox>
 
-              <Button Grid.Row="3" Grid.Column="1" Classes="primary" Content="{x:Static vm:Texts.AddRule}"
-                      Command="{Binding AddRuleCommand}" IsDefault="True" />
+              <TextBlock Grid.Row="3" Classes="muted" Text="{x:Static vm:Texts.Priority}" VerticalAlignment="Center" IsVisible="{Binding RuleForm.IsEditing}" />
+              <StackPanel x:Name="PriorityRow" Grid.Row="3" Grid.Column="1" Classes="headingRow" IsVisible="{Binding RuleForm.IsEditing}">
+                <TextBox x:Name="PriorityField" Text="{Binding RuleForm.Priority}" Width="80" />
+                <Button x:Name="PriorityHelp" Classes="help" Content="?" ToolTip.Tip="{x:Static vm:Texts.PriorityHelp}" VerticalAlignment="Center" />
+              </StackPanel>
+
+              <!-- Enter presses the default button; while a rule is open, AddRule saves it -->
+              <Button x:Name="AddRuleButton" Grid.Row="4" Grid.Column="1" Classes="primary" Content="{x:Static vm:Texts.AddRule}"
+                      Command="{Binding AddRuleCommand}" IsDefault="True" IsVisible="{Binding !RuleForm.IsEditing}" />
+              <StackPanel x:Name="EditButtons" Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}"
+                          IsVisible="{Binding RuleForm.IsEditing}">
+                <Button Classes="primary" Content="{x:Static vm:Texts.SaveRule}" Command="{Binding SaveRuleCommand}" />
+                <Button Classes="secondary" Content="{x:Static vm:Texts.CancelEdit}" Command="{Binding CancelEditCommand}" />
+              </StackPanel>
             </Grid>
             <Border Classes="message confirmation" IsVisible="{Binding RuleForm.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
               <TextBlock Text="{Binding RuleForm.Message}" TextWrapping="Wrap" />
@@ -265,14 +277,20 @@
             </Border>
             <Panel>
               <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoRules}" IsVisible="{Binding !Rules.Count}" />
-              <ItemsControl ItemsSource="{Binding Rules}">
+              <ItemsControl x:Name="RuleList" ItemsSource="{Binding Rules}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="vm:RuleRow">
-                    <Grid ColumnDefinitions="Auto,*,*" Margin="{StaticResource Look.Margin.Row}">
-                      <TextBlock Classes="priority" Text="{Binding Priority}" />
-                      <TextBlock Grid.Column="1" Text="{Binding Condition}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" />
-                      <TextBlock Grid.Column="2" Classes="muted" Text="{Binding Target}" TextTrimming="CharacterEllipsis" />
-                    </Grid>
+                    <Border Classes="ruleRow" Classes.editing="{Binding IsEditing}">
+                      <Grid ColumnDefinitions="Auto,*,*,Auto">
+                        <TextBlock Classes="priority" Text="{Binding Priority}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding Condition}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Classes="muted" Text="{Binding Target}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Small}">
+                          <Button Classes="small secondary" Content="{x:Static vm:Texts.Edit}"
+                                  Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).EditRuleCommand}" CommandParameter="{Binding}" />
+                        </StackPanel>
+                      </Grid>
+                    </Border>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>

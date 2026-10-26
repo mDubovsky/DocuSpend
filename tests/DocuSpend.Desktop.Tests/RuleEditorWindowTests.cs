@@ -87,6 +87,52 @@ public sealed class RuleEditorWindowTests : IDisposable
         window.Close();
     });
 
+    private static void AddRule(MainViewModel model, string text)
+    {
+        model.RuleForm.Text = text;
+        model.RuleForm.SelectedCategory = model.RuleForm.Categories[0];
+        model.RuleForm.SelectedSubcategory = model.RuleForm.Subcategories[0];
+        model.AddRuleCommand.Execute(null);
+        Dispatcher.UIThread.RunJobs();
+    }
+
+    private static Button RowButton(Window window, int row, string label) =>
+        Named(window, "RuleList").GetLogicalDescendants().OfType<Border>().Where(b => b.Classes.Contains("ruleRow")).ElementAt(row)
+            .GetLogicalDescendants().OfType<Button>().Single(b => b.Content as string == label && b.IsEffectivelyVisible);
+
+    private static void Press(Button button)
+    {
+        button.Command!.Execute(button.CommandParameter);
+        Dispatcher.UIThread.RunJobs();
+    }
+
+    [Fact]
+    public void Upravit_turns_the_form_into_the_editor_of_that_rule_and_marks_its_row() => Headless.Run(() =>
+    {
+        var (window, model) = StartWithStatement();
+        AddRule(model, "Pekáreň");
+        AddRule(model, "Kino");
+        Assert.False(Named(window, "PriorityRow").IsEffectivelyVisible);
+
+        Press(RowButton(window, 1, "Upraviť"));
+
+        Assert.Equal("Upraviť pravidlo", ((TextBlock)Named(window, "FormHeading")).Text);
+        Assert.True(Named(window, "PriorityRow").IsEffectivelyVisible);
+        Assert.Equal("1", ((TextBox)Named(window, "PriorityField")).Text);
+        Assert.Equal(Texts.PriorityHelp, ToolTip.GetTip(Named(window, "PriorityHelp")));
+        Assert.True(Named(window, "EditButtons").IsEffectivelyVisible);
+        Assert.False(Named(window, "AddRuleButton").IsEffectivelyVisible);
+        var rows = Named(window, "RuleList").GetLogicalDescendants().OfType<Border>().Where(b => b.Classes.Contains("ruleRow")).ToList();
+        Assert.Equal([false, true], rows.Select(r => r.Classes.Contains("editing")));
+        Assert.Equal("Pekáreň", model.RuleForm.Text);
+
+        var cancel = Named(window, "EditButtons").GetLogicalDescendants().OfType<Button>().Single(b => b.Content as string == "Zrušiť");
+        Press(cancel);
+        Assert.Equal("Nové pravidlo", ((TextBlock)Named(window, "FormHeading")).Text);
+        Assert.True(Named(window, "AddRuleButton").IsEffectivelyVisible);
+        window.Close();
+    });
+
     [Fact]
     public void Each_rule_in_the_list_shows_its_number() => Headless.Run(() =>
     {

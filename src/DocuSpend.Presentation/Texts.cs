@@ -79,6 +79,14 @@ public static class Texts
 
     // The rule form
     public const string NewRule = "Nové pravidlo";
+    public const string EditRule = "Upraviť pravidlo";
+    public const string SaveRule = "Uložiť zmeny";
+    public const string CancelEdit = "Zrušiť";
+    public const string Priority = "Priorita";
+    public const string Edit = "Upraviť";
+    public const string Delete = "Odstrániť";
+    public const string ChangeOnlyThisSession = "Zmena platí len do zatvorenia DocuSpend.";
+    public const string ChangeSaveFailed = "Zmenu sa nepodarilo uložiť, preto po zatvorení DocuSpend neostane. Pri ďalšej zmene sa DocuSpend pokúsi uložiť znova.";
     public const string Condition = "Podmienka";
     public const string KindText = "Text v popise";
     public const string KindAmount = "Suma";

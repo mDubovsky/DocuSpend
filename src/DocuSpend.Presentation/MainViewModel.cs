@@ -9,7 +9,7 @@ using DocuSpend.Statements.Reading;
 namespace DocuSpend.Presentation;
 
 /// <summary>A rule in a list: its number, what it matches and where it puts it.</summary>
-public sealed record RuleRow(RuleId Id, string Priority, string Condition, string Target);
+public sealed record RuleRow(RuleId Id, string Priority, string Condition, string Target, bool IsEditing = false);
 
 /// <summary>
 /// The window: the start screen or the statement the user opened, the message about a file that wasn't opened, the
@@ -183,6 +183,12 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void AddRule()
     {
+        // Enter in the form presses its default button; while a rule is open, that means saving it.
+        if (RuleForm.IsEditing)
+        {
+            SaveRule();
+            return;
+        }
         if (RuleForm.TryBuild() is not { } draft)
             return;
         var outcome = Statement.Config.AddUserRuleOnTop(draft.Condition, draft.Target);
@@ -193,11 +199,58 @@ public sealed partial class MainViewModel : ObservableObject
         }
         var saved = ApplyUserChange(outcome.Value!);
 
-        var added = Statement.Config.UserRules[^1].Id;
-        var matched = Statement.Categorized?.Transactions.Count(t => t.Rule?.Id == added) ?? 0;
         RuleForm.Clear();
+        Confirm(Statement.Config.UserRules[^1].Id, saved, Texts.RuleOnlyThisSession, Texts.RuleSaveFailed);
+    }
+
+    /// <summary>Opens a user rule in the form (spec: editing a rule). Whatever was typed in the form is replaced.</summary>
+    [RelayCommand]
+    private void EditRule(RuleRow row)
+    {
+        if (Statement.Config.UserRules.FirstOrDefault(r => r.Id == row.Id) is not { } rule)
+            return;
+        RuleForm.Edit(rule);
+        Rules = UserRows();
+    }
+
+    /// <summary>
+    /// Changes the open rule as the form describes it, saves it, and categorizes the statement again. It keeps its
+    /// identifier and creation order. Invalid input changes nothing and leaves the form open.
+    /// </summary>
+    [RelayCommand]
+    private void SaveRule()
+    {
+        if (RuleForm.EditingRule is not { } id || RuleForm.TryBuild() is not { } draft || RuleForm.TryPriority() is not { } priority)
+            return;
+        var outcome = Statement.Config.ChangeUserRule(id, draft.Condition, draft.Target, priority);
+        if (!outcome.IsSuccess)
+        {
+            RuleForm.Error = Texts.Refusal(outcome.Refusal!.Kind);
+            return;
+        }
+        RuleForm.Reset();
+        var saved = ApplyUserChange(outcome.Value!);
+        Confirm(id, saved, Texts.ChangeOnlyThisSession, Texts.ChangeSaveFailed);
+    }
+
+    /// <summary>Closes the open rule without changing it; the form is an empty "Nové pravidlo" again.</summary>
+    [RelayCommand]
+    private void CancelEdit()
+    {
+        RuleForm.Reset();
+        RuleForm.Message = null;
+        Rules = UserRows();
+    }
+
+    /// <summary>
+    /// The form's confirmation after a rule was added or changed: how many transactions it now catches, and whether
+    /// it will be kept.
+    /// </summary>
+    private void Confirm(RuleId rule, bool saved, string onlyThisSession, string saveFailed)
+    {
+        var matched = Statement.Categorized?.Transactions.Count(t => t.Rule?.Id == rule) ?? 0;
         RuleForm.Message = matched > 0 ? Texts.RuleMatched(matched) : saved ? Texts.RuleMatchedNothing : Texts.RuleMatchedNothingUnsaved;
-        RuleForm.Error = saved ? null : RulesNotSaving ? Texts.RuleOnlyThisSession : Texts.RuleSaveFailed;
+        RuleForm.Error = saved ? null : RulesNotSaving ? onlyThisSession : saveFailed;
     }
 
     /// <summary>
@@ -218,7 +271,8 @@ public sealed partial class MainViewModel : ObservableObject
     private RuleRow Row(Rule rule, string priority)
     {
         var (category, subcategory) = Statement.Config.Catalog.FindSubcategory(rule.Target)!.Value;
-        return new RuleRow(rule.Id, priority, Describe(rule.Condition), $"{category.Name} › {subcategory.Name}");
+        return new RuleRow(rule.Id, priority, Describe(rule.Condition), $"{category.Name} › {subcategory.Name}",
+            IsEditing: rule.Id == RuleForm.EditingRule);
     }
 
     /// <summary>A condition in Slovak, as the rules list shows it.</summary>
