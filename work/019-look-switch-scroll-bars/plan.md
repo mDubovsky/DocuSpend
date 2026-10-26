@@ -86,6 +86,11 @@ No new files in `src/`. Changed:
 - **The narrower lists change other screens.** Expected and small (12 units). Step 4 compares every screen, not only the new ones.
 - **The hover and handle tones look wrong on screen** despite passing the numbers. That is what the step 4 review is for; the tests pin minimums, not exact values.
 - **Display scaling.** The bar's sizes are in the same device-independent units as the rest of the look; checked by hand in step 5 if the maintainer's screen scales.
+- **Found in the build: the test window scrolls.** With a statement open, the headless window had scrolled the header out of view (the look switch sat at y = -150), so the pointer never reached it. The window tests bring a control into view before pointing at it, as a user would scroll to it. The application itself was not affected.
+- **Found in the build: `TextBox` binds `AllowAutoHide` too.** Like `ListBox`, its template binds its scroll viewer's setting, which outranks a style, so the look sets it on `TextBox` as well.
+- **Found in the build: the test platform's font is small.** The first category of `02-busy-month` and the category choice box's list fit without scrolling there. The tests use the category with the most transactions and a shorter choice box list, and check first that the list overflows. The theme was found everywhere, including the pop-up, and the headless platform dragged and paged the bar, so neither fallback was needed.
+- **Found in the screenshot review: the light hover looked chosen.** The first light `SwitchHover`, `#DCDFEA`, was too close to the chosen pill's blue tint. The maintainer asked for a neutral grey, `#DCDDE1`.
+- **Found in the hand check:** nothing. The maintainer checked the switch's shape, both switches' hover and the scroll bars, including a choice box's list, on a real statement in both looks.
 
 ## Verification
 
