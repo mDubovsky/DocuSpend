@@ -67,20 +67,61 @@ public class StatementViewModelTests
 
     [Theory]
     [MemberData(nameof(Valid))]
-    public void The_balance_line_runs_from_the_opening_to_the_closing_balance_by_booking_date(string sample)
+    public void Every_day_of_the_period_has_the_balance_at_the_end_of_that_day(string sample)
     {
         var statement = Samples.Read(sample);
         var points = Show(sample).BalancePoints;
 
-        Assert.Equal(new BalancePoint(statement.PeriodStart, statement.OpeningBalance), points[0]);
-        Assert.Equal(new BalancePoint(statement.PeriodEnd, statement.ClosingBalance), points[^1]);
-        var running = statement.OpeningBalance;
-        foreach (var day in statement.Transactions.GroupBy(t => t.BookingDate).OrderBy(g => g.Key))
+        var days = statement.PeriodEnd.DayNumber - statement.PeriodStart.DayNumber + 1;
+        Assert.Equal(days, points.Count);
+        for (var i = 0; i < days; i++)
         {
-            running += day.Sum(t => t.Amount);
-            Assert.Contains(new BalancePoint(day.Key, running), points);
+            var date = statement.PeriodStart.AddDays(i);
+            var expected = statement.OpeningBalance + statement.Transactions.Where(t => t.BookingDate <= date).Sum(t => t.Amount);
+            Assert.Equal(date, points[i].Date);
+            Assert.Equal(expected, points[i].Balance);
+            Assert.Equal(SlovakFormat.Date(date), points[i].DateText);
+            Assert.Equal(SlovakFormat.Amount(expected), points[i].BalanceText);
         }
-        Assert.Equal(points.OrderBy(p => p.Date).ToList(), points);
+        Assert.Equal(statement.ClosingBalance, points[^1].Balance);
+    }
+
+    [Fact]
+    public void A_booking_on_the_first_day_shows_on_the_first_day()
+    {
+        var statement = Samples.Read("02-busy-month");
+        var points = Show("02-busy-month").BalancePoints;
+
+        var onFirstDay = statement.Transactions.Where(t => t.BookingDate == statement.PeriodStart).Sum(t => t.Amount);
+        Assert.NotEqual(0m, onFirstDay);
+        Assert.Equal(statement.OpeningBalance + onFirstDay, points[0].Balance);
+    }
+
+    [Fact]
+    public void A_day_without_bookings_carries_the_balance_over_and_a_day_with_several_shows_the_balance_after_all_of_them()
+    {
+        var statement = Samples.Read("02-busy-month");
+        var points = Show("02-busy-month").BalancePoints;
+
+        var several = statement.Transactions.GroupBy(t => t.BookingDate).First(g => g.Count() > 1).Key;
+        var after = points.Single(p => p.Date == several).Balance;
+        Assert.Equal(statement.OpeningBalance + statement.Transactions.Where(t => t.BookingDate <= several).Sum(t => t.Amount), after);
+
+        var quietStatement = Samples.Read("01-typical-month");
+        var quietPoints = Show("01-typical-month").BalancePoints;
+        var quiet = quietPoints.Select((p, i) => (p, i)).First(x => x.i > 0 && quietStatement.Transactions.All(t => t.BookingDate != x.p.Date));
+        Assert.Equal(quietPoints[quiet.i - 1].Balance, quiet.p.Balance);
+    }
+
+    [Fact]
+    public void In_a_month_with_one_transaction_the_balance_changes_on_its_day_only()
+    {
+        var statement = Samples.Read("05-single-transaction-month");
+        var points = Show("05-single-transaction-month").BalancePoints;
+
+        var day = statement.Transactions.Single().BookingDate;
+        Assert.All(points.Where(p => p.Date < day), p => Assert.Equal(statement.OpeningBalance, p.Balance));
+        Assert.All(points.Where(p => p.Date >= day), p => Assert.Equal(statement.ClosingBalance, p.Balance));
     }
 
     [Theory]
