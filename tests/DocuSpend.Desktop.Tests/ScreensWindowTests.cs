@@ -88,6 +88,7 @@ public sealed class ScreensWindowTests : IDisposable
         Assert.True(Shows(window, Texts.Transactions));
         Assert.True(Shows(window, Texts.SpendingTotal));
         Assert.False(Shows(window, Texts.NewRule));
+        Assert.False(window.CategoriesCard.IsEffectivelyVisible);
         Assert.False(window.RuleViewSwitch.IsEffectivelyVisible);
         Assert.False(Shows(window, Texts.Rules));
         Assert.False(Shows(window, Texts.BuiltInRules));
@@ -100,7 +101,7 @@ public sealed class ScreensWindowTests : IDisposable
         Assert.True(window.RuleViewSwitch.IsEffectivelyVisible);
         Assert.False(Shows(window, Texts.SpendingChart));
         Assert.False(Shows(window, Texts.BalanceChart));
-        Assert.False(Shows(window, Texts.Categories));
+        Assert.True(window.CategoriesCard.IsEffectivelyVisible); // the rules screen's own card, not the month's list
         Assert.False(Shows(window, Texts.Transactions));
         Assert.False(Shows(window, Texts.SpendingTotal));
         window.Close();

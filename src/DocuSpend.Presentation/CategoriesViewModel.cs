@@ -92,6 +92,10 @@ public sealed partial class CategoriesViewModel : ObservableObject
     [ObservableProperty]
     public partial string? Error { get; set; }
 
+    /// <summary>Counts every opening of the line for a new sub-category, so the window can put the cursor in it.</summary>
+    [ObservableProperty]
+    public partial int LineOpenings { get; private set; }
+
     /// <summary>The category added last, so the window can bring its row into view.</summary>
     [ObservableProperty]
     public partial CategoryId? LastAdded { get; private set; }
@@ -117,6 +121,7 @@ public sealed partial class CategoriesViewModel : ObservableObject
         SubcategoryError = null;
         row.IsLineOpen = true;
         OpenRow = row;
+        LineOpenings++;
     }
 
     /// <summary>"Zrušiť": closes the line and adds nothing.</summary>

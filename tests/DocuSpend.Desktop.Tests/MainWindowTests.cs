@@ -67,7 +67,7 @@ public sealed class MainWindowTests : IDisposable
         var form = model.RuleForm;
         var boxes = All<ComboBox>(window).ToList();
 
-        All<TextBox>(window).Single(t => t.IsEffectivelyVisible).Text = "NETFLIX";
+        All<TextBox>(window).Single(t => t.IsEffectivelyVisible && t.Name != "CategoryNameField").Text = "NETFLIX";
         boxes.Single(b => ReferenceEquals(b.ItemsSource, form.Categories)).SelectedItem =
             form.Categories.Single(c => c.Name == "Zábava a oddych");
         Dispatcher.UIThread.RunJobs();

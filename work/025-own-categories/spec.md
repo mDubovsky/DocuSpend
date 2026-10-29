@@ -158,7 +158,7 @@ Look, privacy and hand checks:
 - Choosing a category's colour.
 - Creating a category from the rule form or from a transaction ([#22](https://github.com/mDubovsky/DocuSpend/issues/22)).
 - Reordering categories or sub-categories.
-- Adding with the keyboard alone (Enter to add, Esc to cancel), as [#21](../021-rules-screen/spec.md) left keyboard use for a later accessibility item.
+- Reaching the card's buttons with the keyboard alone, and Esc to cancel a sub-category line, as [#21](../021-rules-screen/spec.md) left keyboard use for a later accessibility item. Enter in a name field does add what is typed (see Decisions).
 - Exporting, importing or sharing categories ([mvp.md](../../docs/mvp.md), future directions).
 
 ## Decisions
@@ -173,6 +173,8 @@ Look, privacy and hand checks:
 - **Names are limited to 40 characters.** The longest built-in name has 32; longer names would crowd the legend, the lists and the rule card.
 - **A sub-category's confirmation shows at the top of the card, its refusal under its own field**: a refusal belongs where the user is typing, while a confirmation in one place is easy to find after the line closes.
 - **Everything happens in the card, with no pop-up box**, since adding a name is too small for one.
+- **Enter in a name field adds what is typed**, found in the build: the rule form's default button would otherwise take the key and add a rule while the user was typing a category name. Enter in the category's name field adds the category; in a sub-category's field it adds the sub-category.
+- **The rules screen's card is called "Kategórie" too**, as the statement screen's list of the month's categories is. The two are on different screens, so they don't meet; the statement screen's list still shows only what the month holds.
 
 ## Open questions
 
