@@ -38,4 +38,11 @@ public class TextsTests
         Assert.False(string.IsNullOrWhiteSpace(message));
         Assert.EndsWith(".", message);
     }
+
+    [Fact]
+    public void The_two_screens_are_named_as_the_spec_says()
+    {
+        Assert.Equal("Výpis", Texts.StatementScreen);
+        Assert.Equal("Pravidlá", Texts.RulesScreen);
+    }
 }

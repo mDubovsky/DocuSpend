@@ -23,7 +23,7 @@ public sealed class RuleEditorWindowTests : IDisposable
         var window = new MainWindow(model);
         window.Show();
         Headless.Wait(model.OpenExampleCommand.ExecuteAsync(null));
-        Dispatcher.UIThread.RunJobs();
+        Headless.ShowRules(model);
         return (window, model);
     }
 

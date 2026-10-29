@@ -102,6 +102,7 @@ public sealed class LookSwitchWindowTests : IDisposable
         var (window, model) = Start(look);
         Headless.Wait(model.OpenFileAsync(MainWindowTests.Sample("01-typical-month")));
         Dispatcher.UIThread.RunJobs();
+        Headless.ShowRules(model);
 
         AssertCentred(Chosen(window.RuleViewSwitch));
         Finish(window);
@@ -146,6 +147,7 @@ public sealed class LookSwitchWindowTests : IDisposable
             foreach (var look in new[] { LookChoice.Light, LookChoice.Dark })
             {
                 data.Add(look, nameof(MainWindow.LookSwitch), 0);       // "Podľa systému"
+                data.Add(look, nameof(MainWindow.ScreenSwitch), 1);     // "Pravidlá"
                 data.Add(look, nameof(MainWindow.RuleViewSwitch), 1);   // "Vstavané pravidlá"
             }
             return data;
@@ -162,6 +164,8 @@ public sealed class LookSwitchWindowTests : IDisposable
             var (window, model) = Start(look);
             Headless.Wait(model.OpenFileAsync(MainWindowTests.Sample("01-typical-month")));
             Dispatcher.UIThread.RunJobs();
+            if (name == nameof(MainWindow.RuleViewSwitch))
+                Headless.ShowRules(model);
             var choice = Choices(SwitchNamed(window, name))[index];
             Assert.False(choice.IsSelected);
             Assert.Null(PillColour(choice));
@@ -181,8 +185,9 @@ public sealed class LookSwitchWindowTests : IDisposable
         var (window, model) = Start(look);
         Headless.Wait(model.OpenFileAsync(MainWindowTests.Sample("01-typical-month")));
         Dispatcher.UIThread.RunJobs();
+        Headless.ShowRules(model);
 
-        foreach (var @switch in new[] { window.LookSwitch, window.RuleViewSwitch })
+        foreach (var @switch in new[] { window.LookSwitch, window.ScreenSwitch, window.RuleViewSwitch })
         {
             var chosen = Choices(@switch).Single(i => i.IsSelected);
             PointAt(window, chosen);
@@ -197,6 +202,7 @@ public sealed class LookSwitchWindowTests : IDisposable
         var (window, model) = Start(LookChoice.Light);
         Headless.Wait(model.OpenFileAsync(MainWindowTests.Sample("01-typical-month")));
         Dispatcher.UIThread.RunJobs();
+        Headless.ShowRules(model);
         var builtIn = Choices(window.RuleViewSwitch)[1];
 
         var centre = CentreInView(window, builtIn);

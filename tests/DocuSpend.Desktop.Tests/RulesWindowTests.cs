@@ -74,6 +74,7 @@ public sealed class RulesWindowTests : IDisposable
         File.WriteAllText(RulesFile, """{ "version": 2 }""");
         var (window, model) = Start();
         Headless.Wait(model.OpenExampleCommand.ExecuteAsync(null));
+        Headless.ShowRules(model);
 
         var line = Named(window, "RulesNotSaving");
         Assert.True(line.IsEffectivelyVisible);
@@ -86,6 +87,7 @@ public sealed class RulesWindowTests : IDisposable
     {
         var (window, model) = Start();
         Headless.Wait(model.OpenExampleCommand.ExecuteAsync(null));
+        Headless.ShowRules(model);
 
         Assert.False(Named(window, "RulesMessage").IsEffectivelyVisible);
         Assert.False(Named(window, "RulesNotSaving").IsEffectivelyVisible);
@@ -97,6 +99,7 @@ public sealed class RulesWindowTests : IDisposable
     {
         var (first, model) = Start();
         Headless.Wait(model.OpenExampleCommand.ExecuteAsync(null));
+        Headless.ShowRules(model);
         model.RuleForm.SelectedKind = ConditionKind.Text;
         model.RuleForm.Text = "Pekáreň";
         model.RuleForm.SelectedCategory = model.RuleForm.Categories.Single(c => c.Id == new CategoryId("food"));
@@ -107,7 +110,7 @@ public sealed class RulesWindowTests : IDisposable
 
         var (second, restarted) = Start();
         Headless.Wait(restarted.OpenExampleCommand.ExecuteAsync(null));
-        Dispatcher.UIThread.RunJobs();
+        Headless.ShowRules(restarted);
 
         Assert.True(Lists(second, "Text obsahuje „Pekáreň“"));
         Assert.Equal(placements, restarted.Statement.Categorized!.Transactions.Select(t => t.Placement));

@@ -106,6 +106,8 @@ public static class Texts
     public const string TargetCategory = "Kategória";
     public const string TargetSubcategory = "Podkategória";
     public const string AddRule = "Pridať pravidlo";
+    public const string StatementScreen = "Výpis";
+    public const string RulesScreen = "Pravidlá";
     public const string Rules = "Moje pravidlá";
     public const string BuiltInRules = "Vstavané pravidlá";
 

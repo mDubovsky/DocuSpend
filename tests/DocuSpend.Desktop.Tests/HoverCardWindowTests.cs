@@ -26,7 +26,7 @@ public sealed class HoverCardWindowTests : IDisposable
             Directory.Delete(_folder, recursive: true);
     }
 
-    private (MainWindow Window, MainViewModel Model) Open(string sample = "02-busy-month", double width = 1280, double height = 880)
+    private (MainWindow Window, MainViewModel Model) Open(string sample = "02-busy-month", double width = 1280, double height = 940)
     {
         var model = new MainViewModel(new RuleStore(Path.Combine(_folder, "rules.json")));
         Headless.Wait(model.OpenFileAsync(MainWindowTests.Sample(sample)));
@@ -81,8 +81,8 @@ public sealed class HoverCardWindowTests : IDisposable
     [Theory]
     [InlineData(0, 0)]
     [InlineData(1280, 0)]
-    [InlineData(0, 880)]
-    [InlineData(1280, 880)]
+    [InlineData(0, 940)]
+    [InlineData(1280, 940)]
     [InlineData(640, 440)]
     public void A_card_stays_whole_inside_the_window_wherever_the_pointer_is(double x, double y) => Headless.Run(() =>
     {
