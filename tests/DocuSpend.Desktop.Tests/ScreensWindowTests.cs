@@ -177,7 +177,7 @@ public sealed class ScreensWindowTests : IDisposable
         var (window, model) = StartWithStatement();
         Choose(window, model, AppScreen.Rules);
         var before = model.Statement.Categorized;
-        var transfer = new DataTransfer();
+        using var transfer = new DataTransfer();
         var file = window.StorageProvider.TryGetFileFromPathAsync(MainWindowTests.Sample("01-typical-month"));
         Headless.Wait(file);
         transfer.Add(DataTransferItem.CreateFile(file.Result!));
