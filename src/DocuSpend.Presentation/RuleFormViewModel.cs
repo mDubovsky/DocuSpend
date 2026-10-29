@@ -38,7 +38,7 @@ public sealed partial class RuleFormViewModel : ObservableObject
     public RuleFormViewModel(CategoryCatalog catalog)
     {
         // A rule's target is always a sub-category; the two Uncategorized buckets have none.
-        Categories = catalog.Categories.Where(c => !c.IsUncategorized).ToList();
+        Categories = CatalogOrder.Categories(catalog).Where(c => !c.IsUncategorized).ToList();
         SelectedKind = ConditionKind.Text;
         SelectedTextMode = TextModes[0];
     }
@@ -197,7 +197,7 @@ public sealed partial class RuleFormViewModel : ObservableObject
 
     partial void OnSelectedCategoryChanged(Category? value)
     {
-        Subcategories = value?.Subcategories ?? [];
+        Subcategories = value is null ? [] : CatalogOrder.Subcategories(value);
         SelectedSubcategory = null;
     }
 

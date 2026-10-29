@@ -45,6 +45,7 @@ public sealed partial class MainViewModel : ObservableObject
         var load = store.Load(CategorizationConfig.Default);
         Statement = new StatementViewModel(load.Config);
         RuleForm = new RuleFormViewModel(Statement.Config.Catalog);
+        Categories = new CategoriesViewModel(Statement.Config.Catalog);
         RulesMessage = Texts.RulesProblemMessage(load.Problem, load.MovedTo);
         RulesNotSaving = !store.IsSaving;
         Rules = UserRows();
@@ -82,6 +83,9 @@ public sealed partial class MainViewModel : ObservableObject
     public StatementViewModel Statement { get; }
 
     public RuleFormViewModel RuleForm { get; }
+
+    /// <summary>The "Kategórie" card on the rules screen.</summary>
+    public CategoriesViewModel Categories { get; }
 
     public IReadOnlyList<AppScreenOption> Screens { get; } =
     [

@@ -111,6 +111,44 @@ public static class Texts
     public const string Rules = "Moje pravidlá";
     public const string BuiltInRules = "Vstavané pravidlá";
 
+
+    // Categories of the user's own (work/025-own-categories/spec.md)
+    public const string CategoryName = "Názov";
+    public const string CountsAs = "Počíta sa ako";
+    public const string AddCategory = "Pridať kategóriu";
+    public const string AddSubcategory = "Pridať podkategóriu";
+    public const string Add = "Pridať";
+    public const string Own = "vlastná";
+    public const string RoleHelp = "Výdavky: platby sa započítajú do výdavkov a do grafu výdavkov. Príjmy: prichádzajúce platby, nikdy sa nepočítajú ako výdavky. Mimo výdavkov: napríklad prevody medzi vlastnými účtami alebo investície; do výdavkov sa nezapočítajú.";
+    public const string CategoryOnlyThisSession = "Kategória platí len do zatvorenia DocuSpend.";
+    public const string SubcategoryOnlyThisSession = "Podkategória platí len do zatvorenia DocuSpend.";
+    public const string CategorySaveFailed = "Kategóriu sa nepodarilo uložiť, preto po zatvorení DocuSpend zmizne. Pri ďalšej zmene sa DocuSpend pokúsi uložiť znova.";
+    public const string SubcategorySaveFailed = "Podkategóriu sa nepodarilo uložiť, preto po zatvorení DocuSpend zmizne. Pri ďalšej zmene sa DocuSpend pokúsi uložiť znova.";
+
+    /// <summary>The longest name a user can give a category or sub-category; the longest built-in name has 32.</summary>
+    public const int MaxNameLength = 40;
+
+    public static string CategoryAdded(string name) => $"Kategória „{name}“ je pridaná.";
+
+    public static string SubcategoryAdded(string name, string category) => $"Podkategória „{name}“ je pridaná do kategórie „{category}“.";
+
+    /// <summary>A role as the choice for a new category names it.</summary>
+    public static string RoleName(CategoryRole role) => role switch
+    {
+        CategoryRole.Spending => "Výdavky",
+        CategoryRole.Income => "Príjmy",
+        CategoryRole.Excluded => "Mimo výdavkov",
+        _ => throw new ArgumentOutOfRangeException(nameof(role), role, null),
+    };
+
+    /// <summary>A role as the small tag on a category's row says it.</summary>
+    public static string RoleTag(CategoryRole role) => role switch
+    {
+        CategoryRole.Spending => "výdavky",
+        CategoryRole.Income => "príjmy",
+        CategoryRole.Excluded => "mimo výdavkov",
+        _ => throw new ArgumentOutOfRangeException(nameof(role), role, null),
+    };
     public const string NoRules = "Zatiaľ žiadne pravidlá.";
 
     /// <summary>The help mark by "Moje pravidlá" and by "Priorita" (spec of #24).</summary>
