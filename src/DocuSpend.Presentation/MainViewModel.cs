@@ -235,6 +235,67 @@ public sealed partial class MainViewModel : ObservableObject
     private void CloseRulesMessage() => RulesMessage = null;
 
     /// <summary>
+    /// "Pridať kategóriu": adds the typed category with the chosen role, saves it and shows it. A refused name changes
+    /// nothing and stays typed, with the reason under it. A category that can't be saved still works until DocuSpend
+    /// closes, and the card says so.
+    /// </summary>
+    [RelayCommand]
+    private void AddCategory()
+    {
+        var card = Categories;
+        card.Message = card.Error = card.NameError = null;
+        var outcome = Statement.Config.AddCategory(card.NewName, card.SelectedRole.Role);
+        if (!outcome.IsSuccess)
+        {
+            card.NameError = Texts.Refusal(outcome.Refusal!.Kind);
+            return;
+        }
+        var name = card.NewName.Trim();
+        var saved = ApplyUserChange(outcome.Value!);
+        ShowCategories();
+        card.Added(outcome.Value!.Catalog.Categories[^1].Id);
+        Report(saved, Texts.CategoryAdded(name), Texts.CategoryOnlyThisSession, Texts.CategorySaveFailed);
+    }
+
+    /// <summary>
+    /// "Pridať" in the line under a category: adds the typed sub-category to it, saves it and shows it. A refused name
+    /// changes nothing, and the line stays open with the reason under the field.
+    /// </summary>
+    [RelayCommand]
+    private void AddSubcategory()
+    {
+        var card = Categories;
+        if (card.OpenRow is not { } row)
+            return;
+        card.Message = card.Error = card.SubcategoryError = null;
+        var outcome = Statement.Config.AddSubcategory(row.Id, card.SubcategoryName);
+        if (!outcome.IsSuccess)
+        {
+            card.SubcategoryError = Texts.Refusal(outcome.Refusal!.Kind);
+            return;
+        }
+        var name = card.SubcategoryName.Trim();
+        var saved = ApplyUserChange(outcome.Value!);
+        card.CloseLine();
+        ShowCategories();
+        Report(saved, Texts.SubcategoryAdded(name, row.Name), Texts.SubcategoryOnlyThisSession, Texts.SubcategorySaveFailed);
+    }
+
+    /// <summary>The card and the rule form show the catalog as it is now.</summary>
+    private void ShowCategories()
+    {
+        Categories.Refresh(Statement.Config.Catalog);
+        RuleForm.UseCatalog(Statement.Config.Catalog);
+    }
+
+    /// <summary>The card's answer to an addition: the confirmation, or why it won't last.</summary>
+    private void Report(bool saved, string confirmation, string onlyThisSession, string saveFailed)
+    {
+        Categories.Message = saved ? confirmation : null;
+        Categories.Error = saved ? null : RulesNotSaving ? onlyThisSession : saveFailed;
+    }
+
+    /// <summary>
     /// Adds the form's rule on top of every earlier one, saves it, and categorizes the statement again. A rule that
     /// can't be saved still applies until DocuSpend closes, and the form says so. Invalid input changes nothing.
     /// </summary>
