@@ -91,6 +91,9 @@ public sealed class CategoriesWindowTests : IDisposable
         Assert.Equal(29, window.CategoryList.ItemCount);
         Assert.Equal("Kategória „Šport“ je pridaná.", model.Categories.Message);
         Assert.True(window.CategoriesMessage.IsEffectivelyVisible);
+        // The message takes its own room: the list starts below it, not under it.
+        var messageBottom = window.CategoriesMessage.TranslatePoint(new Point(0, window.CategoriesMessage.Bounds.Height), window)!.Value.Y;
+        Assert.True(window.CategoriesScroll.TranslatePoint(default, window)!.Value.Y >= messageBottom - 0.5);
         Assert.Equal("", window.CategoryNameField.Text);
         var row = window.CategoryList.ContainerFromIndex(model.Categories.Rows.ToList().FindIndex(r => r.Name == "Šport"))!;
         var top = row.TranslatePoint(default, window.CategoriesScroll)!.Value.Y;

@@ -119,6 +119,33 @@ internal static class Screens
             main.RuleForm.Message = null;
         }),
         new("19-screen-switch-hover", main => Open(main, "01-typical-month"), InWindow: window => PointAt(window, Choice(window.ScreenSwitch, 1))),
+        // Categories of the user's own (#25).
+        new("20-categories", main =>
+        {
+            AddOwnCategories(main);
+            main.Categories.Message = Texts.SubcategoryAdded("Obedy v práci", "Stravovanie");
+            ShowRules(main);
+        }),
+        new("21-subcategory-line", main =>
+        {
+            AddOwnCategories(main);
+            main.Categories.OpenLineCommand.Execute(main.Categories.Rows.Single(r => r.Name == "Stravovanie"));
+            main.Categories.SubcategoryName = "Potraviny";
+            main.AddSubcategoryCommand.Execute(null);
+            main.Categories.Message = null;
+            ShowRules(main);
+        }),
+        new("22-categories-not-saving", main =>
+        {
+            Open(main, "01-typical-month");
+            main.Categories.NewName = "Šport";
+            main.AddCategoryCommand.Execute(null);
+            ShowRules(main);
+        }, rules =>
+        {
+            File.WriteAllText(rules, """{ "version": 2 }""");
+            return null;
+        }),
         new("17-scroll-bar", main =>
         {
             Open(main, "02-busy-month");
@@ -190,6 +217,30 @@ internal static class Screens
         main.SaveRuleCommand.Execute(null);
         form.Message = null;
         ShowRules(main);
+    }
+
+    /// <summary>Some categories and sub-categories of the user's own, and a rule that fills one of them.</summary>
+    private static void AddOwnCategories(MainViewModel main)
+    {
+        Open(main, "01-typical-month");
+        main.Categories.NewName = "Šport";
+        main.AddCategoryCommand.Execute(null);
+        main.Categories.NewName = "Dane";
+        main.Categories.SelectedRole = main.Categories.Roles[2];
+        main.AddCategoryCommand.Execute(null);
+        main.Categories.SelectedRole = main.Categories.Roles[0];
+        foreach (var (category, name) in new[] { ("Šport", "Vybavenie"), ("Šport", "Vstupné"), ("Stravovanie", "Obedy v práci") })
+        {
+            main.Categories.OpenLineCommand.Execute(main.Categories.Rows.Single(r => r.Name == category));
+            main.Categories.SubcategoryName = name;
+            main.AddSubcategoryCommand.Execute(null);
+        }
+        main.RuleForm.SelectedKind = ConditionKind.Text;
+        main.RuleForm.Text = "minimarket";
+        main.RuleForm.SelectedCategory = main.RuleForm.Categories.Single(c => c.Name == "Šport");
+        main.RuleForm.SelectedSubcategory = main.RuleForm.Subcategories.Single(s => s.Name == "Vybavenie");
+        main.AddRuleCommand.Execute(null);
+        main.RuleForm.Message = null;
     }
 
     private static void AddRuleOnTheExample(MainViewModel main)

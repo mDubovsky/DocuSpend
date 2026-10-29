@@ -295,7 +295,7 @@
         <!-- "Kategórie": the categories with their sub-categories, and the ways to add to them -->
         <Border x:Name="CategoriesCard" Classes="card" Grid.Row="1">
           <Grid RowDefinitions="Auto,*">
-            <StackPanel Grid.Row="0" Spacing="{StaticResource Look.Space.Medium}">
+            <StackPanel Grid.Row="0" Spacing="{StaticResource Look.Space.Medium}" Margin="{StaticResource Look.Margin.Heading}">
               <TextBlock Classes="heading" Text="{x:Static vm:Texts.Categories}" />
               <Border Classes="message error" x:Name="CategoriesNotSaving" IsVisible="{Binding RulesNotSaving}">
                 <TextBlock Text="{x:Static vm:Texts.RulesNotSaving}" TextWrapping="Wrap" />
