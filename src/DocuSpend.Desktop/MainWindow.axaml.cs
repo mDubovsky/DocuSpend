@@ -100,41 +100,30 @@ public partial class MainWindow : Window
     internal Palette Palette => LookResources.For(ActualThemeVariant);
 
     /// <summary>
-    /// Enter in a name field of the "Kategórie" card adds what is typed. Without this, the rule form's default button
+    /// Enter in a name field of the "Kategórie" screen adds what is typed. Without this, the rule form's default button
     /// would take the key and add a rule.
     /// </summary>
     private void OnCategoryKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key != Key.Enter || e.Source is not TextBox field)
             return;
-        if (field.Name == nameof(CategoryNameField))
+        if (field == CategoryNameField)
             _model.AddCategoryCommand.Execute(null);
-        else if (field.Name == "SubcategoryNameField")
+        else if (field == SubcategoryNameField)
             _model.AddSubcategoryCommand.Execute(null);
         else
             return;
         e.Handled = true;
     }
 
-    /// <summary>A line for a new sub-category took the cursor; a new category scrolls into view.</summary>
+    /// <summary>The form for a new category takes the cursor when it opens; the chosen category is kept in view.</summary>
     private void OnCategoriesChanged(object? sender, PropertyChangedEventArgs e)
     {
         var card = _model.Categories;
-        if (e.PropertyName == nameof(CategoriesViewModel.LineOpenings) && card.OpenRow is { } open)
-            Avalonia.Threading.Dispatcher.UIThread.Post(() => RowOf(open)?
-                .GetVisualDescendants().OfType<TextBox>().FirstOrDefault(t => t.Name == "SubcategoryNameField")?.Focus(),
-                Avalonia.Threading.DispatcherPriority.Loaded);
-        if (e.PropertyName == nameof(CategoriesViewModel.LastAdded) && card.LastAdded is { } added)
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                RowOf(card.Rows.FirstOrDefault(r => r.Id == added))?.BringIntoView(),
-                Avalonia.Threading.DispatcherPriority.Loaded);
-    }
-
-    /// <summary>The control that shows a row of the "Kategórie" card, once the list has made it.</summary>
-    private Control? RowOf(CategoryCardRow? row)
-    {
-        var index = row is null ? -1 : _model.Categories.Rows.ToList().IndexOf(row);
-        return index < 0 ? null : CategoryList.ContainerFromIndex(index);
+        if (e.PropertyName == nameof(CategoriesViewModel.IsAddingCategory) && card.IsAddingCategory)
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => CategoryNameField.Focus(), Avalonia.Threading.DispatcherPriority.Loaded);
+        if (e.PropertyName == nameof(CategoriesViewModel.SelectedRow) && card.SelectedRow is { } chosen)
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => CategoryList.ScrollIntoView(chosen), Avalonia.Threading.DispatcherPriority.Loaded);
     }
 
     private void OnStatementChanged(object? sender, PropertyChangedEventArgs e)

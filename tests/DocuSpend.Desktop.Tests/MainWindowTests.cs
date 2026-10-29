@@ -67,7 +67,8 @@ public sealed class MainWindowTests : IDisposable
         var form = model.RuleForm;
         var boxes = All<ComboBox>(window).ToList();
 
-        All<TextBox>(window).Single(t => t.IsEffectivelyVisible && t.Name != "CategoryNameField").Text = "NETFLIX";
+        // Within the rules screen: a screen never shown yet reports its text boxes as visible in the logical tree.
+        All<TextBox>(window.RulesScreen).Single(t => t.IsEffectivelyVisible).Text = "NETFLIX";
         boxes.Single(b => ReferenceEquals(b.ItemsSource, form.Categories)).SelectedItem =
             form.Categories.Single(c => c.Name == "Zábava a oddych");
         Dispatcher.UIThread.RunJobs();

@@ -27,5 +27,6 @@ public static class CatalogOrder
     public static bool IsOwn(Category category, Subcategory subcategory) =>
         !IsOther(category, subcategory) && subcategory.Id.Value.StartsWith("user-", StringComparison.Ordinal);
 
-    private static bool IsOther(Category category, Subcategory subcategory) => subcategory.Id.Value == $"{category.Id}.other";
+    /// <summary>The category's "Ostatné", made with it, for whatever fits no other sub-category.</summary>
+    public static bool IsOther(Category category, Subcategory subcategory) => subcategory.Id.Value == $"{category.Id}.other";
 }

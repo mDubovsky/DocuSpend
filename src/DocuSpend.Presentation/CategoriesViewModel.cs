@@ -4,55 +4,59 @@ using DocuSpend.Categorization.Model;
 
 namespace DocuSpend.Presentation;
 
-/// <summary>A sub-category as the card shows it: a small pill, marked when it is the user's own.</summary>
-public sealed record SubcategoryPill(SubcategoryId Id, string Name, bool IsOwn);
+/// <summary>A sub-category as the chosen category's details show it.</summary>
+/// <param name="IsOwn">The user added it.</param>
+/// <param name="IsOther">The category's "Ostatné", for whatever fits no other sub-category.</param>
+public sealed record SubcategoryItem(SubcategoryId Id, string Name, bool IsOwn, bool IsOther);
+
+/// <summary>A category in the list on the "Kategórie" screen, with what its details show.</summary>
+/// <param name="RoleTag">The role in a word or two: "výdavky", "príjmy", "mimo výdavkov".</param>
+/// <param name="RoleText">The role as a sentence, for the details.</param>
+/// <param name="IsOwn">The user made it.</param>
+/// <param name="CanAddSubcategory">False for the two Uncategorized buckets, which have no sub-categories.</param>
+public sealed record CategoryItem(
+    CategoryId Id,
+    string Name,
+    string RoleTag,
+    string RoleText,
+    bool IsOwn,
+    bool CanAddSubcategory,
+    IReadOnlyList<SubcategoryItem> Subcategories);
 
 /// <summary>A role as the choice for a new category offers it.</summary>
 public sealed record RoleOption(CategoryRole Role, string Label);
 
-/// <summary>A category as the "Kategórie" card shows it, with the line for adding a sub-category to it.</summary>
-public sealed partial class CategoryCardRow(
-    CategoryId id,
-    string name,
-    string roleTag,
-    bool isOwn,
-    bool canAddSubcategory,
-    IReadOnlyList<SubcategoryPill> subcategories) : ObservableObject
-{
-    public CategoryId Id { get; } = id;
-
-    public string Name { get; } = name;
-
-    public string RoleTag { get; } = roleTag;
-
-    /// <summary>The user made this category.</summary>
-    public bool IsOwn { get; } = isOwn;
-
-    /// <summary>False for the two Uncategorized buckets.</summary>
-    public bool CanAddSubcategory { get; } = canAddSubcategory;
-
-    public IReadOnlyList<SubcategoryPill> Subcategories { get; } = subcategories;
-
-    /// <summary>The line under the pills, for typing a new sub-category's name, is open.</summary>
-    [ObservableProperty]
-    public partial bool IsLineOpen { get; set; }
-}
-
 /// <summary>
-/// The "Kategórie" card on the rules screen (work/025-own-categories/spec.md): the list of categories, the fields for
-/// a new one, and the line for a new sub-category. Adding goes through <see cref="MainViewModel"/>, which saves.
+/// The "Kategórie" screen (work/025-own-categories/spec.md): the list of categories, the chosen category's details
+/// with a field for a new sub-category, and the form for a new category, shown only when asked for. Adding goes
+/// through <see cref="MainViewModel"/>, which saves.
 /// </summary>
 public sealed partial class CategoriesViewModel : ObservableObject
 {
+    private bool _refreshing;
+
     public CategoriesViewModel(CategoryCatalog catalog)
     {
         Rows = Describe(catalog);
         SelectedRole = Roles[0];
+        SelectedRow = Rows[0];
     }
 
     /// <summary>Every category in display order, rebuilt after every change.</summary>
     [ObservableProperty]
-    public partial IReadOnlyList<CategoryCardRow> Rows { get; private set; }
+    public partial IReadOnlyList<CategoryItem> Rows { get; private set; }
+
+    /// <summary>The category whose details show; the first one at start.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsDetails))]
+    public partial CategoryItem? SelectedRow { get; set; }
+
+    /// <summary>The form for a new category shows in place of the details.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsDetails))]
+    public partial bool IsAddingCategory { get; private set; }
+
+    public bool ShowsDetails => !IsAddingCategory && SelectedRow is not null;
 
     public IReadOnlyList<RoleOption> Roles { get; } =
     [
@@ -72,11 +76,7 @@ public sealed partial class CategoriesViewModel : ObservableObject
     [ObservableProperty]
     public partial string? NameError { get; set; }
 
-    /// <summary>The row whose line for a new sub-category is open, or null. Only one is open at a time.</summary>
-    [ObservableProperty]
-    public partial CategoryCardRow? OpenRow { get; private set; }
-
-    /// <summary>The new sub-category's name as typed in the open line, cut at <see cref="Texts.MaxNameLength"/> characters.</summary>
+    /// <summary>The new sub-category's name as typed under the chosen category, cut at <see cref="Texts.MaxNameLength"/> characters.</summary>
     [ObservableProperty]
     public partial string SubcategoryName { get; set; } = "";
 
@@ -92,56 +92,53 @@ public sealed partial class CategoriesViewModel : ObservableObject
     [ObservableProperty]
     public partial string? Error { get; set; }
 
-    /// <summary>Counts every opening of the line for a new sub-category, so the window can put the cursor in it.</summary>
-    [ObservableProperty]
-    public partial int LineOpenings { get; private set; }
-
-    /// <summary>The category added last, so the window can bring its row into view.</summary>
-    [ObservableProperty]
-    public partial CategoryId? LastAdded { get; private set; }
-
-    /// <summary>Shows the catalog as it is now. The open line stays open on the same category.</summary>
+    /// <summary>Shows the catalog as it is now, with the same category chosen.</summary>
     public void Refresh(CategoryCatalog catalog)
     {
-        var open = OpenRow?.Id;
+        var selected = SelectedRow?.Id;
+        _refreshing = true;
         Rows = Describe(catalog);
-        OpenRow = open is { } id ? Rows.FirstOrDefault(r => r.Id == id) : null;
-        if (OpenRow is not null)
-            OpenRow.IsLineOpen = true;
+        SelectedRow = Rows.FirstOrDefault(r => r.Id == selected) ?? Rows[0];
+        _refreshing = false;
     }
 
-    /// <summary>"Pridať podkategóriu": opens the line under this category, closing any other and emptying the name.</summary>
+    /// <summary>"Nová kategória": the form for a new category, empty, in place of the details.</summary>
     [RelayCommand]
-    private void OpenLine(CategoryCardRow? row)
-    {
-        if (row is null || !row.CanAddSubcategory)
-            return;
-        CloseLine();
-        SubcategoryName = "";
-        SubcategoryError = null;
-        row.IsLineOpen = true;
-        OpenRow = row;
-        LineOpenings++;
-    }
-
-    /// <summary>"Zrušiť": closes the line and adds nothing.</summary>
-    [RelayCommand]
-    public void CloseLine()
-    {
-        if (OpenRow is not null)
-            OpenRow.IsLineOpen = false;
-        OpenRow = null;
-        SubcategoryName = "";
-        SubcategoryError = null;
-    }
-
-    /// <summary>A category was added: empty the name, keep the role, remember it for the window.</summary>
-    internal void Added(CategoryId category)
+    private void StartNewCategory()
     {
         NewName = "";
         NameError = null;
-        Error = null;
-        LastAdded = category;
+        Message = Error = null;
+        IsAddingCategory = true;
+    }
+
+    /// <summary>"Zrušiť" in the form: back to the chosen category's details; nothing is added.</summary>
+    [RelayCommand]
+    private void CancelNewCategory()
+    {
+        IsAddingCategory = false;
+        NewName = "";
+        NameError = null;
+    }
+
+    /// <summary>A category was added: the form closes and the new category is chosen.</summary>
+    internal void Added(CategoryId category)
+    {
+        IsAddingCategory = false;
+        NewName = "";
+        NameError = null;
+        SelectedRow = Rows.First(r => r.Id == category);
+    }
+
+    partial void OnSelectedRowChanged(CategoryItem? oldValue, CategoryItem? newValue)
+    {
+        // A list replaced on refresh lets go of its selection for a moment; that isn't the user choosing.
+        if (_refreshing || oldValue?.Id == newValue?.Id || newValue is null)
+            return;
+        IsAddingCategory = false;
+        SubcategoryName = "";
+        SubcategoryError = null;
+        Message = Error = null;
     }
 
     partial void OnNewNameChanged(string value)
@@ -158,14 +155,17 @@ public sealed partial class CategoriesViewModel : ObservableObject
         SubcategoryError = null;
     }
 
-    private static List<CategoryCardRow> Describe(CategoryCatalog catalog) =>
+    private static List<CategoryItem> Describe(CategoryCatalog catalog) =>
         CatalogOrder.Categories(catalog)
-            .Select(c => new CategoryCardRow(
+            .Select(c => new CategoryItem(
                 c.Id,
                 c.Name,
                 Texts.RoleTag(c.Role),
-                isOwn: !c.IsBuiltIn,
-                canAddSubcategory: !c.IsUncategorized,
-                CatalogOrder.Subcategories(c).Select(s => new SubcategoryPill(s.Id, s.Name, CatalogOrder.IsOwn(c, s))).ToList()))
+                Texts.RoleText(c.Role),
+                IsOwn: !c.IsBuiltIn,
+                CanAddSubcategory: !c.IsUncategorized,
+                CatalogOrder.Subcategories(c)
+                    .Select(s => new SubcategoryItem(s.Id, s.Name, CatalogOrder.IsOwn(c, s), CatalogOrder.IsOther(c, s)))
+                    .ToList()))
             .ToList();
 }

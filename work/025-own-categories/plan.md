@@ -16,47 +16,47 @@ Checked on 29 October 2026, on this branch:
 
 ### The screen logic, in `DocuSpend.Presentation`
 - **`CategoriesViewModel`** (new), owned by `MainViewModel` as `Categories`. It holds:
-  - `Rows`: one `CategoryCardRow` per category, in display order, each with its name, role tag, whether it is the user's own, whether sub-categories can be added (not for the uncategorized buckets), and its sub-categories in display order, each with its name and whether it is the user's own. It is rebuilt from the catalog after every change.
-  - the new category's fields: `NewName` (cut at `MaxNameLength` = 40), `Roles` (three options, "Výdavky" first) and `SelectedRole`, and `NameError`, cleared when `NewName` changes;
-  - the sub-category line: `OpenRow` (the category whose line is open, or none), `SubcategoryName` and `SubcategoryError`. `OpenLine(row)` opens it, closing any other and emptying the name; `CancelLine()` closes it;
-  - `Message` (the confirmation) and `Error` (a save failure), as the rule form has them, and `LastAdded`, the category to bring into view.
+  - `Rows`: one `CategoryItem` per category, in display order, each with its name, role tag and role sentence, whether it is the user's own, whether sub-categories can be added (not for the uncategorized buckets), and its sub-categories in display order (`SubcategoryItem`: name, the user's own, the category's "Ostatné"). It is rebuilt from the catalog after every change, keeping the chosen category.
+  - `SelectedRow`, the chosen category (the first at start); choosing another empties the sub-category field, its reason and the message, and closes the form;
+  - the form for a new category: `IsAddingCategory` (`StartNewCategory`, `CancelNewCategory`), `NewName` (cut at `MaxNameLength` = 40), `Roles` (three options, "Výdavky" first) and `SelectedRole`, and `NameError`, cleared when `NewName` changes;
+  - the new sub-category: `SubcategoryName` and `SubcategoryError`;
+  - `Message` (the confirmation) and `Error` (a save failure), as the rule form has them.
 - **`MainViewModel`** gets `AddCategoryCommand` and `AddSubcategoryCommand`. Each calls the config's method; a refusal goes to the field's error through `Texts.Refusal`. A success goes through the existing `ApplyUserChange`, the one place every change is saved and shown, so saving, the "not saving" state and recategorizing work as for rules. Then it refreshes the card's rows and the rule form's choices, and sets the message: the confirmation when saved, otherwise the session-only or save-failed text, as `Confirm` does for rules.
 - **Display order in one place**: a small `CatalogOrder` helper (categories, and sub-categories with "Ostatné" last) used by the card and by `RuleFormViewModel`.
 - **`Texts`**: "Názov", "Počíta sa ako", "Pridať kategóriu", "Pridať podkategóriu", "Pridať", "vlastná", the three roles and their tags, the help text, `CategoryAdded(name)`, `SubcategoryAdded(name, category)`, and the four save texts. "Kategórie" and "Zrušiť" exist already.
 
 ### The window, in `DocuSpend.Desktop`
-- **The rules screen's left column becomes a grid of two rows**: the form (`Auto`) and the new `CategoriesCard` (`*`). The rules card keeps the right column's full height.
-- **`CategoriesCard`**: the heading "Kategórie"; the "Zmeny pravidiel sa teraz neukladajú." note while `RulesNotSaving`; the add fields, with the reason under the name; the message; then a `ScrollViewer` (the look's scroll bars, always shown) with an `ItemsControl` of rows:
-  - a row: the name, the role tag and the "vlastná" tag as small pills, and "Pridať podkategóriu" on the right;
-  - its sub-categories in a `WrapPanel` of pills, the user's own in the accent style;
-  - the line, while it is open: a name field, "Pridať", "Zrušiť", and the reason under it.
-- **Add fields on one line**, `[Názov…] [Výdavky ▾] (?) [Pridať kategóriu]`, rather than the spec sketch's three lines. They fit in the column's ≈ 560 points, and that leaves the list a row or two more. The screenshot review decides, and the spec follows.
-- **Focus and scrolling in the code-behind**: when a line opens, its name field takes the focus; when `LastAdded` changes, the window brings that row into view.
-- **The tags and pills** become styles in `Look/Look.axaml` (`Border.tag`, `Border.pill`, `Border.pill.own`) from the palette's existing colours. No new colour is needed; if the review asks for one, it goes in `Palette.cs` with its contrast test.
+Rebuilt after the first screenshot review (see Risks): the categories moved from a card under the rule form to a screen of their own.
+- **A third screen.** `AppScreen.Categories` and the pill "Kategórie" join the header's switch; `MainViewModel.ShowsCategories` shows `CategoriesScreen`, a grid of two cards (`2*` and `3*`). The rules screen is back as #21 left it.
+- **The list card**: the heading "Kategórie" with "Nová kategória" beside it, the "Zmeny pravidiel sa teraz neukladajú." note while `RulesNotSaving`, and a `ListBox` of the categories (its selection is `Categories.SelectedRow`), styled as the statement screen's category list, with a "vlastná" tag on the user's own.
+- **The right card** holds two panels, one shown at a time: the details (`ScrollViewer`: name, role sentence, message, "Podkategórie" with an `ItemsControl` of rows, the field and "Pridať podkategóriu", and the reason under it; or the note for an uncategorized bucket) and the form for a new category (labelled fields like the rule form's: "Názov", "Počíta sa ako" with the help mark, "Pridať kategóriu" and "Zrušiť").
+- **In the code-behind**: the name field takes the focus when the form opens; the list scrolls the chosen category into view; Enter in either name field adds, so the rule form's default button doesn't take the key.
+- **The look**: `Border.tag` and `Border.tag.own` for "vlastná", `Border.subcategoryRow`, `TextBlock.fieldError`, `TextBlock.heading.plain` (a heading beside a button, without its bottom margin), and `Look.Padding.Tag` and `Look.Margin.FieldLabel`. Every `TextBox` centres its text and placeholder vertically (the placeholder sat high before). No new colour.
 
 ### Tests and screenshots
-- Logic in `DocuSpend.Presentation.Tests` (`CategoriesTests.cs`, new; `TextsTests.cs`), and colour stability in `LookTests.cs` there. The window in `DocuSpend.Desktop.Tests` (`CategoriesWindowTests.cs`, new).
-- New screenshots: `20-categories` (the user's own category and sub-categories listed, a confirmation shown), `21-subcategory-line` (a line open, with "Taký názov už existuje."), and `22-categories-not-saving`. `18-rules-screen` shows the new card as well.
+- Logic in `DocuSpend.Presentation.Tests` (`CategoriesTests.cs` and `CategoriesAddingTests.cs`, new), with the slice colours checked there. The window in `DocuSpend.Desktop.Tests` (`CategoriesWindowTests.cs`, new).
+- New screenshots: `20-categories` to `25-categories-not-saving` (step 4).
 
 ### Alternatives considered
 - **Putting "Ostatné" last inside the categorization** (inserting before it when adding): lost. It would change the order the categorization holds, and with it the order the saved file has for built-in categories with user sub-categories. Sorting for display gives the same picture with nothing saved differently.
 - **Moving the user's categories before "Nezaradené" in the catalog**: lost for the same reason, and it would shift the slice colours' numbering for nothing.
-- **A third screen, "Kategórie", in the header switch**: lost in the intent.
+- **A card under the rule form, listing every category with its sub-categories as pills**: built first, and lost at the screenshot review as cluttered and confusing (see Risks).
+- **A list that opens one category in place, under the rule form**: offered at the review, and lost to a screen of its own, which has room for both the list and the details.
 - **A pop-up box for adding**: lost in the spec.
-- **A `TreeView`** for categories and sub-categories: lost. Its expand arrows and selection aren't wanted, its Fluent template would need restyling in both looks, and the spec shows every sub-category at once. An `ItemsControl` with a `WrapPanel` is plain and already styled by the look.
+- **A `TreeView`** for categories and sub-categories: lost. Its expand arrows and selection aren't wanted, and its Fluent template would need restyling in both looks. A `ListBox` of names beside the chosen category's details is plain, and styled by the look already.
 - **Commands on `CategoriesViewModel` with a callback into `MainViewModel`**: lost. The rule commands live on `MainViewModel`, next to `ApplyUserChange` and the store, and the categories' commands follow them.
 
 ### Layout
 New files:
 - `src/DocuSpend.Presentation/CategoriesViewModel.cs`, `CatalogOrder.cs`
-- `tests/DocuSpend.Presentation.Tests/CategoriesTests.cs`
+- `tests/DocuSpend.Presentation.Tests/CategoriesTests.cs`, `CategoriesAddingTests.cs`
 - `tests/DocuSpend.Desktop.Tests/CategoriesWindowTests.cs`
 
 Changed:
 - `src/DocuSpend.Presentation/MainViewModel.cs`, `RuleFormViewModel.cs`, `Texts.cs`
 - `src/DocuSpend.Desktop/MainWindow.axaml`, `MainWindow.axaml.cs`, `Look/Look.axaml`
 - `tools/DocuSpend.Screenshots/Screens.cs`
-- `tests/DocuSpend.Presentation.Tests/TextsTests.cs`, `LookTests.cs`, `RuleFormViewModelTests.cs`
+- `tests/DocuSpend.Presentation.Tests/ScreensTests.cs`; `tests/DocuSpend.Desktop.Tests/ScreensWindowTests.cs`, `MainWindowTests.cs` (three screens)
 - docs: `README.md`, `AGENTS.md`, `work/025-own-categories/`
 
 ## Prerequisites
@@ -66,7 +66,7 @@ Changed:
 ## Steps
 Test-first for logic; one commit per step, committed when it is done and every test passes.
 
-1. **The card's list** (`CatalogOrder`, `CategoriesViewModel.Rows`, `Texts`). Tests:
+1. **The list of categories** (`CatalogOrder`, `CategoriesViewModel.Rows`, `Texts`). Tests:
    - with no user categories: the 14 built-in categories in order, then "Nezaradené výdavky" and "Nezaradené príjmy"; each with its role tag; sub-categories with "Ostatné" last; no add for the uncategorized buckets;
    - with user categories and sub-categories (built through `AddCategory` and `AddSubcategory`): the user's own after the built-in and before "Nezaradené", marked as own, "Ostatné" still last;
    - the rule form's sub-categories with "Ostatné" last;
@@ -76,85 +76,81 @@ Test-first for logic; one commit per step, committed when it is done and every t
 2. **Adding** (`MainViewModel` commands, `CategoriesViewModel` fields, `RuleFormViewModel` taking a new catalog). Tests:
    - a category of each role is added and listed, with its confirmation; the name field empties and the role stays;
    - names trimmed; cut at 40; empty, spaces only, and repeated names (case, diacritics, "Nezaradené výdavky", a user's own) refused with the reason, nothing added, the name kept; the reason cleared on a change;
-   - the sub-category line: opening, opening another, cancelling; adding to a built-in and to a user category; the refusals, including "Ostatné" and "ostatne"; the same name under another category or as its category's name allowed;
+   - adding to a built-in and to a user category; the refusals, including "Ostatné" and "ostatne"; the same name under another category or as its category's name allowed;
    - the rule form offers the new category and sub-category at once, for a new rule and an edited one, and keeps a half-typed rule's choices;
    - a rule targeting a new sub-category: its count, its row "<category> › <sub-category>", and the statement's categories;
    - a new spending, excluded and income category filled by a rule: the pie, "Výdavky spolu" and the income follow its role; a new category with no rule changes nothing in the statement;
    - built-in slice colours are the same before and after adding a spending category;
    - after a restart (a new `MainViewModel` on the same file): the category, its sub-category, its role and the rule are back, and the statement is categorized the same;
-   - saving fails, and saving is off for the session: the texts for a category and for a sub-category, and the category still usable;
-   - the card's state is kept across opening another statement.
-3. **The card in the window** (`MainWindow.axaml`, `.cs`, `Look.axaml`). Window tests, on "Pravidlá":
-   - the card is under the form, with the add fields, the help mark's tooltip, and the rows;
-   - adding a category through the button shows its row and brings it into view;
-   - "Pridať podkategóriu" opens the line with its field focused; a second one closes the first; "Zrušiť" closes it; a refusal shows under the field;
-   - no "Pridať podkategóriu" on the "Nezaradené" rows;
-   - the name fields take at most 40 characters;
-   - with 30 user categories, the card's list scrolls inside it and the window has nothing to scroll at 1280 × 940;
-   - "Zmeny pravidiel sa teraz neukladajú." shows in the card while saving is off;
-   - the card's fields, an open line and the list's scroll position survive a switch to "Výpis" and back.
+   - saving fails, and saving is off for the session: the texts for a category and for a sub-category, and the category still usable.
+3. **The card in the window**, as first planned: under the rule form on "Pravidlá". Built, then replaced in step 4 (see Risks).
+4. **Screenshots.** **Stop for review.** At the first review the maintainer found the card cluttered and confusing and chose a screen of its own. Rebuilt in this step:
+   - logic: `AppScreen.Categories` and `ShowsCategories`; `CategoriesViewModel` with the chosen category and the form shown on request, instead of a line per row. Tests: the first category chosen at start; choosing another empties the field, its reason and the message, and closes the form; "Nová kategória" and "Zrušiť"; adding chooses the new category; the uncategorized buckets take no sub-category; "Ostatné" marked; the screen's state kept across another statement and a switch of screens; the three screens in order;
+   - the window: the "Kategórie" screen, the rules screen back as #21 left it. Window tests (`CategoriesWindowTests`): the third pill and only this screen's cards; the list, the first category's details, "Ostatné" described; an uncategorized bucket's note and no field; the form with the cursor in "Názov", "Zrušiť"; adding a category chooses it and brings it into view; refusals under their fields; adding a sub-category; the 40-character fields; 30 categories scroll inside the list with nothing to scroll in the window; the note while saving is off; the screen kept across a switch; Enter adds and adds no rule; a new sub-category in the rule form with a chosen target kept. The two #21 window tests that counted two screens, or looked for "Kategórie" anywhere on the rules screen, now count three and look only inside the rules screen;
+   - screenshots `20-categories`, `21-own-category`, `22-new-category`, `23-subcategory-refused`, `24-uncategorized-chosen`, `25-categories-not-saving`.
 
-   The look test passes with the new styles.
-4. **Screenshots.** **Stop for review:** the maintainer looks at `18`, `20`, `21` and `22` in both looks at the default size, and decides the add fields' arrangement (one line or three), the tags and pills, and how much of the list shows. Fixes go in this step, and the spec follows. The approved pictures go to `work/025-own-categories/screenshots/`.
+   **Stop for review again:** the maintainer looks at these in both looks. The approved pictures go to `work/025-own-categories/screenshots/`.
 5. **Hand check.** **Stop:** the maintainer opens a real statement, adds a category and a sub-category, adds a rule that sends transactions there, checks "Výpis", restarts DocuSpend, and finds the category, the sub-category and the rule as they left them.
 6. **Docs and done**, with `finish-item`:
-   - `README.md` ("What works today", and what is next) and `AGENTS.md` (the rules screen's cards);
+   - `README.md` ("What works today", and what is next) and `AGENTS.md` (the three screens);
    - the spec and this plan updated for anything the build changed;
    - the intent becomes `done`;
    - the follow-up issue for renaming and deleting your own categories, drafted with `new-issue` for the maintainer to approve, as the intent decided.
 
 ## Risks and unknowns
 
-- **The card may show too few categories at the default size**, more so while a rule is being edited and the form is taller. Fallback, for the screenshot review: the add fields on one line (planned), smaller pills, or giving the card a minimum height so the window scrolls only when editing.
-- **A refreshed rule form could lose its choice**, if the new category lists hold new objects and the combo boxes compare by reference. The form reselects by identifier, and a step 2 test covers a half-typed rule and a rule being edited.
-- **Focusing a field in a line that is just appearing** may need a layout pass first. Fallback: focus it after the next layout (`Dispatcher.UIThread.Post` at `Loaded` priority), as the window already does for the charts.
-- **Bringing a new row into view** may not work before its container exists. Fallback: scroll the `ScrollViewer` to the end, since a new category is always the last of the user's own, just above "Nezaradené".
-- **Pills that wrap inside an `ItemsControl` row** can measure oddly in a `ScrollViewer` with an unbounded width. The `ItemsControl` gets the card's width, and the window test at the default size checks that nothing scrolls sideways.
+- **Found at the first screenshot review: the card under the rule form was cluttered and confusing.** Every category with all its sub-categories as pills, a button and tags on every row, in a third of the window; half-scrolled rows left stray "Ostatné" pills under the card's messages, and the "Názov" placeholder sat high in its field. The maintainer chose a screen of its own with a list and one category's details. The placeholder is centred for every text box.
+- **A refreshed rule form could lose its choice**, if the new category lists hold new objects and the combo boxes compare by reference. The form reselects by identifier; tests cover a half-typed rule, a rule being edited, and the window.
+- **A list replaced on refresh lets go of its selection** for a moment, which would look like the user choosing nothing. `CategoriesViewModel` ignores that while it refreshes, and keeps the chosen category by identifier.
+- **Found in the build: a screen never shown reports its text boxes as visible** when searched through the logical tree. A #21 window test that looked for the one visible text box in the whole window now looks only inside the rules screen.
+- **Found in the build: Enter in a name field added a rule**, through the rule form's default button. The window handles Enter in both name fields first.
 
 ## Verification
 
 | Acceptance criterion | Checked by |
 |---|---|
-| The rules screen shows the form, the rules card and "Kategórie" under the form; "Výpis" unchanged | `CategoriesWindowTests` (step 3); `ScreensWindowTests`, unchanged |
-| Built-in list: 14 categories in order, then the two "Nezaradené", role tags, "Ostatné" last | `CategoriesTests` (step 1) |
-| No add on the "Nezaradené" rows; every other row has it | `CategoriesTests` (step 1); `CategoriesWindowTests` (step 3) |
-| More categories than fit: the card scrolls, the window doesn't | `CategoriesWindowTests` with 30 categories (step 3) |
-| Adding "Šport" as "Výdavky": its place, tags, "Ostatné", confirmation, field emptied, role kept | `CategoriesTests` (step 2); `CategoriesWindowTests` through the button (step 3) |
-| "Príjmy" and "Mimo výdavkov" tags | `CategoriesTests` (step 2) |
-| "  Šport  " named "Šport" | `CategoriesTests` (step 2) |
-| Empty or spaces-only name refused | `CategoriesTests` (step 2) |
-| Repeated names refused (case, diacritics, "Nezaradené výdavky", the user's own), name kept | `CategoriesTests` (step 2) |
-| A reason disappears when the name changes | `CategoriesTests` (step 2) |
-| The help mark's tooltip text | `TextsTests` (step 1); `CategoriesWindowTests` (step 3) |
-| "Pridať podkategóriu" opens a line with a focused field | `CategoriesWindowTests` (step 3) |
-| Opening a second line closes the first | `CategoriesTests` (step 2); `CategoriesWindowTests` (step 3) |
-| Adding "Obedy v práci" to "Stravovanie": before "Ostatné", own, confirmation | `CategoriesTests` (step 2) |
-| Adding to a user category | `CategoriesTests` (step 2) |
-| Sub-category refusals: empty, "Ostatné", "ostatne", "Potraviny"; line stays open | `CategoriesTests` (step 2); `CategoriesWindowTests` for the reason's place (step 3) |
-| "Potraviny" under "Bývanie" and "Šport" under "Šport" allowed | `CategoriesTests` (step 2) |
-| "Zrušiť" closes the line, nothing added | `CategoriesTests` (step 2); `CategoriesWindowTests` (step 3) |
-| New choices in the rule form at once, new and edited rule, "Ostatné" last | `CategoriesTests`, `RuleFormViewModelTests` (steps 1, 2) |
-| A half-typed rule keeps its choices | `CategoriesTests` (step 2) |
-| A rule into a new sub-category: count, rule row, "Výpis" | `CategoriesTests` (step 2) |
-| A new spending category gets a slice; built-in colours unchanged | `CategoriesTests`, `LookTests` (step 2) |
-| A new excluded category: out of the pie and "Výdavky spolu", still in "Kategórie" | `CategoriesTests` (step 2) |
-| A new income category isn't spending | `CategoriesTests` (step 2) |
-| A new category with no rule: not on "Výpis", categorization unchanged | `CategoriesTests` (step 2) |
-| Back after a restart, with its rule | `CategoriesTests` with a second `MainViewModel` (step 2) |
-| A failed save: the texts, and the category still usable | `CategoriesTests`, store folder blocked (step 2) |
-| Saving off: the note and the session-only texts | `CategoriesTests` (step 2); `CategoriesWindowTests` for the note (step 3) |
+| The switch offers three screens; "Kategórie" shows only its cards | `CategoriesWindowTests`, `ScreensWindowTests`, `ScreensTests` (step 4) |
+| The rules and statement screens are as before | `ScreensWindowTests`, `RulesWindowTests`, `FitWindowTests`, unchanged in substance (every step) |
+| Built-in list in order, then the two "Nezaradené"; the first chosen with its details | `CategoriesTests` (step 1); `CategoriesAddingTests`, `CategoriesWindowTests` (step 4) |
+| A built-in category's role sentence and sub-categories, "Ostatné" last and described | `CategoriesTests` (step 1); `CategoriesWindowTests` (step 4) |
+| An uncategorized bucket: the note, no field | `CategoriesAddingTests`, `CategoriesWindowTests` (step 4) |
+| More categories than fit: the list scrolls, the window doesn't | `CategoriesWindowTests` with 30 categories (step 4) |
+| "Nová kategória" shows the form with the cursor in "Názov"; "Zrušiť" and choosing a category close it | `CategoriesAddingTests`, `CategoriesWindowTests` (step 4) |
+| Adding "Šport": its place, tag, chosen and in view, details, confirmation, role kept | `CategoriesAddingTests` (steps 2, 4); `CategoriesWindowTests` (step 4) |
+| "Príjmy" and "Mimo výdavkov" role sentences | `CategoriesAddingTests` (steps 2, 4); `CategoriesTests`, texts (step 1) |
+| "  Šport  " named "Šport" | `CategoriesAddingTests` (step 2) |
+| Empty or spaces-only name refused; the form stays | `CategoriesAddingTests` (step 2); `CategoriesWindowTests` (step 4) |
+| Repeated names refused (case, diacritics, "Nezaradené výdavky", the user's own), name kept | `CategoriesAddingTests` (step 2); `CategoriesWindowTests` (step 4) |
+| A reason disappears when the name changes | `CategoriesAddingTests` (step 2) |
+| The help mark's tooltip text | `CategoriesTests`, texts (step 1); `CategoriesWindowTests` (step 4) |
+| Adding "Obedy v práci" to "Stravovanie": before "Ostatné", own, field empty, confirmation | `CategoriesAddingTests` (steps 2, 4); `CategoriesWindowTests` (step 4) |
+| Adding to a user category | `CategoriesAddingTests` (step 2) |
+| Sub-category refusals: empty, "Ostatné", "ostatne", "Potraviny"; name kept | `CategoriesAddingTests` (step 2); `CategoriesWindowTests` (step 4) |
+| "Potraviny" under "Bývanie" and "Šport" under "Šport" allowed | `CategoriesAddingTests` (step 2) |
+| Choosing another category empties the field, its reason and the message | `CategoriesAddingTests` (step 4) |
+| Enter adds the category or the sub-category, and no rule | `CategoriesWindowTests` (step 4) |
+| New choices in the rule form at once, new and edited rule, "Ostatné" last | `CategoriesAddingTests`, `CategoriesTests` (steps 1, 2) |
+| A half-typed rule keeps its choices | `CategoriesAddingTests` (step 2); `CategoriesWindowTests` (step 4) |
+| A rule into a new sub-category: count, rule row, "Výpis" | `CategoriesAddingTests` (step 2) |
+| A new spending category gets a slice; built-in colours unchanged | `CategoriesAddingTests` (step 2) |
+| A new excluded category: out of the pie and "Výdavky spolu", still in "Kategórie" | `CategoriesAddingTests` (step 2) |
+| A new income category isn't spending | `CategoriesAddingTests` (step 2) |
+| A new category with no rule: not on "Výpis", categorization unchanged | `CategoriesAddingTests` (step 2) |
+| Back after a restart, with its rule | `CategoriesAddingTests` with a second `MainViewModel` (step 2) |
+| A failed save: the texts, and the category still usable | `CategoriesAddingTests`, store folder blocked (step 2) |
+| Saving off: the note and the session-only texts | `CategoriesAddingTests` (step 2); `CategoriesWindowTests` for the note (step 4) |
 | Saved shape unchanged; earlier saved files still load | no change to `SavedRules`; `rules-v1.json` tests unchanged (every step) |
 | Only the shared look; no literal values | `LookCheckTests` (every step) |
 | Privacy checks pass, nothing new in the reviewed lists | `dotnet test` (every step) |
-| Every new text in Slovak | `TextsTests`, letter for letter (step 1) |
+| Every new text in Slovak | `CategoriesTests`, letter for letter (steps 1, 4) |
 | Screenshots approved | maintainer, step 4 |
 | Hand check with a real statement | maintainer, step 5 |
-| Edge: names cut at 40 characters | `CategoriesTests` (step 2); `CategoriesWindowTests`, `MaxLength` (step 3) |
-| Edge: "Sport" and "Šport" the same | `CategoriesTests` (step 2) |
-| Edge: spaces inside a name kept | `CategoriesTests` (step 2) |
-| Edge: many categories, colours repeat after 14, never change | `LookTests` (step 2); `CategoriesWindowTests` (step 3) |
-| Edge: adding while a rule is edited keeps the edit | `CategoriesTests` (step 2) |
-| Edge: the top fields and the line keep their own text | `CategoriesTests` (step 2) |
-| Edge: a switch to "Výpis" and back keeps the card | `CategoriesWindowTests` (step 3) |
-| Edge: opening another statement keeps the card | `CategoriesTests` (step 2) |
-| Edge: a later successful save saves what failed before | `CategoriesTests`: unblock the folder, add a rule, restart (step 2) |
+| Edge: names cut at 40 characters | `CategoriesAddingTests` (step 2); `CategoriesWindowTests`, `MaxLength` (step 4) |
+| Edge: "Sport" and "Šport" the same | `CategoriesAddingTests` (step 2) |
+| Edge: spaces inside a name kept | `CategoriesAddingTests` (step 2) |
+| Edge: many categories; colours repeat after 14 and never change | `CategoriesAddingTests`, `CategoriesWindowTests` (steps 2, 4) |
+| Edge: many sub-categories scroll in the details | the details are a `ScrollViewer`; screenshot review (step 4) |
+| Edge: adding while a rule is edited keeps the edit | `CategoriesAddingTests` (step 2) |
+| Edge: a switch of screens keeps the screen | `CategoriesAddingTests`, `CategoriesWindowTests` (step 4) |
+| Edge: opening another statement keeps the screen and an open form | `CategoriesAddingTests` (step 4) |
+| Edge: a later successful save saves what failed before | `CategoriesAddingTests`: unblock the folder, add, restart (step 2) |

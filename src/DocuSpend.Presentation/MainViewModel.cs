@@ -14,7 +14,7 @@ public enum RuleView { Mine, BuiltIn }
 public sealed record RuleViewOption(RuleView View, string Label);
 
 /// <summary>The two screens a statement is shown on: the statement itself and its rules (spec of #21).</summary>
-public enum AppScreen { Statement, Rules }
+public enum AppScreen { Statement, Rules, Categories }
 
 public sealed record AppScreenOption(AppScreen Screen, string Label);
 
@@ -84,18 +84,19 @@ public sealed partial class MainViewModel : ObservableObject
 
     public RuleFormViewModel RuleForm { get; }
 
-    /// <summary>The "Kategórie" card on the rules screen.</summary>
+    /// <summary>The "Kategórie" screen.</summary>
     public CategoriesViewModel Categories { get; }
 
     public IReadOnlyList<AppScreenOption> Screens { get; } =
     [
         new(AppScreen.Statement, Texts.StatementScreen),
         new(AppScreen.Rules, Texts.RulesScreen),
+        new(AppScreen.Categories, Texts.Categories),
     ];
 
     /// <summary>Which screen a statement is shown on: "Výpis" at start, and after every statement that is opened.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowsStatement), nameof(ShowsRules))]
+    [NotifyPropertyChangedFor(nameof(ShowsStatement), nameof(ShowsRules), nameof(ShowsCategories))]
     public partial AppScreenOption SelectedScreen { get; set; }
 
     /// <summary>The statement screen shows: a statement is open and "Výpis" is chosen.</summary>
@@ -104,12 +105,15 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>The rules screen shows: a statement is open and "Pravidlá" is chosen.</summary>
     public bool ShowsRules => HasStatement && SelectedScreen.Screen == AppScreen.Rules;
 
+    /// <summary>The categories screen shows: a statement is open and "Kategórie" is chosen.</summary>
+    public bool ShowsCategories => HasStatement && SelectedScreen.Screen == AppScreen.Categories;
+
     /// <summary>Where "Otvoriť výpis…" asks for a file; the window sets it.</summary>
     public IStatementPicker? Picker { get; set; }
 
     /// <summary>False on the start screen; true once a statement has been opened.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowsStatement), nameof(ShowsRules))]
+    [NotifyPropertyChangedFor(nameof(ShowsStatement), nameof(ShowsRules), nameof(ShowsCategories))]
     public partial bool HasStatement { get; private set; }
 
     /// <summary>The statement shown is the example, with invented data, and is labelled so.</summary>
@@ -258,14 +262,14 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// "Pridať" in the line under a category: adds the typed sub-category to it, saves it and shows it. A refused name
-    /// changes nothing, and the line stays open with the reason under the field.
+    /// "Pridať podkategóriu" in the chosen category's details: adds the typed sub-category to it, saves it and shows it. A refused name
+    /// changes nothing and stays typed, with the reason under the field.
     /// </summary>
     [RelayCommand]
     private void AddSubcategory()
     {
         var card = Categories;
-        if (card.OpenRow is not { } row)
+        if (card.SelectedRow is not { } row || !row.CanAddSubcategory)
             return;
         card.Message = card.Error = card.SubcategoryError = null;
         var outcome = Statement.Config.AddSubcategory(row.Id, card.SubcategoryName);
@@ -276,7 +280,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         var name = card.SubcategoryName.Trim();
         var saved = ApplyUserChange(outcome.Value!);
-        card.CloseLine();
+        card.SubcategoryName = "";
         ShowCategories();
         Report(saved, Texts.SubcategoryAdded(name, row.Name), Texts.SubcategoryOnlyThisSession, Texts.SubcategorySaveFailed);
     }

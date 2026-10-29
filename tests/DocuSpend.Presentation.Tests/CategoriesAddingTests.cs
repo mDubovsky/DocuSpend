@@ -27,14 +27,18 @@ public sealed class CategoriesAddingTests : IDisposable
 
     private static void AddCategory(MainViewModel main, string name, CategoryRole role = CategoryRole.Spending)
     {
+        main.Categories.StartNewCategoryCommand.Execute(null);
         main.Categories.NewName = name;
         main.Categories.SelectedRole = main.Categories.Roles.Single(r => r.Role == role);
         main.AddCategoryCommand.Execute(null);
     }
 
+    private static void Choose(MainViewModel main, string category) =>
+        main.Categories.SelectedRow = main.Categories.Rows.Single(r => r.Name == category);
+
     private static void AddSubcategory(MainViewModel main, string category, string name)
     {
-        main.Categories.OpenLineCommand.Execute(main.Categories.Rows.Single(r => r.Name == category));
+        Choose(main, category);
         main.Categories.SubcategoryName = name;
         main.AddSubcategoryCommand.Execute(null);
     }
@@ -71,15 +75,19 @@ public sealed class CategoriesAddingTests : IDisposable
     }
 
     [Fact]
-    public async Task After_adding_a_category_the_name_is_empty_the_role_stays_and_the_new_row_is_remembered()
+    public async Task After_adding_a_category_the_form_closes_the_role_stays_and_the_new_category_is_chosen()
     {
         var main = await Start();
 
         AddCategory(main, "Šport", CategoryRole.Excluded);
 
+        Assert.False(main.Categories.IsAddingCategory);
+        Assert.True(main.Categories.ShowsDetails);
         Assert.Equal("", main.Categories.NewName);
         Assert.Equal(CategoryRole.Excluded, main.Categories.SelectedRole.Role);
-        Assert.Equal(main.Categories.Rows.Single(r => r.Name == "Šport").Id, main.Categories.LastAdded);
+        Assert.Equal("Šport", main.Categories.SelectedRow?.Name);
+        Assert.Equal("Nepočíta sa do výdavkov", main.Categories.SelectedRow?.RoleText);
+        Assert.Equal("Kategória „Šport“ je pridaná.", main.Categories.Message);
     }
 
     [Fact]
@@ -108,7 +116,6 @@ public sealed class CategoriesAddingTests : IDisposable
         var main = await Start();
 
         main.Categories.NewName = new string('x', 60);
-        main.Categories.OpenLineCommand.Execute(main.Categories.Rows[0]);
         main.Categories.SubcategoryName = new string('y', 60);
 
         Assert.Equal(40, main.Categories.NewName.Length);
@@ -150,47 +157,86 @@ public sealed class CategoriesAddingTests : IDisposable
     }
 
     [Fact]
-    public async Task The_line_for_a_sub_category_opens_under_one_category_and_closes_when_another_opens()
+    public async Task At_start_the_first_category_is_chosen_and_its_details_show()
     {
         var main = await Start();
-        var rows = main.Categories.Rows;
 
-        main.Categories.OpenLineCommand.Execute(rows[2]);
-        main.Categories.SubcategoryName = "Niečo";
-        main.Categories.OpenLineCommand.Execute(rows[3]);
+        Assert.Equal("Bývanie", main.Categories.SelectedRow?.Name);
+        Assert.Equal("Počíta sa ako výdavky", main.Categories.SelectedRow?.RoleText);
+        Assert.True(main.Categories.ShowsDetails);
+        Assert.False(main.Categories.IsAddingCategory);
+    }
 
-        Assert.False(rows[2].IsLineOpen);
-        Assert.True(rows[3].IsLineOpen);
-        Assert.Same(rows[3], main.Categories.OpenRow);
+    [Fact]
+    public async Task Choosing_another_category_empties_the_sub_category_field_its_reason_and_the_message()
+    {
+        var main = await Start();
+        AddSubcategory(main, "Stravovanie", "Potraviny");
+        Assert.NotNull(main.Categories.SubcategoryError);
+
+        Choose(main, "Bývanie");
+
         Assert.Equal("", main.Categories.SubcategoryName);
-    }
-
-    [Fact]
-    public async Task The_uncategorized_rows_cannot_open_a_line()
-    {
-        var main = await Start();
-
-        main.Categories.OpenLineCommand.Execute(main.Categories.Rows[^1]);
-
-        Assert.Null(main.Categories.OpenRow);
-    }
-
-    [Fact]
-    public async Task Cancelling_closes_the_line_and_adds_nothing()
-    {
-        var main = await Start();
-        main.Categories.OpenLineCommand.Execute(main.Categories.Rows[2]);
-        main.Categories.SubcategoryName = "Obedy";
-
-        main.Categories.CloseLine();
-
-        Assert.Null(main.Categories.OpenRow);
-        Assert.DoesNotContain(main.Categories.Rows[2].Subcategories, s => s.Name == "Obedy");
+        Assert.Null(main.Categories.SubcategoryError);
         Assert.Null(main.Categories.Message);
     }
 
     [Fact]
-    public async Task A_sub_category_is_added_to_a_built_in_category_before_Ostatne_with_a_confirmation_and_the_line_closes()
+    public async Task Nova_kategoria_shows_the_form_in_place_of_the_details_and_Zrusit_goes_back_adding_nothing()
+    {
+        var main = await Start();
+
+        main.Categories.StartNewCategoryCommand.Execute(null);
+        Assert.True(main.Categories.IsAddingCategory);
+        Assert.False(main.Categories.ShowsDetails);
+        main.Categories.NewName = "Šport";
+
+        main.Categories.CancelNewCategoryCommand.Execute(null);
+
+        Assert.False(main.Categories.IsAddingCategory);
+        Assert.True(main.Categories.ShowsDetails);
+        Assert.Equal("Bývanie", main.Categories.SelectedRow?.Name);
+        Assert.Equal(16, main.Categories.Rows.Count);
+        Assert.Equal("", main.Categories.NewName);
+    }
+
+    [Fact]
+    public async Task Choosing_a_category_while_the_form_shows_closes_the_form()
+    {
+        var main = await Start();
+        main.Categories.StartNewCategoryCommand.Execute(null);
+
+        Choose(main, "Stravovanie");
+
+        Assert.False(main.Categories.IsAddingCategory);
+        Assert.True(main.Categories.ShowsDetails);
+    }
+
+    [Fact]
+    public async Task The_uncategorized_categories_take_no_sub_category()
+    {
+        var main = await Start();
+
+        AddSubcategory(main, "Nezaradené výdavky", "Niečo");
+
+        Assert.False(main.Categories.SelectedRow!.CanAddSubcategory);
+        Assert.Empty(main.Categories.SelectedRow.Subcategories);
+        Assert.Null(main.Categories.Message);
+    }
+
+    [Fact]
+    public async Task The_categorys_Ostatne_is_marked_as_the_one_for_everything_else()
+    {
+        var main = await Start();
+
+        var food = main.Categories.Rows.Single(r => r.Name == "Stravovanie");
+
+        Assert.Equal([false, false, true], food.Subcategories.Select(s => s.IsOther));
+        Assert.Equal("pre všetko, čo nepatrí inam", Texts.OtherHint);
+    }
+
+    [Fact]
+    public async Task A_sub_category_is_added_to_a_built_in_category_before_Ostatne_with_a_confirmation_and_the_field_empties()
     {
         var main = await Start();
 
@@ -200,8 +246,8 @@ public sealed class CategoriesAddingTests : IDisposable
         Assert.Equal(["Potraviny", "Reštaurácie a kaviarne", "Obedy v práci", "Ostatné"], food.Subcategories.Select(s => s.Name));
         Assert.Equal([false, false, true, false], food.Subcategories.Select(s => s.IsOwn));
         Assert.Equal("Podkategória „Obedy v práci“ je pridaná do kategórie „Stravovanie“.", main.Categories.Message);
-        Assert.Null(main.Categories.OpenRow);
-        Assert.False(food.IsLineOpen);
+        Assert.Same(food, main.Categories.SelectedRow);
+        Assert.Equal("", main.Categories.SubcategoryName);
     }
 
     [Fact]
@@ -220,14 +266,14 @@ public sealed class CategoriesAddingTests : IDisposable
     [InlineData("Ostatné", "Taký názov už existuje.")]
     [InlineData("ostatne", "Taký názov už existuje.")]
     [InlineData("Potraviny", "Taký názov už existuje.")]
-    public async Task A_sub_category_name_that_cannot_be_used_is_refused_and_the_line_stays_open(string name, string reason)
+    public async Task A_sub_category_name_that_cannot_be_used_is_refused_and_stays_typed(string name, string reason)
     {
         var main = await Start();
 
         AddSubcategory(main, "Stravovanie", name);
 
         Assert.Equal(reason, main.Categories.SubcategoryError);
-        Assert.Equal("Stravovanie", main.Categories.OpenRow?.Name);
+        Assert.Equal("Stravovanie", main.Categories.SelectedRow?.Name);
         Assert.Equal(name, main.Categories.SubcategoryName);
         Assert.Equal(3, main.Categories.Rows.Single(r => r.Name == "Stravovanie").Subcategories.Count);
         Assert.Null(main.Categories.Message);
@@ -258,12 +304,12 @@ public sealed class CategoriesAddingTests : IDisposable
     }
 
     [Fact]
-    public async Task The_top_fields_and_the_line_keep_their_own_text()
+    public async Task The_new_category_and_the_new_sub_category_keep_their_own_text()
     {
         var main = await Start();
-        main.Categories.NewName = "Šport";
-        main.Categories.OpenLineCommand.Execute(main.Categories.Rows[0]);
         main.Categories.SubcategoryName = "Niečo";
+        main.Categories.StartNewCategoryCommand.Execute(null);
+        main.Categories.NewName = "Šport";
 
         Assert.Equal("Šport", main.Categories.NewName);
         Assert.Equal("Niečo", main.Categories.SubcategoryName);
@@ -458,33 +504,44 @@ public sealed class CategoriesAddingTests : IDisposable
     }
 
     [Fact]
-    public async Task The_card_keeps_its_state_when_another_statement_is_opened()
+    public async Task The_screen_keeps_its_state_when_another_statement_is_opened()
     {
         var main = await Start();
         AddCategory(main, "Šport");
-        main.Categories.NewName = "Dane";
-        main.Categories.OpenLineCommand.Execute(main.Categories.Rows[2]);
+        Choose(main, "Stravovanie");
         main.Categories.SubcategoryName = "Obedy";
 
         await main.OpenFileAsync(Samples.Path("02-busy-month"));
 
         Assert.Contains(main.Categories.Rows, r => r.Name == "Šport");
-        Assert.Equal("Dane", main.Categories.NewName);
+        Assert.Equal("Stravovanie", main.Categories.SelectedRow?.Name);
         Assert.Equal("Obedy", main.Categories.SubcategoryName);
-        Assert.Same(main.Categories.Rows[2], main.Categories.OpenRow);
     }
 
     [Fact]
-    public async Task Adding_a_category_while_a_line_is_open_keeps_it_open_on_the_same_category()
+    public async Task The_form_for_a_new_category_keeps_its_text_when_another_statement_is_opened()
     {
         var main = await Start();
-        main.Categories.OpenLineCommand.Execute(main.Categories.Rows[2]);
-        main.Categories.SubcategoryName = "Obedy";
+        main.Categories.StartNewCategoryCommand.Execute(null);
+        main.Categories.NewName = "Dane";
 
-        AddCategory(main, "Šport");
+        await main.OpenFileAsync(Samples.Path("02-busy-month"));
 
-        Assert.Equal(main.Categories.Rows[2].Name, main.Categories.OpenRow?.Name);
-        Assert.True(main.Categories.Rows[2].IsLineOpen);
-        Assert.Equal("Obedy", main.Categories.SubcategoryName);
+        Assert.True(main.Categories.IsAddingCategory);
+        Assert.Equal("Dane", main.Categories.NewName);
+    }
+
+    [Fact]
+    public async Task Choosing_a_category_and_switching_screens_keeps_the_choice()
+    {
+        var main = await Start();
+        Choose(main, "Auto-moto");
+
+        main.SelectedScreen = main.Screens.Single(s => s.Screen == AppScreen.Categories);
+        Assert.True(main.ShowsCategories);
+        Assert.False(main.ShowsRules);
+        main.SelectedScreen = main.Screens[0];
+
+        Assert.Equal("Auto-moto", main.Categories.SelectedRow?.Name);
     }
 }

@@ -119,28 +119,49 @@ internal static class Screens
             main.RuleForm.Message = null;
         }),
         new("19-screen-switch-hover", main => Open(main, "01-typical-month"), InWindow: window => PointAt(window, Choice(window.ScreenSwitch, 1))),
-        // Categories of the user's own (#25).
+        // The "Kategórie" screen (#25).
         new("20-categories", main =>
         {
             AddOwnCategories(main);
+            Choose(main, "Stravovanie");
             main.Categories.Message = Texts.SubcategoryAdded("Obedy v práci", "Stravovanie");
-            ShowRules(main);
+            ShowCategories(main);
         }),
-        new("21-subcategory-line", main =>
+        new("21-own-category", main =>
         {
             AddOwnCategories(main);
-            main.Categories.OpenLineCommand.Execute(main.Categories.Rows.Single(r => r.Name == "Stravovanie"));
-            main.Categories.SubcategoryName = "Potraviny";
-            main.AddSubcategoryCommand.Execute(null);
-            main.Categories.Message = null;
-            ShowRules(main);
+            Choose(main, "Šport");
+            ShowCategories(main);
         }),
-        new("22-categories-not-saving", main =>
+        new("22-new-category", main =>
         {
             Open(main, "01-typical-month");
+            main.Categories.StartNewCategoryCommand.Execute(null);
+            main.Categories.NewName = "Bývanie";
+            main.AddCategoryCommand.Execute(null);
+            ShowCategories(main);
+        }),
+        new("23-subcategory-refused", main =>
+        {
+            Open(main, "01-typical-month");
+            Choose(main, "Stravovanie");
+            main.Categories.SubcategoryName = "Potraviny";
+            main.AddSubcategoryCommand.Execute(null);
+            ShowCategories(main);
+        }),
+        new("24-uncategorized-chosen", main =>
+        {
+            Open(main, "01-typical-month");
+            Choose(main, "Nezaradené výdavky");
+            ShowCategories(main);
+        }),
+        new("25-categories-not-saving", main =>
+        {
+            Open(main, "01-typical-month");
+            main.Categories.StartNewCategoryCommand.Execute(null);
             main.Categories.NewName = "Šport";
             main.AddCategoryCommand.Execute(null);
-            ShowRules(main);
+            ShowCategories(main);
         }, rules =>
         {
             File.WriteAllText(rules, """{ "version": 2 }""");
@@ -223,15 +244,11 @@ internal static class Screens
     private static void AddOwnCategories(MainViewModel main)
     {
         Open(main, "01-typical-month");
-        main.Categories.NewName = "Šport";
-        main.AddCategoryCommand.Execute(null);
-        main.Categories.NewName = "Dane";
-        main.Categories.SelectedRole = main.Categories.Roles[2];
-        main.AddCategoryCommand.Execute(null);
-        main.Categories.SelectedRole = main.Categories.Roles[0];
+        AddCategory(main, "Šport", 0);
+        AddCategory(main, "Dane", 2);
         foreach (var (category, name) in new[] { ("Šport", "Vybavenie"), ("Šport", "Vstupné"), ("Stravovanie", "Obedy v práci") })
         {
-            main.Categories.OpenLineCommand.Execute(main.Categories.Rows.Single(r => r.Name == category));
+            Choose(main, category);
             main.Categories.SubcategoryName = name;
             main.AddSubcategoryCommand.Execute(null);
         }
@@ -241,7 +258,23 @@ internal static class Screens
         main.RuleForm.SelectedSubcategory = main.RuleForm.Subcategories.Single(s => s.Name == "Vybavenie");
         main.AddRuleCommand.Execute(null);
         main.RuleForm.Message = null;
+        main.Categories.Message = null;
     }
+
+    private static void AddCategory(MainViewModel main, string name, int role)
+    {
+        main.Categories.StartNewCategoryCommand.Execute(null);
+        main.Categories.NewName = name;
+        main.Categories.SelectedRole = main.Categories.Roles[role];
+        main.AddCategoryCommand.Execute(null);
+        main.Categories.SelectedRole = main.Categories.Roles[0];
+    }
+
+    private static void Choose(MainViewModel main, string category) =>
+        main.Categories.SelectedRow = main.Categories.Rows.Single(r => r.Name == category);
+
+    private static void ShowCategories(MainViewModel main) =>
+        main.SelectedScreen = main.Screens.Single(s => s.Screen == AppScreen.Categories);
 
     private static void AddRuleOnTheExample(MainViewModel main)
     {

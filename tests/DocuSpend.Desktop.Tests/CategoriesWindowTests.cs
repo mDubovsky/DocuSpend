@@ -10,7 +10,7 @@ using DocuSpend.Presentation;
 namespace DocuSpend.Desktop.Tests;
 
 /// <summary>
-/// The "Kategórie" card in the real window (work/025-own-categories/spec.md). What the view models do is tested in
+/// The "Kategórie" screen in the real window (work/025-own-categories/spec.md). What the view models do is tested in
 /// DocuSpend.Presentation.Tests; these catch what only the window shows.
 /// </summary>
 public sealed class CategoriesWindowTests : IDisposable
@@ -21,33 +21,33 @@ public sealed class CategoriesWindowTests : IDisposable
 
     public void Dispose() => Directory.Delete(_folder, recursive: true);
 
-    private (MainWindow Window, MainViewModel Model) Start(double width = 1280, double height = 940)
+    private (MainWindow Window, MainViewModel Model) Start()
     {
         var model = new MainViewModel(new RuleStore(RulesFile), example: MainWindowTests.Sample("01-typical-month"));
-        var window = new MainWindow(model) { Width = width, Height = height };
+        var window = new MainWindow(model) { Width = 1280, Height = 940 };
         window.Show();
         Headless.Wait(model.OpenExampleCommand.ExecuteAsync(null));
-        Headless.ShowRules(model);
-        Dispatcher.UIThread.RunJobs();
+        ShowCategories(model);
         return (window, model);
     }
 
-    private static Control Named(Window window, string name) => window.FindControl<Control>(name)!;
-
-    private static IEnumerable<T> All<T>(Window window, string name) where T : Control =>
-        window.GetVisualDescendants().OfType<T>().Where(c => c.Name == name);
-
-    private static T Row<T>(MainWindow window, string category, string name) where T : Control
+    private static void ShowCategories(MainViewModel model)
     {
-        var model = (MainViewModel)window.DataContext!;
-        var index = model.Categories.Rows.ToList().FindIndex(r => r.Name == category);
-        var container = window.CategoryList.ContainerFromIndex(index)!;
-        return container.GetVisualDescendants().OfType<T>().Single(c => c.Name == name);
+        model.SelectedScreen = model.Screens.Single(s => s.Screen == AppScreen.Categories);
+        Dispatcher.UIThread.RunJobs();
+    }
+
+    private static void Choose(MainViewModel model, string category)
+    {
+        model.Categories.SelectedRow = model.Categories.Rows.Single(r => r.Name == category);
+        Dispatcher.UIThread.RunJobs();
     }
 
     private static void Add(MainWindow window, string name, CategoryRole role = CategoryRole.Spending)
     {
         var model = (MainViewModel)window.DataContext!;
+        window.NewCategoryButton.Command!.Execute(null);
+        Dispatcher.UIThread.RunJobs();
         window.CategoryNameField.Text = name;
         model.Categories.SelectedRole = model.Categories.Roles.Single(r => r.Role == role);
         window.AddCategoryButton.Command!.Execute(null);
@@ -55,59 +55,109 @@ public sealed class CategoriesWindowTests : IDisposable
     }
 
     [Fact]
-    public void The_card_is_under_the_form_with_the_add_fields_and_shows_only_on_the_rules_screen() => Headless.Run(() =>
+    public void Kategorie_is_the_third_screen_and_shows_only_its_own_cards() => Headless.Run(() =>
     {
         var (window, model) = Start();
 
-        var form = Named(window, "FormHeading");
-        var card = window.CategoriesCard;
-        Assert.True(card.IsEffectivelyVisible);
-        Assert.True(card.TranslatePoint(default, window)!.Value.Y > form.TranslatePoint(default, window)!.Value.Y);
-        var formCard = form.GetVisualAncestors().OfType<Border>().First(b => b.Classes.Contains("card"));
-        Assert.Equal(formCard.TranslatePoint(default, window)!.Value.X, card.TranslatePoint(default, window)!.Value.X, 1);
-        Assert.True(window.CategoryNameField.IsEffectivelyVisible);
-        Assert.True(window.AddCategoryButton.IsEffectivelyVisible);
-        Assert.True(window.RoleChoice.IsEffectivelyVisible);
-        Assert.Equal(Texts.RoleHelp, ToolTip.GetTip(window.RoleHelp));
-        Assert.Equal(16, window.CategoryList.ItemCount);
+        var labels = window.ScreenSwitch.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text).ToList();
+        Assert.Equal(["Výpis", "Pravidlá", "Kategórie"], labels);
+        Assert.True(window.CategoriesScreen.IsEffectivelyVisible);
+        Assert.False(window.StatementScreen.IsEffectivelyVisible);
+        Assert.False(window.RulesScreen.IsEffectivelyVisible);
 
-        model.SelectedScreen = model.Screens[0];
-        Dispatcher.UIThread.RunJobs();
-        Assert.False(card.IsEffectivelyVisible);
+        Headless.ShowRules(model);
+        Assert.False(window.CategoriesScreen.IsEffectivelyVisible);
+        Assert.True(window.RulesScreen.IsEffectivelyVisible);
         window.Close();
     });
 
     [Fact]
-    public void Adding_a_category_with_the_button_shows_its_row_and_brings_it_into_view() => Headless.Run(() =>
+    public void The_list_shows_every_category_and_the_first_one_is_chosen_with_its_details() => Headless.Run(() =>
+    {
+        var (window, _) = Start();
+
+        Assert.Equal(16, window.CategoryList.ItemCount);
+        Assert.True(window.CategoryDetails.IsEffectivelyVisible);
+        Assert.False(window.NewCategoryForm.IsEffectivelyVisible);
+        Assert.Equal("Bývanie", window.CategoryDetailsName.Text);
+        Assert.Equal("Počíta sa ako výdavky", window.CategoryDetailsRole.Text);
+        Assert.Equal(4, window.SubcategoryList.ItemCount);
+        window.Close();
+    });
+
+    [Fact]
+    public void Ostatne_says_what_it_is_for() => Headless.Run(() =>
+    {
+        var (window, _) = Start();
+
+        var hints = window.SubcategoryList.GetVisualDescendants().OfType<TextBlock>()
+            .Where(t => t.Text == Texts.OtherHint && t.IsEffectivelyVisible).ToList();
+
+        Assert.Single(hints);
+        window.Close();
+    });
+
+    [Fact]
+    public void An_uncategorized_category_says_what_it_holds_and_offers_no_sub_category() => Headless.Run(() =>
+    {
+        var (window, model) = Start();
+
+        Choose(model, "Nezaradené výdavky");
+
+        Assert.True(window.UncategorizedNote.IsEffectivelyVisible);
+        Assert.False(window.SubcategoryPart.IsEffectivelyVisible);
+        Assert.False(window.SubcategoryNameField.IsEffectivelyVisible);
+        window.Close();
+    });
+
+    [Fact]
+    public void Nova_kategoria_shows_the_form_with_the_cursor_in_the_name_and_Zrusit_shows_the_details_again() => Headless.Run(() =>
+    {
+        var (window, _) = Start();
+
+        window.NewCategoryButton.Command!.Execute(null);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.True(window.NewCategoryForm.IsEffectivelyVisible);
+        Assert.False(window.CategoryDetails.IsEffectivelyVisible);
+        Assert.True(window.CategoryNameField.IsFocused);
+        Assert.Equal(Texts.RoleHelp, ToolTip.GetTip(window.RoleHelp));
+
+        window.CancelNewCategoryButton.Command!.Execute(null);
+        Dispatcher.UIThread.RunJobs();
+        Assert.False(window.NewCategoryForm.IsEffectivelyVisible);
+        Assert.True(window.CategoryDetails.IsEffectivelyVisible);
+        window.Close();
+    });
+
+    [Fact]
+    public void Adding_a_category_chooses_it_and_brings_it_into_view_with_the_confirmation() => Headless.Run(() =>
     {
         var (window, model) = Start();
         for (var i = 1; i <= 12; i++)
             Add(window, $"Vlastná {i}");
-        Dispatcher.UIThread.RunJobs();
 
-        Add(window, "Šport");
-        Dispatcher.UIThread.RunJobs();
+        Add(window, "Šport", CategoryRole.Excluded);
 
         Assert.Equal(29, window.CategoryList.ItemCount);
-        Assert.Equal("Kategória „Šport“ je pridaná.", model.Categories.Message);
+        Assert.Equal("Šport", window.CategoryDetailsName.Text);
+        Assert.Equal("Nepočíta sa do výdavkov", window.CategoryDetailsRole.Text);
         Assert.True(window.CategoriesMessage.IsEffectivelyVisible);
-        // The message takes its own room: the list starts below it, not under it.
-        var messageBottom = window.CategoriesMessage.TranslatePoint(new Point(0, window.CategoriesMessage.Bounds.Height), window)!.Value.Y;
-        Assert.True(window.CategoriesScroll.TranslatePoint(default, window)!.Value.Y >= messageBottom - 0.5);
-        Assert.Equal("", window.CategoryNameField.Text);
-        var row = window.CategoryList.ContainerFromIndex(model.Categories.Rows.ToList().FindIndex(r => r.Name == "Šport"))!;
-        var top = row.TranslatePoint(default, window.CategoriesScroll)!.Value.Y;
-        Assert.InRange(top, 0, window.CategoriesScroll.Viewport.Height);
+        var index = model.Categories.Rows.ToList().FindIndex(r => r.Name == "Šport");
+        var row = window.CategoryList.ContainerFromIndex(index)!;
+        var scroller = window.CategoryList.GetVisualDescendants().OfType<ScrollViewer>().First();
+        Assert.InRange(row.TranslatePoint(default, scroller)!.Value.Y, 0, scroller.Viewport.Height);
         window.Close();
     });
 
     [Fact]
-    public void A_refused_name_shows_its_reason_under_the_field_and_stays_typed() => Headless.Run(() =>
+    public void A_refused_name_shows_its_reason_under_the_field_and_the_form_stays() => Headless.Run(() =>
     {
         var (window, _) = Start();
 
         Add(window, "Bývanie");
 
+        Assert.True(window.NewCategoryForm.IsEffectivelyVisible);
         Assert.True(window.CategoryNameError.IsEffectivelyVisible);
         Assert.Equal("Taký názov už existuje.", window.CategoryNameError.Text);
         Assert.Equal("Bývanie", window.CategoryNameField.Text);
@@ -115,88 +165,51 @@ public sealed class CategoriesWindowTests : IDisposable
     });
 
     [Fact]
-    public void The_line_for_a_sub_category_opens_with_its_field_focused_and_closes_when_another_opens_or_is_cancelled() => Headless.Run(() =>
+    public void A_sub_category_is_added_under_the_chosen_category_and_a_refused_one_shows_its_reason() => Headless.Run(() =>
     {
         var (window, model) = Start();
-        Assert.DoesNotContain(All<StackPanel>(window, "SubcategoryLine"), l => l.IsEffectivelyVisible);
+        Choose(model, "Stravovanie");
 
-        model.Categories.OpenLineCommand.Execute(model.Categories.Rows.Single(r => r.Name == "Stravovanie"));
+        window.SubcategoryNameField.Text = "Potraviny";
+        window.AddSubcategoryButton.Command!.Execute(null);
         Dispatcher.UIThread.RunJobs();
-        var field = Row<TextBox>(window, "Stravovanie", "SubcategoryNameField");
-        Assert.True(Row<StackPanel>(window, "Stravovanie", "SubcategoryLine").IsEffectivelyVisible);
-        Assert.True(field.IsFocused);
+        Assert.True(window.SubcategoryError.IsEffectivelyVisible);
+        Assert.Equal("Taký názov už existuje.", window.SubcategoryError.Text);
 
-        model.Categories.OpenLineCommand.Execute(model.Categories.Rows.Single(r => r.Name == "Bývanie"));
+        window.SubcategoryNameField.Text = "Obedy v práci";
+        window.AddSubcategoryButton.Command!.Execute(null);
         Dispatcher.UIThread.RunJobs();
-        Assert.False(Row<StackPanel>(window, "Stravovanie", "SubcategoryLine").IsEffectivelyVisible);
-        Assert.True(Row<StackPanel>(window, "Bývanie", "SubcategoryLine").IsEffectivelyVisible);
-
-        Row<Button>(window, "Bývanie", "CancelSubcategoryButton").Command!.Execute(null);
-        Dispatcher.UIThread.RunJobs();
-        Assert.DoesNotContain(All<StackPanel>(window, "SubcategoryLine"), l => l.IsEffectivelyVisible);
-        window.Close();
-    });
-
-    [Fact]
-    public void A_refused_sub_category_name_shows_its_reason_under_its_field_and_the_line_stays_open() => Headless.Run(() =>
-    {
-        var (window, model) = Start();
-        model.Categories.OpenLineCommand.Execute(model.Categories.Rows.Single(r => r.Name == "Stravovanie"));
-        Dispatcher.UIThread.RunJobs();
-
-        Row<TextBox>(window, "Stravovanie", "SubcategoryNameField").Text = "Potraviny";
-        Row<Button>(window, "Stravovanie", "AddSubcategoryButton").Command!.Execute(null);
-        Dispatcher.UIThread.RunJobs();
-
-        var reason = Row<TextBlock>(window, "Stravovanie", "SubcategoryError");
-        Assert.True(reason.IsEffectivelyVisible);
-        Assert.Equal("Taký názov už existuje.", reason.Text);
-        Assert.True(Row<StackPanel>(window, "Stravovanie", "SubcategoryLine").IsEffectivelyVisible);
-        window.Close();
-    });
-
-    [Fact]
-    public void The_button_to_add_a_sub_category_is_on_every_row_except_the_two_uncategorized_ones() => Headless.Run(() =>
-    {
-        var (window, model) = Start();
-
-        var buttons = window.CategoryList.GetVisualDescendants().OfType<Button>()
-            .Where(b => b.Content as string == Texts.AddSubcategory && b.IsEffectivelyVisible).ToList();
-
-        Assert.Equal(14, buttons.Count);
-        Assert.Equal(["Nezaradené výdavky", "Nezaradené príjmy"], model.Categories.Rows.TakeLast(2).Select(r => r.Name));
+        Assert.Equal(4, window.SubcategoryList.ItemCount);
+        Assert.Equal("", window.SubcategoryNameField.Text);
+        Assert.True(window.CategoriesMessage.IsEffectivelyVisible);
         window.Close();
     });
 
     [Fact]
     public void The_name_fields_take_at_most_forty_characters() => Headless.Run(() =>
     {
-        var (window, model) = Start();
-        model.Categories.OpenLineCommand.Execute(model.Categories.Rows[0]);
-        Dispatcher.UIThread.RunJobs();
+        var (window, _) = Start();
 
         Assert.Equal(Texts.MaxNameLength, window.CategoryNameField.MaxLength);
-        Assert.Equal(Texts.MaxNameLength, Row<TextBox>(window, model.Categories.Rows[0].Name, "SubcategoryNameField").MaxLength);
+        Assert.Equal(Texts.MaxNameLength, window.SubcategoryNameField.MaxLength);
         window.Close();
     });
 
     [Fact]
-    public void With_many_categories_the_card_scrolls_inside_itself_and_the_window_does_not_scroll() => Headless.Run(() =>
+    public void With_many_categories_the_list_scrolls_inside_its_card_and_the_window_does_not_scroll() => Headless.Run(() =>
     {
         var (window, _) = Start();
         for (var i = 1; i <= 30; i++)
             Add(window, $"Vlastná kategória {i}");
-        Dispatcher.UIThread.RunJobs();
 
-        var scroll = window.CategoriesScroll;
-        Assert.True(scroll.Extent.Height > scroll.Viewport.Height);
+        var scroller = window.CategoryList.GetVisualDescendants().OfType<ScrollViewer>().First();
+        Assert.True(scroller.Extent.Height > scroller.Viewport.Height);
         Assert.True(window.ContentScroller.Extent.Height <= window.ContentScroller.Viewport.Height + 0.5);
-        Assert.True(scroll.Extent.Width <= scroll.Viewport.Width + 0.5);
         window.Close();
     });
 
     [Fact]
-    public void While_changes_are_not_saved_the_card_says_so() => Headless.Run(() =>
+    public void While_changes_are_not_saved_the_screen_says_so() => Headless.Run(() =>
     {
         File.WriteAllText(RulesFile, """{ "version": 2 }""");
         var (window, _) = Start();
@@ -206,27 +219,19 @@ public sealed class CategoriesWindowTests : IDisposable
     });
 
     [Fact]
-    public void The_card_is_as_it_was_after_a_switch_to_the_statement_and_back() => Headless.Run(() =>
+    public void The_screen_is_as_it_was_after_a_switch_to_another_screen_and_back() => Headless.Run(() =>
     {
         var (window, model) = Start();
-        window.CategoryNameField.Text = "Šport";
-        model.Categories.SelectedRole = model.Categories.Roles[2];
-        model.Categories.OpenLineCommand.Execute(model.Categories.Rows.Single(r => r.Name == "Stravovanie"));
-        Dispatcher.UIThread.RunJobs();
-        Row<TextBox>(window, "Stravovanie", "SubcategoryNameField").Text = "Obedy";
-        window.CategoriesScroll.Offset = new Vector(0, 40);
-        Dispatcher.UIThread.RunJobs();
+        Choose(model, "Stravovanie");
+        window.SubcategoryNameField.Text = "Obedy";
 
         model.SelectedScreen = model.Screens[0];
         Dispatcher.UIThread.RunJobs();
-        Headless.ShowRules(model);
-        Dispatcher.UIThread.RunJobs();
+        ShowCategories(model);
 
-        Assert.Equal("Šport", window.CategoryNameField.Text);
-        Assert.Equal(CategoryRole.Excluded, model.Categories.SelectedRole.Role);
-        Assert.Equal("Obedy", Row<TextBox>(window, "Stravovanie", "SubcategoryNameField").Text);
-        Assert.True(Row<StackPanel>(window, "Stravovanie", "SubcategoryLine").IsEffectivelyVisible);
-        Assert.Equal(40, window.CategoriesScroll.Offset.Y);
+        Assert.Equal("Stravovanie", window.CategoryDetailsName.Text);
+        Assert.Equal("Obedy", window.SubcategoryNameField.Text);
+        Assert.Same(model.Categories.SelectedRow, window.CategoryList.SelectedItem);
         window.Close();
     });
 
@@ -235,9 +240,10 @@ public sealed class CategoriesWindowTests : IDisposable
     {
         var (window, model) = Start();
         model.RuleForm.Text = "minimarket";
+        window.NewCategoryButton.Command!.Execute(null);
+        Dispatcher.UIThread.RunJobs();
         window.CategoryNameField.Text = "Šport";
         window.CategoryNameField.Focus();
-        Dispatcher.UIThread.RunJobs();
 
         window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
         Dispatcher.UIThread.RunJobs();
@@ -251,11 +257,10 @@ public sealed class CategoriesWindowTests : IDisposable
     public void Enter_in_the_sub_category_field_adds_the_sub_category_and_not_a_rule() => Headless.Run(() =>
     {
         var (window, model) = Start();
-        model.Categories.OpenLineCommand.Execute(model.Categories.Rows.Single(r => r.Name == "Stravovanie"));
-        Dispatcher.UIThread.RunJobs();
-        var field = Row<TextBox>(window, "Stravovanie", "SubcategoryNameField");
-        field.Text = "Obedy";
-        field.Focus();
+        model.RuleForm.Text = "minimarket";
+        Choose(model, "Stravovanie");
+        window.SubcategoryNameField.Text = "Obedy";
+        window.SubcategoryNameField.Focus();
 
         window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
         Dispatcher.UIThread.RunJobs();
@@ -266,18 +271,20 @@ public sealed class CategoriesWindowTests : IDisposable
     });
 
     [Fact]
-    public void A_new_sub_category_is_a_choice_in_the_rule_forms_lists_at_once() => Headless.Run(() =>
+    public void A_new_sub_category_is_a_choice_in_the_rule_form_and_a_chosen_target_stays() => Headless.Run(() =>
     {
         var (window, model) = Start();
+        Headless.ShowRules(model);
         model.RuleForm.SelectedCategory = model.RuleForm.Categories.Single(c => c.Name == "Stravovanie");
         model.RuleForm.SelectedSubcategory = model.RuleForm.Subcategories[0];
         Dispatcher.UIThread.RunJobs();
 
-        model.Categories.OpenLineCommand.Execute(model.Categories.Rows.Single(r => r.Name == "Stravovanie"));
+        ShowCategories(model);
+        Choose(model, "Stravovanie");
+        window.SubcategoryNameField.Text = "Obedy v práci";
+        window.AddSubcategoryButton.Command!.Execute(null);
         Dispatcher.UIThread.RunJobs();
-        Row<TextBox>(window, "Stravovanie", "SubcategoryNameField").Text = "Obedy v práci";
-        Row<Button>(window, "Stravovanie", "AddSubcategoryButton").Command!.Execute(null);
-        Dispatcher.UIThread.RunJobs();
+        Headless.ShowRules(model);
 
         Assert.Equal("Stravovanie", model.RuleForm.SelectedCategory?.Name);
         Assert.Equal("Potraviny", model.RuleForm.SelectedSubcategory?.Name);

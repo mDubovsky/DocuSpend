@@ -117,7 +117,11 @@ public static class Texts
     public const string CountsAs = "Počíta sa ako";
     public const string AddCategory = "Pridať kategóriu";
     public const string AddSubcategory = "Pridať podkategóriu";
-    public const string Add = "Pridať";
+    public const string NewCategory = "Nová kategória";
+    public const string Subcategories = "Podkategórie";
+    public const string NewSubcategory = "Nová podkategória";
+    public const string OtherHint = "pre všetko, čo nepatrí inam";
+    public const string UncategorizedNote = "Sem patria transakcie, ktoré nezaradilo žiadne pravidlo. Táto kategória nemá podkategórie.";
     public const string Own = "vlastná";
     public const string RoleHelp = "Výdavky: platby sa započítajú do výdavkov a do grafu výdavkov. Príjmy: prichádzajúce platby, nikdy sa nepočítajú ako výdavky. Mimo výdavkov: napríklad prevody medzi vlastnými účtami alebo investície; do výdavkov sa nezapočítajú.";
     public const string CategoryOnlyThisSession = "Kategória platí len do zatvorenia DocuSpend.";
@@ -138,6 +142,15 @@ public static class Texts
         CategoryRole.Spending => "Výdavky",
         CategoryRole.Income => "Príjmy",
         CategoryRole.Excluded => "Mimo výdavkov",
+        _ => throw new ArgumentOutOfRangeException(nameof(role), role, null),
+    };
+
+    /// <summary>A role as a category's details say it.</summary>
+    public static string RoleText(CategoryRole role) => role switch
+    {
+        CategoryRole.Spending => "Počíta sa ako výdavky",
+        CategoryRole.Income => "Počíta sa ako príjmy",
+        CategoryRole.Excluded => "Nepočíta sa do výdavkov",
         _ => throw new ArgumentOutOfRangeException(nameof(role), role, null),
     };
 

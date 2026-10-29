@@ -13,7 +13,7 @@ The built-in categories don't fit everyone. A user who wants to follow something
 The MVP says a built-in set of categories ships "and users can add their own" ([mvp.md](../../docs/mvp.md)). DocuSpend can already hold user categories and keeps them between sessions ([#13](../013-keep-rules/intent.md)), but the user can't create one on screen.
 
 ## Desired outcome
-- **The user sees the categories.** In a card "Kategórie" on the rules screen ("Pravidlá", [#21](../021-rules-screen/intent.md)) the user can see every category with its sub-categories, built-in and their own, and which are their own.
+- **The user sees the categories.** On a screen of their own, "Kategórie", next to "Výpis" and "Pravidlá" ([#21](../021-rules-screen/intent.md)), the user can see every category with its sub-categories, built-in and their own, and which are their own.
 - **A category can be added.** The user names it and chooses its role: spending, income or excluded from spending. It gets its own "Ostatné" sub-category without being asked.
 - **A sub-category can be added** to any category, built-in or the user's own. The uncategorized buckets have no sub-categories, so they get none.
 - **Names are checked as the categorization already checks them.** A name can't be empty, a new category can't share a name with another category, and a new sub-category can't share a name with another sub-category of the same category. Case and diacritics are ignored when comparing names. A refused name is explained in Slovak, and nothing is added.
@@ -47,10 +47,9 @@ The MVP says a built-in set of categories ships "and users can add their own" ([
 - **No sub-categories in the uncategorized buckets**, as the [glossary](../../docs/glossary.md) and [mvp.md](../../docs/mvp.md) define them.
 - **Categories are referred to by identifiers, not names** ([decision 0004](../../docs/decisions/0004-stable-category-and-rule-identifiers.md)). That leaves room to rename them later without breaking rules.
 - **No rename or delete in this item**, as the issue says. A category added by mistake stays until a later item makes it possible to change it.
-
-- **The categories are a card "Kategórie" on the rules screen**, beside the rules, not a third screen, agreed by the maintainer. [#21](../021-rules-screen/intent.md) left room there for it, and categories are what rules point at.
+- **The categories get a screen of their own, "Kategórie"**, a third pill in the header's switch, decided by the maintainer at the screenshot review. A card under the rule form was the first choice, but with every category, sub-category and button in a third of the window it was cluttered and confusing. A screen of its own has room for a plain list of categories beside the chosen one's details.
 - **A mistyped category can't be fixed yet**, agreed by the maintainer. Renaming and deleting your own categories get an issue of their own: deleting raises its own questions (what happens to the rules that point at a category), which would make this item twice as big.
-- **A new, still empty category doesn't show on the statement screen**, agreed by the maintainer. The statement screen's categories and pie show what the month holds, as for built-in categories today; a new category shows in the "Kategórie" card and as a rule target, and on the statement screen once a rule fills it.
+- **A new, still empty category doesn't show on the statement screen**, agreed by the maintainer. The statement screen's categories and pie show what the month holds, as for built-in categories today; a new category shows on the "Kategórie" screen and as a rule target, and on the statement screen once a rule fills it.
 
 ## Open questions
 None.

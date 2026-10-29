@@ -147,7 +147,13 @@ public sealed class CategoriesTests : IDisposable
         Assert.Equal("Počíta sa ako", Texts.CountsAs);
         Assert.Equal("Pridať kategóriu", Texts.AddCategory);
         Assert.Equal("Pridať podkategóriu", Texts.AddSubcategory);
-        Assert.Equal("Pridať", Texts.Add);
+        Assert.Equal("Nová kategória", Texts.NewCategory);
+        Assert.Equal("Podkategórie", Texts.Subcategories);
+        Assert.Equal("Nová podkategória", Texts.NewSubcategory);
+        Assert.Equal("Počíta sa ako výdavky", Texts.RoleText(CategoryRole.Spending));
+        Assert.Equal("Počíta sa ako príjmy", Texts.RoleText(CategoryRole.Income));
+        Assert.Equal("Nepočíta sa do výdavkov", Texts.RoleText(CategoryRole.Excluded));
+        Assert.Equal("Sem patria transakcie, ktoré nezaradilo žiadne pravidlo. Táto kategória nemá podkategórie.", Texts.UncategorizedNote);
         Assert.Equal("vlastná", Texts.Own);
         Assert.Equal("Výdavky", Texts.RoleName(CategoryRole.Spending));
         Assert.Equal("Príjmy", Texts.RoleName(CategoryRole.Income));
