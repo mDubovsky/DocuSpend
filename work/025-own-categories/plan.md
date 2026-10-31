@@ -95,15 +95,16 @@ Test-first for logic; one commit per step, committed when it is done and every t
    - `README.md` ("What works today", and what is next) and `AGENTS.md` (the three screens);
    - the spec and this plan updated for anything the build changed;
    - the intent becomes `done`;
-   - the follow-up issue for renaming and deleting your own categories, drafted with `new-issue` for the maintainer to approve, as the intent decided.
+   - the follow-up issue for renaming and deleting your own categories, as the intent decided, is left to the maintainer to open; the maintainer asked to finish this item without starting another.
 
 ## Risks and unknowns
 
-- **Found at the first screenshot review: the card under the rule form was cluttered and confusing.** Every category with all its sub-categories as pills, a button and tags on every row, in a third of the window; half-scrolled rows left stray "Ostatné" pills under the card's messages, and the "Názov" placeholder sat high in its field. The maintainer chose a screen of its own with a list and one category's details. The placeholder is centred for every text box.
+- **Found in the screenshot review: the card under the rule form was cluttered and confusing.** Every category with all its sub-categories as pills, a button and tags on every row, in a third of the window; half-scrolled rows left stray "Ostatné" pills under the card's messages, and the "Názov" placeholder sat high in its field. The maintainer chose a screen of its own with a list and one category's details. The placeholder is centred for every text box.
 - **A refreshed rule form could lose its choice**, if the new category lists hold new objects and the combo boxes compare by reference. The form reselects by identifier; tests cover a half-typed rule, a rule being edited, and the window.
 - **A list replaced on refresh lets go of its selection** for a moment, which would look like the user choosing nothing. `CategoriesViewModel` ignores that while it refreshes, and keeps the chosen category by identifier.
 - **Found in the build: a screen never shown reports its text boxes as visible** when searched through the logical tree. A #21 window test that looked for the one visible text box in the whole window now looks only inside the rules screen.
 - **Found in the build: Enter in a name field added a rule**, through the rule form's default button. The window handles Enter in both name fields first.
+- **Found in the hand check:** nothing; the maintainer added a category and a sub-category, sent a real statement's transactions there with a rule, and found them all after a restart.
 
 ## Verification
 
