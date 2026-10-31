@@ -360,7 +360,10 @@ internal static class Screens
             }
 
             var path = Path.Combine(output, $"{screen.Name}-{look}.png");
-            window.CaptureRenderedFrame()!.Save(path);
+            // Held until saved, then freed: unheld, a Release build could collect the frame while Skia was still
+            // encoding it, which crashed the tool now and then (0xC0000005 in sk_image_encode).
+            using (var frame = window.CaptureRenderedFrame()!)
+                frame.Save(path);
             window.Close();
             return path;
         }

@@ -105,6 +105,7 @@ Test-first for logic; one commit per step, committed when it is done and every t
 - **Found in the build: a screen never shown reports its text boxes as visible** when searched through the logical tree. A #21 window test that looked for the one visible text box in the whole window now looks only inside the rules screen.
 - **Found in the build: Enter in a name field added a rule**, through the rule form's default button. The window handles Enter in both name fields first.
 - **Found in the hand check:** nothing; the maintainer added a category and a sub-category, sent a real statement's transactions there with a rule, and found them all after a restart.
+- **Found in the PR's build: the screenshot tool crashed now and then in Release** (0xC0000005 in Skia's PNG encoder, about two runs in three locally). The captured frame was never held or disposed, so the garbage collector could free it while it was being encoded; the six new screenshots made that likelier. The tool now holds each frame in a `using` until it is saved, and six Release runs in a row passed.
 
 ## Verification
 
