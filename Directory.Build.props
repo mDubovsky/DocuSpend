@@ -16,7 +16,7 @@
 
   <!-- The user interface toolkit (decision 0005). One version for every Avalonia package. -->
   <PropertyGroup>
-    <AvaloniaVersion>11.3.22</AvaloniaVersion>
+    <AvaloniaVersion>12.1.4</AvaloniaVersion>
     <!-- The build telemetry package Avalonia brings; switched off in Directory.Build.targets. -->
     <AvaloniaBuildServicesVersion>11.3.2</AvaloniaBuildServicesVersion>
   </PropertyGroup>
