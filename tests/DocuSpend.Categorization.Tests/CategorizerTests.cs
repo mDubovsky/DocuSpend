@@ -42,6 +42,38 @@ public class CategorizerTests
 
     private static string Where(CategorizedTransaction t) => t.Placement.Subcategory?.Value ?? t.Placement.Category.Value;
 
+    // Cash withdrawals and unknown types (work/041-unknown-transaction-kinds/spec.md: Categorizing)
+
+    [Fact]
+    public void No_default_rule_places_a_cash_withdrawal_even_at_a_machine_named_after_a_shop()
+    {
+        var result = Run(CashWithdrawal("ATM TESCO ZOBOR NITRA"), Card("TESCO ZOBOR NITRA"));
+
+        Assert.Equal(["uncategorized-out", "food.groceries"], result.Transactions.Select(Where));
+        Assert.Null(result.Transactions[0].Rule);
+    }
+
+    [Fact]
+    public void A_user_rule_places_a_cash_withdrawal_by_its_text_or_its_type()
+    {
+        var byText = Config.AddUserRuleOnTop(new TextCondition("tesco", TextMode.Contains), new SubcategoryId("food.groceries")).Value!;
+        var byType = Config.AddUserRuleOnTop(new TypeCondition([TransactionType.CashWithdrawal]), new SubcategoryId("other-expenses.other")).Value!;
+
+        Assert.Equal("food.groceries", Where(Run(byText, CashWithdrawal("ATM TESCO ZOBOR NITRA")).Transactions[0]));
+        Assert.Equal("other-expenses.other", Where(Run(byType, CashWithdrawal("ATM NITRA")).Transactions[0]));
+    }
+
+    [Fact]
+    public void An_unknown_type_is_placed_by_the_rules_like_any_other_transaction()
+    {
+        var byPrintedType = Config.AddUserRuleOnTop(new TextCondition("hodinkami", TextMode.Contains), new SubcategoryId("leisure.other")).Value!;
+
+        var result = Run(Unknown("PLATBA HODINKAMI", "PEKAREN U MOSTA"), Unknown("ZRÁŽKA ZO ZÁLOHY"), Unknown("VKLAD NA UCET", amount: 20m));
+
+        Assert.Equal(["food.groceries", "uncategorized-out", "uncategorized-in"], result.Transactions.Select(Where));
+        Assert.Equal("leisure.other", Where(Run(byPrintedType, Unknown("PLATBA HODINKAMI", "PEKAREN U MOSTA")).Transactions[0]));
+    }
+
     // Placement
 
     [Fact]

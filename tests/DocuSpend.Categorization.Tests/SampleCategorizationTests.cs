@@ -121,6 +121,19 @@ public class SampleCategorizationTests
     }
 
     [Fact]
+    public void Sample_ten_leaves_cash_uncategorized_and_places_the_other_new_types_by_their_text()
+    {
+        var result = Categorize("10-new-types-month");
+        string Type(CategorizedTransaction t) => t.Transaction.PrintedType ?? t.Transaction.Type.ToString();
+
+        Assert.All(result.Transactions.Where(t => t.Transaction.Type == Statements.Model.TransactionType.CashWithdrawal),
+            t => Assert.Equal("uncategorized-out", Where(t)));
+        Assert.Equal("food.groceries", Where(result.Transactions.Single(t => Type(t) == "PLATBA HODINKAMI")));
+        Assert.Equal("uncategorized-out", Where(result.Transactions.Single(t => Type(t) == "ZRÁŽKA ZO ZÁLOHY")));
+        Assert.True(result.IsComplete);
+    }
+
+    [Fact]
     public void Sample_three_with_its_awkward_text_is_categorized_without_trouble()
     {
         var result = Categorize("03-awkward-month");

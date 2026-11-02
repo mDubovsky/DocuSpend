@@ -5,6 +5,9 @@ public enum RefusalKind
     /// <summary>A transaction-type condition without any type.</summary>
     NoTypeChosen,
 
+    /// <summary>A transaction-type condition naming the unknown type, which no rule can name.</summary>
+    UnknownType,
+
     /// <summary>A text condition (description, purpose or counterparty name) without text.</summary>
     EmptyText,
 

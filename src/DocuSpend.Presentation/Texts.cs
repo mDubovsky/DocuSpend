@@ -217,6 +217,8 @@ public static class Texts
     public static string Refusal(RefusalKind kind) => kind switch
     {
         RefusalKind.NoTypeChosen => "Vyberte typ transakcie.",
+        // The form never offers the unknown type; the text is here so no refusal is ever without one.
+        RefusalKind.UnknownType => "Neznámy typ transakcie sa nedá vybrať. Takú transakciu zaradíte pravidlom s textom.",
         RefusalKind.EmptyText => "Zadajte text, ktorý obsahuje aspoň jedno písmeno alebo číslicu.",
         RefusalKind.EmptyAccount => "Zadajte číslo účtu.",
         RefusalKind.EmptySymbol => "Zadajte variabilný symbol.",

@@ -1,5 +1,6 @@
 using DocuSpend.Categorization.Model;
 using DocuSpend.Categorization.Results;
+using DocuSpend.Categorization.Rules;
 using DocuSpend.Statements.Model;
 
 namespace DocuSpend.Categorization;
@@ -11,6 +12,14 @@ namespace DocuSpend.Categorization;
 /// </summary>
 public static class Categorizer
 {
+    /// <summary>
+    /// Default rules never place a cash withdrawal: its description names the cash machine, often inside a shop, so a
+    /// text rule would call the cash shopping. It stays uncategorized until the user decides
+    /// (work/041-unknown-transaction-kinds/spec.md).
+    /// </summary>
+    private static bool Applies(Rule rule, Transaction transaction) =>
+        rule.Source == RuleSource.User || transaction.Type != TransactionType.CashWithdrawal;
+
     public static CategorizedStatement Categorize(Statement statement, CategorizationConfig config)
     {
         var catalog = config.Catalog;
@@ -19,7 +28,7 @@ public static class Categorizer
 
         foreach (var transaction in statement.Transactions)
         {
-            var rule = rules.FirstOrDefault(r => r.Condition.Matches(transaction));
+            var rule = rules.FirstOrDefault(r => Applies(r, transaction) && r.Condition.Matches(transaction));
             var (category, placement) = Place(catalog, rule, transaction);
             categorized.Add(new CategorizedTransaction(
                 transaction,
