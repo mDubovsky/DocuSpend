@@ -83,7 +83,8 @@
                 <Button Grid.Column="1" Classes="close" Content="{x:Static vm:Texts.Close}" Command="{Binding CloseRulesMessageCommand}" />
               </Grid>
             </Border>
-            <WrapPanel IsVisible="{Binding ShowsStatement}">
+            <Grid IsVisible="{Binding ShowsStatement}" ColumnDefinitions="*,Auto">
+            <WrapPanel>
               <StackPanel Margin="{StaticResource Look.Margin.KeyFigure}">
                 <TextBlock Classes="label" Text="{x:Static vm:Texts.SpendingTotal}" />
                 <TextBlock Classes="keyNumber main" Text="{Binding Statement.SpendingTotal}" />
@@ -97,6 +98,13 @@
                 <TextBlock Classes="keyNumber" Text="{Binding Statement.ClosingBalance}" />
               </StackPanel>
             </WrapPanel>
+            <!-- Transactions of types DocuSpend doesn't know yet: a quiet note, only when there are some -->
+            <StackPanel x:Name="UnknownTypes" Grid.Column="1" Classes="headingRow" VerticalAlignment="Bottom"
+                        IsVisible="{Binding Statement.UnknownTypes, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <TextBlock Classes="muted" Text="{Binding Statement.UnknownTypes}" VerticalAlignment="Center" />
+              <Button x:Name="UnknownTypesHelp" Classes="help" Content="?" ToolTip.Tip="{x:Static vm:Texts.UnknownTypesHelp}" VerticalAlignment="Center" />
+            </StackPanel>
+            </Grid>
           </StackPanel>
         </Border>
 

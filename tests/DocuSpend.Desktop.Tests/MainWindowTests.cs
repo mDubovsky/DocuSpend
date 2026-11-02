@@ -31,6 +31,37 @@ public sealed class MainWindowTests : IDisposable
 
     private static IEnumerable<T> All<T>(Control root) => root.GetLogicalDescendants().OfType<T>();
 
+    private (MainWindow Window, MainViewModel Model) Open(string sample)
+    {
+        var model = new MainViewModel(new RuleStore(Path.Combine(_folder, "rules.json")));
+        Headless.Wait(model.OpenFileAsync(Sample(sample)));
+        var window = new MainWindow(model);
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        return (window, model);
+    }
+
+    [Fact]
+    public void A_statement_with_unknown_types_shows_the_note_with_its_help_mark() => Headless.Run(() =>
+    {
+        var (window, _) = Open("10-new-types-month");
+        var note = window.FindControl<StackPanel>("UnknownTypes")!;
+
+        Assert.True(note.IsEffectivelyVisible);
+        Assert.Contains(All<TextBlock>(note), t => t.Text == "2 transakcie neznámeho typu");
+        Assert.Equal(Texts.UnknownTypesHelp, ToolTip.GetTip(window.FindControl<Button>("UnknownTypesHelp")!));
+        window.Close();
+    });
+
+    [Fact]
+    public void A_statement_without_unknown_types_shows_no_note() => Headless.Run(() =>
+    {
+        var (window, _) = Open("01-typical-month");
+
+        Assert.False(window.FindControl<StackPanel>("UnknownTypes")!.IsVisible);
+        window.Close();
+    });
+
     [Fact]
     public void The_window_loads_from_its_xaml_and_shows_the_first_sample_in_slovak() => Headless.Run(() =>
     {

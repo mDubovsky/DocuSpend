@@ -66,7 +66,7 @@ public sealed class FitWindowTests : IDisposable
         {
             var data = new TheoryData<string, LookChoice>();
             foreach (var look in new[] { LookChoice.Light, LookChoice.Dark })
-                foreach (var sample in new[] { "01-typical-month", "02-busy-month", "03-awkward-month", "04-empty-month", "05-single-transaction-month" })
+                foreach (var sample in new[] { "01-typical-month", "02-busy-month", "03-awkward-month", "04-empty-month", "05-single-transaction-month", "10-new-types-month" })
                     data.Add(sample, look);
             return data;
         }

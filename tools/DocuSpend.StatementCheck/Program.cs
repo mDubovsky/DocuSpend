@@ -40,7 +40,7 @@ foreach (var file in files)
     var result = reader.Read(bytes);
     if (result.Statement is { } statement)
     {
-        Console.WriteLine($"{Path.GetFileName(file)}: OK ({Pages(bytes)} pages, {statement.Transactions.Count} transactions)");
+        Console.WriteLine(DocuSpend.StatementCheck.CheckLine.Ok(Path.GetFileName(file), Pages(bytes), statement));
         if (categorize)
             PrintCategories(Categorizer.Categorize(statement, config));
     }
