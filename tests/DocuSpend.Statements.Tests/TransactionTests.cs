@@ -58,6 +58,84 @@ public class TransactionTests
             Transfer(new DateOnly(2026, 6, 9), new DateOnly(2026, 6, 9))));
     }
 
+    // New and unknown types (work/041-unknown-transaction-kinds/spec.md)
+
+    [Fact]
+    public void A_google_pay_payment_reads_as_a_wallet_card_payment() =>
+        AssertRoundTrip(June(Card(new DateOnly(2026, 6, 10), new DateOnly(2026, 6, 8), -4.60m) with
+        {
+            Type = TransactionType.WalletCardPayment,
+            GooglePay = true,
+        }));
+
+    [Fact]
+    public void A_cash_withdrawal_reads_with_its_card_value_date_description_and_reference() =>
+        AssertRoundTrip(June(Card(new DateOnly(2026, 6, 10), new DateOnly(2026, 6, 9), -50.00m) with
+        {
+            Type = TransactionType.CashWithdrawal,
+            Description = "ATM00417 TRNAVA 13:07",
+        }));
+
+    [Fact]
+    public void An_unknown_type_laid_out_like_a_card_payment_reads_with_its_printed_type_and_card()
+    {
+        var unknown = Card(new DateOnly(2026, 6, 10), new DateOnly(2026, 6, 9), -3.20m) with
+        {
+            Type = TransactionType.Unknown,
+            PrintedType = "PLATBA HODINKAMI",
+        };
+
+        AssertRoundTrip(June(unknown));
+        var read = Reader.Read(VubStatementRenderer.Render(June(unknown))).Statement!.Transactions.Single();
+        Assert.Equal(Statements.Model.TransactionType.Unknown, read.Type);
+        Assert.Equal("PLATBA HODINKAMI", read.PrintedType);
+        Assert.Equal("1111", read.Card);
+    }
+
+    [Fact]
+    public void An_unknown_type_laid_out_like_a_transfer_reads_its_symbols_and_details() =>
+        AssertRoundTrip(June(new Transaction
+        {
+            BookingDate = new DateOnly(2026, 6, 12),
+            ValueDate = new DateOnly(2026, 6, 11),
+            Type = TransactionType.Unknown,
+            PrintedType = "ZRÁŽKA ZO ZÁLOHY",
+            Amount = -35.00m,
+            Description = "Zaloha jun",
+            CounterpartyName = "Správa Bytov Lipa",
+            PaymentPurpose = "Zaloha jun",
+            VariableSymbol = "6202",
+            ConstantSymbol = "0308",
+            Reference = "2606120000001",
+        }));
+
+    [Fact]
+    public void A_long_printed_type_is_kept_whole() =>
+        AssertRoundTrip(June(new Transaction
+        {
+            BookingDate = new DateOnly(2026, 6, 12),
+            ValueDate = new DateOnly(2026, 6, 12),
+            Type = TransactionType.Unknown,
+            PrintedType = "PLATBA HODINKAMI ZA PRSTEN",
+            Amount = -9.90m,
+        }));
+
+    [Fact]
+    public void A_wallet_label_the_reader_does_not_know_stays_an_unknown_type() =>
+        AssertRoundTrip(June(Card(new DateOnly(2026, 6, 10), new DateOnly(2026, 6, 9), -3.20m) with
+        {
+            Type = TransactionType.Unknown,
+            PrintedType = "PLATBA KARTOU X-PAY",
+        }));
+
+    [Fact]
+    public void Known_types_carry_no_printed_type()
+    {
+        foreach (var name in Samples.Valid)
+            Assert.All(Reader.Read(Samples.Pdf(name)).Statement!.Transactions,
+                t => Assert.Equal(t.Type == Statements.Model.TransactionType.Unknown, t.PrintedType is not null));
+    }
+
     [Fact]
     public void Reading_the_same_file_twice_gives_the_same_result()
     {
@@ -84,6 +162,9 @@ public class TransactionTests
         Description = "OBCHOD NA ROHU",
         Reference = "0000000000001",
     };
+
+    private static StatementScenario June(params Transaction[] transactions) =>
+        Scenario("june", new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 30), transactions);
 
     private static StatementScenario Scenario(string name, DateOnly start, DateOnly end, params Transaction[] transactions) => new()
     {

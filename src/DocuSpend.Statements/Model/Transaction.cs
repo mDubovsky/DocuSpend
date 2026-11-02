@@ -8,6 +8,10 @@ public enum TransactionType
     InstantTransfer,
     AccountFee,
     FeeReversal,
+    CashWithdrawal,
+
+    /// <summary>A type this reader doesn't know; <see cref="Transaction.PrintedType"/> says what the statement prints.</summary>
+    Unknown,
 }
 
 /// <summary>One transaction as a statement prints it. A field the statement doesn't show is <c>null</c>.</summary>
@@ -47,4 +51,9 @@ public sealed record Transaction
 
     /// <summary>For fee rows: the amount printed in the fee column, equal to <see cref="Amount"/>.</summary>
     public decimal? FeeAmount { get; init; }
+
+    /// <summary>
+    /// For <see cref="TransactionType.Unknown"/> only: the type text exactly as printed, words separated by single spaces.
+    /// </summary>
+    public string? PrintedType { get; init; }
 }

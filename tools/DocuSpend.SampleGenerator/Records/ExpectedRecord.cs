@@ -83,6 +83,7 @@ public sealed record TransactionRecord
     public string? Reference { get; init; }
     public string? FeeType { get; init; }
     public decimal? FeeAmount { get; init; }
+    public string? PrintedType { get; init; }
 
     public static TransactionRecord From(Transaction tx) => new()
     {
@@ -105,5 +106,6 @@ public sealed record TransactionRecord
         Reference = tx.Reference,
         FeeType = tx.FeeType,
         FeeAmount = tx.FeeAmount,
+        PrintedType = tx.PrintedType,
     };
 }

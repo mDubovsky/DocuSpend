@@ -244,6 +244,7 @@ internal static class Words
         (TransactionType.InstantTransfer, "instantTransfer"),
         (TransactionType.AccountFee, "accountFee"),
         (TransactionType.FeeReversal, "feeReversal"),
+        (TransactionType.CashWithdrawal, "cashWithdrawal"),
     ];
 
     public static string Role(CategoryRole value) => Roles.Single(r => r.Value == value).Word;

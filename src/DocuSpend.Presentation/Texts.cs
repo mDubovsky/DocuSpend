@@ -208,6 +208,8 @@ public static class Texts
         TransactionType.InstantTransfer => "Okamžitý prevod",
         TransactionType.AccountFee => "Poplatok za vedenie účtu",
         TransactionType.FeeReversal => "Vrátenie poplatku",
+        TransactionType.CashWithdrawal => "Výber hotovosti",
+        TransactionType.Unknown => "Neznámy typ",
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
     };
 

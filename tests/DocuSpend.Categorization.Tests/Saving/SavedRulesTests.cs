@@ -183,7 +183,10 @@ public class SavedRulesTests
     [Fact]
     public void Every_value_has_a_fixed_word()
     {
-        Assert.All(Enum.GetValues<TransactionType>(), t => Assert.Equal(t, Words.ParseType(Words.Type(t))));
+        // An unknown type can't be in a rule, so it has no word (work/041-unknown-transaction-kinds/spec.md).
+        Assert.All(Enum.GetValues<TransactionType>().Where(t => t != TransactionType.Unknown),
+            t => Assert.Equal(t, Words.ParseType(Words.Type(t))));
+        Assert.Equal("cashWithdrawal", Words.Type(TransactionType.CashWithdrawal));
         Assert.All(Enum.GetValues<CategoryRole>(), r => Assert.Equal(r, Words.ParseRole(Words.Role(r))));
         Assert.All(Enum.GetValues<TextMode>(), m => Assert.Equal(m, Words.ParseMode(Words.Mode(m))));
         Assert.Equal("equals", Words.Mode(TextMode.EqualTo));
