@@ -211,7 +211,7 @@ public sealed class CategoriesWindowTests : IDisposable
     [Fact]
     public void While_changes_are_not_saved_the_screen_says_so() => Headless.Run(() =>
     {
-        File.WriteAllText(RulesFile, """{ "version": 2 }""");
+        File.WriteAllText(RulesFile, """{ "version": 99 }""");
         var (window, _) = Start();
 
         Assert.True(window.CategoriesNotSaving.IsEffectivelyVisible);

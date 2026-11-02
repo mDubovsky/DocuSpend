@@ -234,7 +234,7 @@ public sealed class ScreensWindowTests : IDisposable
     [Fact]
     public void The_not_saving_line_shows_on_the_rules_screen_only() => Headless.Run(() =>
     {
-        File.WriteAllText(RulesFile, """{ "version": 2 }""");
+        File.WriteAllText(RulesFile, """{ "version": 99 }""");
         var (window, model) = StartWithStatement();
 
         Assert.False(Named(window, "RulesNotSaving").IsEffectivelyVisible);

@@ -53,6 +53,7 @@ public class SavedRulesTests
         c = Ok(c.AddUserRule(new AmountCondition(1000m, null), new SubcategoryId("investments.other"), 4));
         c = Ok(c.AddUserRule(new VariableSymbolCondition("0326"), new SubcategoryId("housing.equipment"), 2));
         c = Ok(c.AddUserRule(new TextCondition("Café „Ž“  😀 Lekáreň", TextMode.Contains), prenájom, 2));
+        c = Ok(c.AddUserRule(new TypeCondition([TransactionType.CashWithdrawal, TransactionType.CardPayment]), deti, 3));
         // A rule whose number changed after it was created keeps its place among equals.
         c = Ok(c.SetUserRulePriority(c.UserRules[2].Id, 7));
         return c;
@@ -208,7 +209,7 @@ public class SavedRulesTests
     [Fact]
     public void An_empty_file_of_the_current_shape_loads_as_no_user_rules()
     {
-        var reading = SavedRules.Read("""{ "version": 1, "categories": [], "subcategories": [], "rules": [] }""", Defaults);
+        var reading = SavedRules.Read("""{ "version": 2, "categories": [], "subcategories": [], "rules": [] }""", Defaults);
         Assert.Equal(SavedRulesStatus.Loaded, reading.Status);
         Assert.Empty(reading.Config!.UserRules);
         AssertSameUserPart(Defaults, reading.Config);
@@ -224,6 +225,9 @@ public class SavedRulesTests
     }
 
     private static JsonNode Rule(JsonNode json, int i) => json["rules"]![i]!;
+
+    private static JsonNode TypeRule(JsonNode json) =>
+        json["rules"]!.AsArray().First(r => r!["condition"]!["kind"]!.GetValue<string>() == "type")!;
 
     public static TheoryData<string, string> DamagedTexts()
     {
@@ -258,7 +262,6 @@ public class SavedRulesTests
             { "an incomplete condition", Mutate(j => Rule(j, 2)["condition"]!["text"] = " ") },
             { "an amount condition with no bound", Mutate(j => Rule(j, 9)["condition"] = JsonNode.Parse("""{ "kind": "amount" }""")) },
             { "a condition with another kind's field", Mutate(j => Rule(j, 2)["condition"]!["symbol"] = "1") },
-            { "an unknown transaction type", Mutate(j => Rule(j, 0)["condition"]!["types"] = new JsonArray("cash")) },
             { "an unknown mode", Mutate(j => Rule(j, 2)["condition"]!["mode"] = "starts") },
             { "a target user sub-category that isn't there", Mutate(j => Rule(j, 0)["target"] = "user-99999999999999999999999999999999") },
         };
@@ -278,7 +281,9 @@ public class SavedRulesTests
     public static TheoryData<string, string> NewerTexts() => new()
     {
         { "a later version", Mutate(j => j["version"] = SavedRules.CurrentVersion + 1) },
-        { "a later version of another shape", """{ "version": 2, "rulePacks": [] }""" },
+        { "a later version of another shape", $$"""{ "version": {{SavedRules.CurrentVersion + 1}}, "rulePacks": [] }""" },
+        // A type a later DocuSpend reads, as this one reads cash withdrawals (work/041-unknown-transaction-kinds/spec.md).
+        { "a transaction type this version doesn't know", Mutate(j => TypeRule(j)["condition"]!["types"] = new JsonArray("transfer", "cryptoPayment")) },
         { "a target built-in sub-category this version doesn't have", Mutate(j => Rule(j, 0)["target"] = "housing.garden") },
         { "a sub-category in a built-in category this version doesn't have", Mutate(j => j["subcategories"]![0]!["category"] = "pets") },
     };

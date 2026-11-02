@@ -270,7 +270,7 @@ public sealed class MainViewModelTests : IDisposable
     public async Task A_file_from_a_newer_DocuSpend_turns_saving_off_and_is_left_untouched()
     {
         Directory.CreateDirectory(_folder);
-        const string Newer = """{ "version": 2, "rulePacks": [] }""";
+        const string Newer = """{ "version": 99, "rulePacks": [] }""";
         File.WriteAllText(RulesFile, Newer);
 
         var main = await Start();

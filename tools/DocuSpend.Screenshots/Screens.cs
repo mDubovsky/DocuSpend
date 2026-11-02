@@ -164,7 +164,7 @@ internal static class Screens
             ShowCategories(main);
         }, rules =>
         {
-            File.WriteAllText(rules, """{ "version": 2 }""");
+            File.WriteAllText(rules, """{ "version": 99 }""");
             return null;
         }),
         new("17-scroll-bar", main =>

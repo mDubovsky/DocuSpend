@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "categories": [
+    {
+      "id": "user-11111111111111111111111111111111",
+      "name": "Hotovosť",
+      "role": "spending",
+      "subcategories": [
+        { "id": "user-11111111111111111111111111111111.other", "name": "Ostatné" }
+      ]
+    }
+  ],
+  "subcategories": [],
+  "rules": [
+    { "id": "user-a0000000000000000000000000000001", "priority": 1, "order": 1, "target": "user-11111111111111111111111111111111.other",
+      "condition": { "kind": "type", "types": [ "cashWithdrawal" ] } },
+    { "id": "user-a0000000000000000000000000000002", "priority": 2, "order": 2, "target": "leisure.other",
+      "condition": { "kind": "text", "text": "hodinkami", "mode": "contains" } },
+    { "id": "user-a0000000000000000000000000000003", "priority": 3, "order": 3, "target": "food.groceries",
+      "condition": { "kind": "type", "types": [ "walletCardPayment", "cardPayment" ] } }
+  ]
+}
