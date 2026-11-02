@@ -191,6 +191,20 @@ public static class Texts
         _ => throw new ArgumentOutOfRangeException(nameof(problem), problem, null),
     };
 
+    /// <summary>The note by the key figures: "1 transakcia / 3 transakcie / 5 transakcií neznámeho typu".</summary>
+    public static string UnknownTypes(int count) => count switch
+    {
+        1 => "1 transakcia neznámeho typu",
+        >= 2 and <= 4 => $"{count} transakcie neznámeho typu",
+        _ => $"{count} transakcií neznámeho typu",
+    };
+
+    /// <summary>The help mark by the note on unknown types.</summary>
+    public const string UnknownTypesHelp = "DocuSpend tento typ transakcie zatiaľ nepozná. Transakciu načítal so sumou aj dátumom a v zozname transakcií má typ uvedený pred popisom. Zaradiť ju môžete pravidlom s textom.";
+
+    /// <summary>Joins a transaction's type and its description in the transaction list.</summary>
+    public const string TypeSeparator = " · ";
+
     /// <summary>"Pravidlo zaradilo 1 transakciu / 3 transakcie / 5 transakcií."</summary>
     public static string RuleMatched(int count) => count switch
     {
