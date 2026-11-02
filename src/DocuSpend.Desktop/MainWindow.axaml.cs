@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using Avalonia.VisualTree;
 using DocuSpend.Categorization.Model;
 using DocuSpend.Desktop.Look;
 using DocuSpend.Presentation;
@@ -50,6 +51,8 @@ public partial class MainWindow : Window
         SpendingPie.DataPointerDown += OnSliceClicked;
         WireHoverCards();
         model.Statement.PropertyChanged += OnStatementChanged;
+        model.Categories.PropertyChanged += OnCategoriesChanged;
+        AddHandler(KeyDownEvent, OnCategoryKeyDown, RoutingStrategies.Bubble);
         model.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(MainViewModel.Look))
@@ -95,6 +98,33 @@ public partial class MainWindow : Window
 
     /// <summary>The palette of the look the window shows now.</summary>
     internal Palette Palette => LookResources.For(ActualThemeVariant);
+
+    /// <summary>
+    /// Enter in a name field of the "Kategórie" screen adds what is typed. Without this, the rule form's default button
+    /// would take the key and add a rule.
+    /// </summary>
+    private void OnCategoryKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter || e.Source is not TextBox field)
+            return;
+        if (field == CategoryNameField)
+            _model.AddCategoryCommand.Execute(null);
+        else if (field == SubcategoryNameField)
+            _model.AddSubcategoryCommand.Execute(null);
+        else
+            return;
+        e.Handled = true;
+    }
+
+    /// <summary>The form for a new category takes the cursor when it opens; the chosen category is kept in view.</summary>
+    private void OnCategoriesChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        var card = _model.Categories;
+        if (e.PropertyName == nameof(CategoriesViewModel.IsAddingCategory) && card.IsAddingCategory)
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => CategoryNameField.Focus(), Avalonia.Threading.DispatcherPriority.Loaded);
+        if (e.PropertyName == nameof(CategoriesViewModel.SelectedRow) && card.SelectedRow is { } chosen)
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => CategoryList.ScrollIntoView(chosen), Avalonia.Threading.DispatcherPriority.Loaded);
+    }
 
     private void OnStatementChanged(object? sender, PropertyChangedEventArgs e)
     {

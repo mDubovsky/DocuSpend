@@ -64,13 +64,13 @@ public sealed class ScreensWindowTests : IDisposable
     });
 
     [Fact]
-    public void With_a_statement_the_switch_offers_both_screens_and_Vypis_is_chosen() => Headless.Run(() =>
+    public void With_a_statement_the_switch_offers_the_three_screens_and_Vypis_is_chosen() => Headless.Run(() =>
     {
         var (window, model) = StartWithStatement();
 
         Assert.True(window.ScreenSwitch.IsEffectivelyVisible);
         var labels = window.ScreenSwitch.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text).ToList();
-        Assert.Equal(["Výpis", "Pravidlá"], labels);
+        Assert.Equal(["Výpis", "Pravidlá", "Kategórie"], labels);
         Assert.Equal(AppScreen.Statement, model.SelectedScreen.Screen);
         window.Close();
     });
@@ -100,7 +100,7 @@ public sealed class ScreensWindowTests : IDisposable
         Assert.True(window.RuleViewSwitch.IsEffectivelyVisible);
         Assert.False(Shows(window, Texts.SpendingChart));
         Assert.False(Shows(window, Texts.BalanceChart));
-        Assert.False(Shows(window, Texts.Categories));
+        Assert.False(Shows(window.RulesScreen, Texts.Categories)); // "Kategórie" is also a pill in the header's switch
         Assert.False(Shows(window, Texts.Transactions));
         Assert.False(Shows(window, Texts.SpendingTotal));
         window.Close();

@@ -38,7 +38,7 @@ public sealed partial class RuleFormViewModel : ObservableObject
     public RuleFormViewModel(CategoryCatalog catalog)
     {
         // A rule's target is always a sub-category; the two Uncategorized buckets have none.
-        Categories = catalog.Categories.Where(c => !c.IsUncategorized).ToList();
+        Categories = CatalogOrder.Categories(catalog).Where(c => !c.IsUncategorized).ToList();
         SelectedKind = ConditionKind.Text;
         SelectedTextMode = TextModes[0];
     }
@@ -62,7 +62,9 @@ public sealed partial class RuleFormViewModel : ObservableObject
     public IReadOnlyList<TypeChoice> Types { get; } =
         Enum.GetValues<TransactionType>().Select(t => new TypeChoice(t, Texts.TypeName(t))).ToList();
 
-    public IReadOnlyList<Category> Categories { get; }
+    /// <summary>The categories a rule can target, in display order; changes when the user adds a category or sub-category.</summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<Category> Categories { get; private set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsText), nameof(IsAccount), nameof(IsAmount), nameof(IsType), nameof(IsSymbol), nameof(SelectedKindOption))]
@@ -195,9 +197,22 @@ public sealed partial class RuleFormViewModel : ObservableObject
         SelectedCategory = null;
     }
 
+    /// <summary>
+    /// Takes the categories as they are now, after the user added one. What was chosen stays chosen, found again by its
+    /// identifier, so a half-typed rule or a rule being edited loses nothing.
+    /// </summary>
+    public void UseCatalog(CategoryCatalog catalog)
+    {
+        var category = SelectedCategory?.Id;
+        var subcategory = SelectedSubcategory?.Id;
+        Categories = CatalogOrder.Categories(catalog).Where(c => !c.IsUncategorized).ToList();
+        SelectedCategory = category is { } id ? Categories.FirstOrDefault(c => c.Id == id) : null;
+        SelectedSubcategory = subcategory is { } sub ? Subcategories.FirstOrDefault(s => s.Id == sub) : null;
+    }
+
     partial void OnSelectedCategoryChanged(Category? value)
     {
-        Subcategories = value?.Subcategories ?? [];
+        Subcategories = value is null ? [] : CatalogOrder.Subcategories(value);
         SelectedSubcategory = null;
     }
 

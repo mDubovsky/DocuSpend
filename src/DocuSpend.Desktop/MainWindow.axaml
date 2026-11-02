@@ -366,6 +366,120 @@
         </Border>
         </Grid>
 
+        <!-- "Kategórie": the list of categories, and the chosen one's details or the form for a new one -->
+        <Grid x:Name="CategoriesScreen" Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="2*,3*" IsVisible="{Binding ShowsCategories}">
+        <Border Classes="card" Grid.Column="0">
+          <DockPanel>
+            <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="{StaticResource Look.Margin.Heading}">
+              <TextBlock Classes="heading plain" Text="{x:Static vm:Texts.Categories}" VerticalAlignment="Center" />
+              <Button x:Name="NewCategoryButton" Grid.Column="1" Classes="secondary" Content="{x:Static vm:Texts.NewCategory}"
+                      Command="{Binding Categories.StartNewCategoryCommand}" />
+            </Grid>
+            <Border Classes="message error" DockPanel.Dock="Top" x:Name="CategoriesNotSaving" IsVisible="{Binding RulesNotSaving}" Margin="{StaticResource Look.Margin.Heading}">
+              <TextBlock Text="{x:Static vm:Texts.RulesNotSaving}" TextWrapping="Wrap" />
+            </Border>
+            <ListBox x:Name="CategoryList" ItemsSource="{Binding Categories.Rows}" SelectedItem="{Binding Categories.SelectedRow}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:CategoryItem">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Classes="name" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                    <Border Grid.Column="1" Classes="tag own" IsVisible="{Binding IsOwn}">
+                      <TextBlock Text="{x:Static vm:Texts.Own}" />
+                    </Border>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
+        </Border>
+
+        <Border Classes="card" Grid.Column="1">
+          <Panel>
+            <!-- The chosen category: its role, its sub-categories, and a field for a new one -->
+            <ScrollViewer x:Name="CategoryDetails" IsVisible="{Binding Categories.ShowsDetails}">
+              <StackPanel Spacing="{StaticResource Look.Space.Medium}">
+                <StackPanel>
+                  <StackPanel Classes="headingRow">
+                    <TextBlock x:Name="CategoryDetailsName" Classes="heading plain" Text="{Binding Categories.SelectedRow.Name, FallbackValue=''}" VerticalAlignment="Center" />
+                    <Border Classes="tag own" IsVisible="{Binding Categories.SelectedRow.IsOwn, FallbackValue=False}">
+                      <TextBlock Text="{x:Static vm:Texts.Own}" />
+                    </Border>
+                  </StackPanel>
+                  <TextBlock x:Name="CategoryDetailsRole" Classes="muted" Text="{Binding Categories.SelectedRow.RoleText, FallbackValue=''}" />
+                </StackPanel>
+                <Border Classes="message confirmation" x:Name="CategoriesMessage"
+                        IsVisible="{Binding Categories.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                  <TextBlock Text="{Binding Categories.Message}" TextWrapping="Wrap" />
+                </Border>
+                <Border Classes="message error" x:Name="CategoriesError"
+                        IsVisible="{Binding Categories.Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                  <TextBlock Text="{Binding Categories.Error}" TextWrapping="Wrap" />
+                </Border>
+                <TextBlock x:Name="UncategorizedNote" Classes="muted" Text="{x:Static vm:Texts.UncategorizedNote}" TextWrapping="Wrap"
+                           IsVisible="{Binding !Categories.SelectedRow.CanAddSubcategory, FallbackValue=False}" />
+                <StackPanel x:Name="SubcategoryPart" IsVisible="{Binding Categories.SelectedRow.CanAddSubcategory, FallbackValue=False}" Spacing="{StaticResource Look.Space.Small}">
+                  <TextBlock Classes="label" Text="{x:Static vm:Texts.Subcategories}" />
+                  <ItemsControl x:Name="SubcategoryList" ItemsSource="{Binding Categories.SelectedRow.Subcategories, FallbackValue={x:Null}}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:SubcategoryItem">
+                        <Border Classes="subcategoryRow">
+                          <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Classes="headingRow">
+                              <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                              <TextBlock Classes="muted" Text="{x:Static vm:Texts.OtherHint}" IsVisible="{Binding IsOther}" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <Border Grid.Column="1" Classes="tag own" IsVisible="{Binding IsOwn}">
+                              <TextBlock Text="{x:Static vm:Texts.Own}" />
+                            </Border>
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{StaticResource Look.Space.Medium}">
+                    <TextBox x:Name="SubcategoryNameField" Text="{Binding Categories.SubcategoryName}" MaxLength="{x:Static vm:Texts.MaxNameLength}"
+                             Watermark="{x:Static vm:Texts.NewSubcategory}" />
+                    <Button x:Name="AddSubcategoryButton" Grid.Column="1" Classes="secondary" Content="{x:Static vm:Texts.AddSubcategory}"
+                            Command="{Binding AddSubcategoryCommand}" />
+                  </Grid>
+                  <TextBlock x:Name="SubcategoryError" Classes="fieldError" Text="{Binding Categories.SubcategoryError}" TextWrapping="Wrap"
+                             IsVisible="{Binding Categories.SubcategoryError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+              </StackPanel>
+            </ScrollViewer>
+
+            <!-- "Nová kategória": shown only when asked for, in place of the details -->
+            <StackPanel x:Name="NewCategoryForm" IsVisible="{Binding Categories.IsAddingCategory}" Spacing="{StaticResource Look.Space.Medium}">
+              <TextBlock Classes="heading" Text="{x:Static vm:Texts.NewCategory}" />
+              <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="{StaticResource Look.Space.Medium}">
+                <TextBlock Classes="muted" Text="{x:Static vm:Texts.CategoryName}" VerticalAlignment="Top" Margin="{StaticResource Look.Margin.FieldLabel}" />
+                <StackPanel Grid.Column="1" Spacing="{StaticResource Look.Space.Small}">
+                  <TextBox x:Name="CategoryNameField" Text="{Binding Categories.NewName}" MaxLength="{x:Static vm:Texts.MaxNameLength}" MinWidth="300" HorizontalAlignment="Left" />
+                  <TextBlock x:Name="CategoryNameError" Classes="fieldError" Text="{Binding Categories.NameError}" TextWrapping="Wrap"
+                             IsVisible="{Binding Categories.NameError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+                <TextBlock Grid.Row="1" Classes="muted" Text="{x:Static vm:Texts.CountsAs}" VerticalAlignment="Center" />
+                <StackPanel Grid.Row="1" Grid.Column="1" Classes="headingRow">
+                  <ComboBox x:Name="RoleChoice" ItemsSource="{Binding Categories.Roles}" SelectedItem="{Binding Categories.SelectedRole}" MinWidth="200">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:RoleOption">
+                        <TextBlock Text="{Binding Label}" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                  <Button x:Name="RoleHelp" Classes="help" Content="?" ToolTip.Tip="{x:Static vm:Texts.RoleHelp}" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}">
+                  <Button x:Name="AddCategoryButton" Classes="primary" Content="{x:Static vm:Texts.AddCategory}" Command="{Binding AddCategoryCommand}" />
+                  <Button x:Name="CancelNewCategoryButton" Classes="secondary" Content="{x:Static vm:Texts.CancelEdit}"
+                          Command="{Binding Categories.CancelNewCategoryCommand}" />
+                </StackPanel>
+              </Grid>
+            </StackPanel>
+          </Panel>
+        </Border>
+        </Grid>
+
       </Grid>
       </Border>
     </ScrollViewer>

@@ -14,7 +14,7 @@ public enum RuleView { Mine, BuiltIn }
 public sealed record RuleViewOption(RuleView View, string Label);
 
 /// <summary>The two screens a statement is shown on: the statement itself and its rules (spec of #21).</summary>
-public enum AppScreen { Statement, Rules }
+public enum AppScreen { Statement, Rules, Categories }
 
 public sealed record AppScreenOption(AppScreen Screen, string Label);
 
@@ -45,6 +45,7 @@ public sealed partial class MainViewModel : ObservableObject
         var load = store.Load(CategorizationConfig.Default);
         Statement = new StatementViewModel(load.Config);
         RuleForm = new RuleFormViewModel(Statement.Config.Catalog);
+        Categories = new CategoriesViewModel(Statement.Config.Catalog);
         RulesMessage = Texts.RulesProblemMessage(load.Problem, load.MovedTo);
         RulesNotSaving = !store.IsSaving;
         Rules = UserRows();
@@ -83,15 +84,19 @@ public sealed partial class MainViewModel : ObservableObject
 
     public RuleFormViewModel RuleForm { get; }
 
+    /// <summary>The "Kategórie" screen.</summary>
+    public CategoriesViewModel Categories { get; }
+
     public IReadOnlyList<AppScreenOption> Screens { get; } =
     [
         new(AppScreen.Statement, Texts.StatementScreen),
         new(AppScreen.Rules, Texts.RulesScreen),
+        new(AppScreen.Categories, Texts.Categories),
     ];
 
     /// <summary>Which screen a statement is shown on: "Výpis" at start, and after every statement that is opened.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowsStatement), nameof(ShowsRules))]
+    [NotifyPropertyChangedFor(nameof(ShowsStatement), nameof(ShowsRules), nameof(ShowsCategories))]
     public partial AppScreenOption SelectedScreen { get; set; }
 
     /// <summary>The statement screen shows: a statement is open and "Výpis" is chosen.</summary>
@@ -100,12 +105,15 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>The rules screen shows: a statement is open and "Pravidlá" is chosen.</summary>
     public bool ShowsRules => HasStatement && SelectedScreen.Screen == AppScreen.Rules;
 
+    /// <summary>The categories screen shows: a statement is open and "Kategórie" is chosen.</summary>
+    public bool ShowsCategories => HasStatement && SelectedScreen.Screen == AppScreen.Categories;
+
     /// <summary>Where "Otvoriť výpis…" asks for a file; the window sets it.</summary>
     public IStatementPicker? Picker { get; set; }
 
     /// <summary>False on the start screen; true once a statement has been opened.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowsStatement), nameof(ShowsRules))]
+    [NotifyPropertyChangedFor(nameof(ShowsStatement), nameof(ShowsRules), nameof(ShowsCategories))]
     public partial bool HasStatement { get; private set; }
 
     /// <summary>The statement shown is the example, with invented data, and is labelled so.</summary>
@@ -229,6 +237,67 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void CloseRulesMessage() => RulesMessage = null;
+
+    /// <summary>
+    /// "Pridať kategóriu": adds the typed category with the chosen role, saves it and shows it. A refused name changes
+    /// nothing and stays typed, with the reason under it. A category that can't be saved still works until DocuSpend
+    /// closes, and the card says so.
+    /// </summary>
+    [RelayCommand]
+    private void AddCategory()
+    {
+        var card = Categories;
+        card.Message = card.Error = card.NameError = null;
+        var outcome = Statement.Config.AddCategory(card.NewName, card.SelectedRole.Role);
+        if (!outcome.IsSuccess)
+        {
+            card.NameError = Texts.Refusal(outcome.Refusal!.Kind);
+            return;
+        }
+        var name = card.NewName.Trim();
+        var saved = ApplyUserChange(outcome.Value!);
+        ShowCategories();
+        card.Added(outcome.Value!.Catalog.Categories[^1].Id);
+        Report(saved, Texts.CategoryAdded(name), Texts.CategoryOnlyThisSession, Texts.CategorySaveFailed);
+    }
+
+    /// <summary>
+    /// "Pridať podkategóriu" in the chosen category's details: adds the typed sub-category to it, saves it and shows it. A refused name
+    /// changes nothing and stays typed, with the reason under the field.
+    /// </summary>
+    [RelayCommand]
+    private void AddSubcategory()
+    {
+        var card = Categories;
+        if (card.SelectedRow is not { } row || !row.CanAddSubcategory)
+            return;
+        card.Message = card.Error = card.SubcategoryError = null;
+        var outcome = Statement.Config.AddSubcategory(row.Id, card.SubcategoryName);
+        if (!outcome.IsSuccess)
+        {
+            card.SubcategoryError = Texts.Refusal(outcome.Refusal!.Kind);
+            return;
+        }
+        var name = card.SubcategoryName.Trim();
+        var saved = ApplyUserChange(outcome.Value!);
+        card.SubcategoryName = "";
+        ShowCategories();
+        Report(saved, Texts.SubcategoryAdded(name, row.Name), Texts.SubcategoryOnlyThisSession, Texts.SubcategorySaveFailed);
+    }
+
+    /// <summary>The card and the rule form show the catalog as it is now.</summary>
+    private void ShowCategories()
+    {
+        Categories.Refresh(Statement.Config.Catalog);
+        RuleForm.UseCatalog(Statement.Config.Catalog);
+    }
+
+    /// <summary>The card's answer to an addition: the confirmation, or why it won't last.</summary>
+    private void Report(bool saved, string confirmation, string onlyThisSession, string saveFailed)
+    {
+        Categories.Message = saved ? confirmation : null;
+        Categories.Error = saved ? null : RulesNotSaving ? onlyThisSession : saveFailed;
+    }
 
     /// <summary>
     /// Adds the form's rule on top of every earlier one, saves it, and categorizes the statement again. A rule that

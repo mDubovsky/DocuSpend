@@ -9,7 +9,7 @@ Shared terms. Use them consistently in docs, specs, and code.
 - **Rejection:** the reader's answer for a file it can't read completely: one of a few kinds (empty, not a PDF, not a known statement, unreadable part, doesn't add up) with a human-readable reason that never repeats the file's content.
 - **Reconcile:** a read statement reconciles when its transactions add up to its own printed totals and its closing balance follows from its opening balance and totals.
 - **Counterparty:** the other party in a transaction (merchant, payer, or payee).
-- **Category:** a named group of transactions shown in the spending chart, e.g. Bývanie. Every category has sub-categories, including one called Ostatné ("other").
+- **Category:** a named group of transactions shown in the spending chart, e.g. Bývanie: built-in, or the user's own, added on the "Kategórie" screen. Every category has sub-categories, including one called Ostatné ("other"), made with it.
 - **Sub-category:** the second level, e.g. Úvery na bývanie under Bývanie. Every transaction is in exactly one sub-category. Two levels only.
 - **Role:** what a category's transactions mean for the totals: *spending*, *income* (incoming payments, never spending) or *excluded* (not spending). Applies to everything under the category.
 - **Balance:** the sum of a category's (or sub-category's) transactions' signed amounts, negative for money going out. A category's spending is the negative of its balance, so money that came back into it reduces it.

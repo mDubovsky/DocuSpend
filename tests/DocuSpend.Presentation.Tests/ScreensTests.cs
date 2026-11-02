@@ -54,12 +54,12 @@ public sealed class ScreensTests : IDisposable
     }
 
     [Fact]
-    public void The_screens_are_offered_as_Vypis_then_Pravidla()
+    public void The_screens_are_offered_as_Vypis_Pravidla_and_Kategorie()
     {
         var main = new MainViewModel(new RuleStore(RulesFile));
 
-        Assert.Equal(["Výpis", "Pravidlá"], main.Screens.Select(s => s.Label));
-        Assert.Equal([AppScreen.Statement, AppScreen.Rules], main.Screens.Select(s => s.Screen));
+        Assert.Equal(["Výpis", "Pravidlá", "Kategórie"], main.Screens.Select(s => s.Label));
+        Assert.Equal([AppScreen.Statement, AppScreen.Rules, AppScreen.Categories], main.Screens.Select(s => s.Screen));
     }
 
     [Fact]
