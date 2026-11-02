@@ -17,15 +17,50 @@ internal sealed class Tx
 
     private int _sequence;
 
-    public Transaction Card(DateOnly booked, int daysEarlier, decimal amount, string merchant, string card, bool wallet = false) => new()
+    public Transaction Card(DateOnly booked, int daysEarlier, decimal amount, string merchant, string card, bool wallet = false,
+        bool googlePay = false) => new()
     {
         BookingDate = booked,
         ValueDate = booked.AddDays(-daysEarlier),
-        Type = wallet ? TransactionType.WalletCardPayment : TransactionType.CardPayment,
+        Type = wallet || googlePay ? TransactionType.WalletCardPayment : TransactionType.CardPayment,
         Amount = -amount,
         Card = card,
         Description = merchant,
         Reference = CardReference(booked),
+        GooglePay = googlePay,
+    };
+
+    /// <summary>Cash from a cash machine: laid out like a card payment, its second line names the machine, place and time.</summary>
+    public Transaction CashWithdrawal(DateOnly booked, int daysEarlier, decimal amount, string machine, string card) => new()
+    {
+        BookingDate = booked,
+        ValueDate = booked.AddDays(-daysEarlier),
+        Type = TransactionType.CashWithdrawal,
+        Amount = -amount,
+        Card = card,
+        Description = machine,
+        Reference = CardReference(booked),
+    };
+
+    /// <summary>
+    /// A type the reader doesn't know. With a card it is laid out like a card payment; without one like a transfer
+    /// that prints its type where the account number goes.
+    /// </summary>
+    public Transaction Unknown(DateOnly booked, int daysEarlier, decimal amount, string printedType, string? description,
+        string? card = null, string? name = null, string? purpose = null, string? vs = null, string? ks = null) => new()
+    {
+        BookingDate = booked,
+        ValueDate = booked.AddDays(-daysEarlier),
+        Type = TransactionType.Unknown,
+        PrintedType = printedType,
+        Amount = amount,
+        Card = card,
+        Description = description,
+        CounterpartyName = name,
+        PaymentPurpose = purpose,
+        VariableSymbol = vs,
+        ConstantSymbol = ks,
+        Reference = card is null ? TransferReference(booked) : CardReference(booked),
     };
 
     public Transaction Incoming(DateOnly booked, decimal amount, string name, string account, string bic,

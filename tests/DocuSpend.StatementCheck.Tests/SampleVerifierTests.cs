@@ -19,10 +19,11 @@ public sealed class SampleVerifierTests : IDisposable
         var report = SampleVerifier.Verify(Samples);
 
         Assert.True(report.Success, string.Join(Environment.NewLine, report.Lines));
-        Assert.Equal(10, report.Lines.Count);
+        Assert.Equal(11, report.Lines.Count);
         Assert.All(report.Lines.Take(5), l => Assert.Contains(": OK, read and categorized", l));
         Assert.All(report.Lines.Skip(5).Take(4), l => Assert.Contains(": OK, rejected as expected", l));
-        Assert.Equal("All 9 samples agree with their records.", report.Lines[^1]);
+        Assert.StartsWith("10-new-types-month: OK, read and categorized", report.Lines[9]);
+        Assert.Equal("All 10 samples agree with their records.", report.Lines[^1]);
     }
 
     [Fact]

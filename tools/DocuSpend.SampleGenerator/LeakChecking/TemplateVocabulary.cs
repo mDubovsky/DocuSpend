@@ -32,6 +32,8 @@ public static class TemplateVocabulary
             [
                 t.Card(day, 0, 0m, P, "0000"),
                 t.Card(day, 0, 0m, P, "0000", wallet: true),
+                t.Card(day, 0, 0m, P, "0000", googlePay: true),
+                t.CashWithdrawal(day, 0, 0m, P, "0000"),
                 t.Incoming(day, 0m, P, account, P, P, category: P, currencyLine: true),
                 t.Instant(day, 0m, P, account, P),
                 .. t.AccountFeeReversed(day, 0m),

@@ -1,0 +1,155 @@
+{
+  "sample": "10-new-types-month",
+  "expectation": "parse",
+  "statement": {
+    "accountHolder": "EVA SKÚŠKOVÁ",
+    "iban": "SK35 9900 0000 0072 6103 8495",
+    "bic": "VZORSKXX",
+    "currency": "EUR",
+    "periodStart": "2026-04-01",
+    "periodEnd": "2026-04-30",
+    "openingBalance": 412.35,
+    "closingBalance": 1490.71,
+    "totalDeposits": 1388.90,
+    "totalWithdrawals": -310.54,
+    "totalFees": 0.00
+  },
+  "transactions": [
+    {
+      "bookingDate": "2026-04-01",
+      "valueDate": "2026-03-31",
+      "type": "walletCardPayment",
+      "amount": -3.80,
+      "currency": "EUR",
+      "card": "5170",
+      "description": "PEKAREN U MOSTA NITRA",
+      "reference": "0104220007919"
+    },
+    {
+      "bookingDate": "2026-04-02",
+      "valueDate": "2026-04-01",
+      "type": "walletCardPayment",
+      "amount": -27.45,
+      "currency": "EUR",
+      "card": "5170",
+      "description": "MINIMARKET POD HRADOM NITRA",
+      "reference": "0204220015838"
+    },
+    {
+      "bookingDate": "2026-04-03",
+      "valueDate": "2026-04-02",
+      "type": "cashWithdrawal",
+      "amount": -50.00,
+      "currency": "EUR",
+      "card": "5170",
+      "description": "ATM00417 NITRA 10:15",
+      "reference": "0304220023757"
+    },
+    {
+      "bookingDate": "2026-04-06",
+      "valueDate": "2026-04-06",
+      "type": "transfer",
+      "amount": 1388.90,
+      "currency": "EUR",
+      "description": "MZDA 03/2026",
+      "counterpartyName": "Fiktívne Mlyny a.s.",
+      "counterpartyAccount": "SK93 1100 0000 0033 4192 7705",
+      "counterpartyBic": "TATRSKBX",
+      "variableSymbol": "32026",
+      "constantSymbol": "0138",
+      "paymentPurpose": "MZDA 03/2026",
+      "purposeCategoryCode": "SALA",
+      "reference": "2604066UTPPLU",
+      "feeType": "X"
+    },
+    {
+      "bookingDate": "2026-04-08",
+      "valueDate": "2026-04-06",
+      "type": "cardPayment",
+      "amount": -61.20,
+      "currency": "EUR",
+      "card": "5170",
+      "description": "CERPACIA STANICA JUH NITRA",
+      "reference": "0804220039595"
+    },
+    {
+      "bookingDate": "2026-04-09",
+      "valueDate": "2026-04-08",
+      "type": "unknown",
+      "amount": -4.20,
+      "currency": "EUR",
+      "card": "5170",
+      "description": "PEKAREN U MOSTA NITRA",
+      "reference": "0904220047514",
+      "printedType": "PLATBA HODINKAMI"
+    },
+    {
+      "bookingDate": "2026-04-12",
+      "valueDate": "2026-04-11",
+      "type": "walletCardPayment",
+      "amount": -18.90,
+      "currency": "EUR",
+      "card": "5170",
+      "description": "BISTRO POD HRADOM NITRA",
+      "reference": "1204220055433"
+    },
+    {
+      "bookingDate": "2026-04-15",
+      "valueDate": "2026-04-13",
+      "type": "cashWithdrawal",
+      "amount": -100.00,
+      "currency": "EUR",
+      "card": "5170",
+      "description": "ATM TESCO ZOBOR NITRA 18:42",
+      "reference": "1504220063352"
+    },
+    {
+      "bookingDate": "2026-04-20",
+      "valueDate": "2026-04-20",
+      "type": "unknown",
+      "amount": -35.00,
+      "currency": "EUR",
+      "description": "Zaloha april",
+      "counterpartyName": "Správa Bytov Zobor",
+      "variableSymbol": "6204",
+      "constantSymbol": "0308",
+      "paymentPurpose": "Zaloha april",
+      "reference": "2604201YRHAAY",
+      "printedType": "ZRÁŽKA ZO ZÁLOHY"
+    },
+    {
+      "bookingDate": "2026-04-24",
+      "valueDate": "2026-04-23",
+      "type": "cardPayment",
+      "amount": -9.99,
+      "currency": "EUR",
+      "card": "5170",
+      "description": "NETFLIX.COM",
+      "reference": "2404220079190"
+    },
+    {
+      "bookingDate": "2026-04-30",
+      "valueDate": "2026-04-30",
+      "type": "accountFee",
+      "amount": -6.90,
+      "currency": "EUR",
+      "description": "Vedenie konta Účet Štandard",
+      "variableSymbol": "0426",
+      "constantSymbol": "0558",
+      "reference": "2604309VZRWFV",
+      "feeAmount": -6.90
+    },
+    {
+      "bookingDate": "2026-04-30",
+      "valueDate": "2026-04-30",
+      "type": "feeReversal",
+      "amount": 6.90,
+      "currency": "EUR",
+      "description": "Storno-vedenie konta",
+      "variableSymbol": "0426",
+      "constantSymbol": "0558",
+      "reference": "2604308FDUTHF",
+      "feeAmount": 6.90
+    }
+  ]
+}

@@ -73,7 +73,7 @@ public class TransactionTests
         AssertRoundTrip(June(Card(new DateOnly(2026, 6, 10), new DateOnly(2026, 6, 9), -50.00m) with
         {
             Type = TransactionType.CashWithdrawal,
-            Description = "ATM00417 TRNAVA 13:07",
+            Description = "ATM00417 TRNAVA 10:15",
         }));
 
     [Fact]

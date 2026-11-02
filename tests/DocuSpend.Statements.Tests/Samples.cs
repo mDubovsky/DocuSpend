@@ -8,7 +8,7 @@ public static class Samples
     public static readonly string Dir = FindDir();
 
     public static readonly string[] Valid =
-        ["01-typical-month", "02-busy-month", "03-awkward-month", "04-empty-month", "05-single-transaction-month"];
+        ["01-typical-month", "02-busy-month", "03-awkward-month", "04-empty-month", "05-single-transaction-month", "10-new-types-month"];
 
     public static readonly string[] Invalid =
         ["06-other-bank-statement", "07-not-a-statement", "08-corrupted-statement", "09-empty-file"];
