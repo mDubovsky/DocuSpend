@@ -11,7 +11,7 @@ namespace DocuSpend.Desktop.Tests;
 /// </summary>
 public sealed class MainWindowTests : IDisposable
 {
-    private readonly string _folder = Path.Combine(Path.GetTempPath(), "docuspend-tests-" + Guid.NewGuid().ToString("N"));
+    private readonly string _folder = Path.Join(Path.GetTempPath(), "docuspend-tests-" + Guid.NewGuid().ToString("N"));
 
     public void Dispose()
     {
@@ -21,7 +21,7 @@ public sealed class MainWindowTests : IDisposable
 
     private (MainWindow Window, MainViewModel Model) Open()
     {
-        var model = new MainViewModel(new RuleStore(Path.Combine(_folder, "rules.json")));
+        var model = new MainViewModel(new RuleStore(Path.Join(_folder, "rules.json")));
         Headless.Wait(model.OpenFileAsync(Sample("01-typical-month")));
         var window = new MainWindow(model);
         window.Show();
@@ -33,7 +33,7 @@ public sealed class MainWindowTests : IDisposable
 
     private (MainWindow Window, MainViewModel Model) Open(string sample)
     {
-        var model = new MainViewModel(new RuleStore(Path.Combine(_folder, "rules.json")));
+        var model = new MainViewModel(new RuleStore(Path.Join(_folder, "rules.json")));
         Headless.Wait(model.OpenFileAsync(Sample(sample)));
         var window = new MainWindow(model);
         window.Show();
@@ -113,14 +113,14 @@ public sealed class MainWindowTests : IDisposable
         window.Close();
     });
 
-    internal static string Sample(string name) => Path.Combine(SamplesDir(), name + ".pdf");
+    internal static string Sample(string name) => Path.Join(SamplesDir(), name + ".pdf");
 
     internal static string SamplesDir()
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
         {
-            if (File.Exists(Path.Combine(dir.FullName, "DocuSpend.slnx")))
-                return Path.Combine(dir.FullName, "samples", "public");
+            if (File.Exists(Path.Join(dir.FullName, "DocuSpend.slnx")))
+                return Path.Join(dir.FullName, "samples", "public");
         }
         throw new InvalidOperationException("Repository root (DocuSpend.slnx) not found.");
     }

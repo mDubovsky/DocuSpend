@@ -13,7 +13,7 @@ namespace DocuSpend.Categorization.Tests.Saving;
 /// </summary>
 public class SecondShapeTests
 {
-    private static readonly string Text = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Saving", "rules-v2.json"));
+    private static readonly string Text = File.ReadAllText(Path.Join(AppContext.BaseDirectory, "Saving", "rules-v2.json"));
 
     private const string Hotovosť = "user-11111111111111111111111111111111";
 
@@ -68,7 +68,7 @@ public class SecondShapeTests
     [Fact]
     public void The_first_shape_still_loads_beside_the_second()
     {
-        var v1 = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Saving", "rules-v1.json"));
+        var v1 = File.ReadAllText(Path.Join(AppContext.BaseDirectory, "Saving", "rules-v1.json"));
 
         Assert.Equal(SavedRulesStatus.Loaded, SavedRules.Read(v1, CategorizationConfig.Default).Status);
     }

@@ -9,7 +9,7 @@ public sealed class CheckLineTests
 
     private static string LineFor(string sample)
     {
-        var statement = new VubStatementReader().Read(File.ReadAllBytes(Path.Combine(Samples, sample + ".pdf"))).Statement!;
+        var statement = new VubStatementReader().Read(File.ReadAllBytes(Path.Join(Samples, sample + ".pdf"))).Statement!;
         return CheckLine.Ok(sample + ".pdf", 2, statement);
     }
 
@@ -35,8 +35,8 @@ public sealed class CheckLineTests
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
         {
-            if (File.Exists(Path.Combine(dir.FullName, "DocuSpend.slnx")))
-                return Path.Combine(dir.FullName, "samples", "public");
+            if (File.Exists(Path.Join(dir.FullName, "DocuSpend.slnx")))
+                return Path.Join(dir.FullName, "samples", "public");
         }
         throw new InvalidOperationException("Repository root (DocuSpend.slnx) not found.");
     }
