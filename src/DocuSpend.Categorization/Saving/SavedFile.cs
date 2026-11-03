@@ -4,10 +4,23 @@ using System.Text.Json.Serialization;
 
 namespace DocuSpend.Categorization.Saving;
 
-// The saved text, version 1 (plan: the saved shape). These records are the shape itself: changing one changes what
+// The saved text, versions 1 to 3 (plan: the saved shape; version 3 added the hand choices, work/022-categorize-from-list/plan.md). These records are the shape itself: changing one changes what
 // DocuSpend writes, so the change needs a new version and a reader for this one (tests/…/Saving/rules-v1.json).
 
-internal sealed record SavedFile(int Version, List<SavedCategory> Categories, List<SavedSubcategoryIn> Subcategories, List<SavedRule> Rules);
+/// <summary>
+/// <paramref name="FingerprintKey"/> and <paramref name="HandChoices"/> are in version 3 only, and always written there;
+/// a version 1 or 2 text that has them is damaged.
+/// </summary>
+internal sealed record SavedFile(
+    int Version,
+    List<SavedCategory> Categories,
+    List<SavedSubcategoryIn> Subcategories,
+    List<SavedRule> Rules,
+    string? FingerprintKey = null,
+    List<SavedHandChoice>? HandChoices = null);
+
+/// <summary>A sub-category chosen for one transaction, which only its fingerprint identifies.</summary>
+internal sealed record SavedHandChoice(string Fingerprint, string Target);
 
 /// <summary>A user category, with all its sub-categories, including its Ostatné.</summary>
 internal sealed record SavedCategory(string Id, string Name, string Role, List<SavedSubcategory> Subcategories);

@@ -47,12 +47,12 @@ public class SecondShapeTests
     }
 
     [Fact]
-    public void This_DocuSpend_writes_the_second_shape()
+    public void This_DocuSpend_writes_the_second_shape_or_a_later_one()
     {
+        // Version 3 followed (work/022-categorize-from-list/plan.md); ThirdShapeTests pins what is written now.
         var written = JsonNode.Parse(SavedRules.Write(Loaded()))!;
 
-        Assert.Equal(2, SavedRules.CurrentVersion);
-        Assert.Equal(2, written["version"]!.GetValue<int>());
+        Assert.True(written["version"]!.GetValue<int>() >= 2);
     }
 
     [Fact]

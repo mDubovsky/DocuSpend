@@ -375,7 +375,7 @@ public sealed class RuleEditorTests : IDisposable
 
         var reading = Categorization.Saving.SavedRules.Read(File.ReadAllText(RulesFile), CategorizationConfig.Default);
         Assert.Equal(Categorization.Saving.SavedRulesStatus.Loaded, reading.Status);
-        Assert.Contains("\"version\": 2", File.ReadAllText(RulesFile));
+        Assert.Contains($"\"version\": {Categorization.Saving.SavedRules.CurrentVersion}", File.ReadAllText(RulesFile));
     }
 
     // Editing: edge cases
