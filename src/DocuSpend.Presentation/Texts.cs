@@ -191,6 +191,20 @@ public static class Texts
         _ => throw new ArgumentOutOfRangeException(nameof(problem), problem, null),
     };
 
+    /// <summary>The note by the key figures: "1 transakcia / 3 transakcie / 5 transakcií neznámeho typu".</summary>
+    public static string UnknownTypes(int count) => count switch
+    {
+        1 => "1 transakcia neznámeho typu",
+        >= 2 and <= 4 => $"{count} transakcie neznámeho typu",
+        _ => $"{count} transakcií neznámeho typu",
+    };
+
+    /// <summary>The help mark by the note on unknown types.</summary>
+    public const string UnknownTypesHelp = "DocuSpend tento typ transakcie zatiaľ nepozná. Transakciu načítal so sumou aj dátumom a v zozname transakcií má typ uvedený pred popisom. Zaradiť ju môžete pravidlom s textom.";
+
+    /// <summary>Joins a transaction's type and its description in the transaction list.</summary>
+    public const string TypeSeparator = " · ";
+
     /// <summary>"Pravidlo zaradilo 1 transakciu / 3 transakcie / 5 transakcií."</summary>
     public static string RuleMatched(int count) => count switch
     {
@@ -208,6 +222,8 @@ public static class Texts
         TransactionType.InstantTransfer => "Okamžitý prevod",
         TransactionType.AccountFee => "Poplatok za vedenie účtu",
         TransactionType.FeeReversal => "Vrátenie poplatku",
+        TransactionType.CashWithdrawal => "Výber hotovosti",
+        TransactionType.Unknown => "Neznámy typ",
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
     };
 
@@ -215,6 +231,8 @@ public static class Texts
     public static string Refusal(RefusalKind kind) => kind switch
     {
         RefusalKind.NoTypeChosen => "Vyberte typ transakcie.",
+        // The form never offers the unknown type; the text is here so no refusal is ever without one.
+        RefusalKind.UnknownType => "Neznámy typ transakcie sa nedá vybrať. Takú transakciu zaradíte pravidlom s textom.",
         RefusalKind.EmptyText => "Zadajte text, ktorý obsahuje aspoň jedno písmeno alebo číslicu.",
         RefusalKind.EmptyAccount => "Zadajte číslo účtu.",
         RefusalKind.EmptySymbol => "Zadajte variabilný symbol.",

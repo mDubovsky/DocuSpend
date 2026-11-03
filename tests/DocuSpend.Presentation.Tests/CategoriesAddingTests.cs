@@ -475,7 +475,7 @@ public sealed class CategoriesAddingTests : IDisposable
     public async Task When_changes_are_not_saved_this_session_the_card_says_they_last_until_closing()
     {
         Directory.CreateDirectory(_folder);
-        File.WriteAllText(RulesFile, "{ \"version\": 2 }");
+        File.WriteAllText(RulesFile, "{ \"version\": 99 }");
         var main = await Start();
         Assert.True(main.RulesNotSaving);
 

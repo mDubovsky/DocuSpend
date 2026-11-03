@@ -34,18 +34,24 @@ public sealed record TypeCondition : Condition
     public override bool Matches(Transaction transaction) => Types.Contains(transaction.Type);
 
     public override Refusal? Validate() =>
-        Needs(Types.Count > 0, RefusalKind.NoTypeChosen, "A transaction-type condition needs at least one type.");
+        Needs(Types.Count > 0, RefusalKind.NoTypeChosen, "A transaction-type condition needs at least one type.")
+        // Nobody knew an unknown type when the rule was made; a text rule finds it by its printed type instead.
+        ?? Needs(!Types.Contains(TransactionType.Unknown), RefusalKind.UnknownType, "A transaction-type condition can't name the unknown type.");
 
     public bool Equals(TypeCondition? other) => other is not null && Types.SequenceEqual(other.Types);
 
     public override int GetHashCode() => Types.Aggregate(0, (hash, type) => HashCode.Combine(hash, type));
 }
 
-/// <summary>The transaction's description, its payment purpose or its counterparty name contains the text, or equals it.</summary>
+/// <summary>
+/// The transaction's description, its payment purpose or its counterparty name contains the text, or equals it; for a
+/// transaction of an unknown type also its printed type.
+/// </summary>
 public sealed record TextCondition(string Text, TextMode Mode) : Condition
 {
     public override bool Matches(Transaction transaction) =>
-        Test(Mode, transaction.Description, Text) || Test(Mode, transaction.PaymentPurpose, Text) || Test(Mode, transaction.CounterpartyName, Text);
+        Test(Mode, transaction.Description, Text) || Test(Mode, transaction.PaymentPurpose, Text) || Test(Mode, transaction.CounterpartyName, Text)
+        || Test(Mode, transaction.PrintedType, Text);
 
     public override Refusal? Validate() =>
         Needs(!TextMatching.HasNoWords(Text), RefusalKind.EmptyText, "A text condition needs text with letters or digits.");

@@ -8,6 +8,10 @@ public enum TransactionType
     InstantTransfer,
     AccountFee,
     FeeReversal,
+    CashWithdrawal,
+
+    /// <summary>A type the reader doesn't know; <see cref="Transaction.PrintedType"/> says what the row prints.</summary>
+    Unknown,
 }
 
 /// <summary>One transaction as it appears on a statement. See work/001-synthetic-statements/layout.md.</summary>
@@ -45,12 +49,36 @@ public sealed record Transaction
     /// <summary>Amount printed in the "Poplatok" column, for fee rows.</summary>
     public decimal? FeeAmount { get; init; }
 
+    /// <summary>For <see cref="TransactionType.Unknown"/>: the type text the row prints, e.g. "PLATBA HODINKAMI".</summary>
+    public string? PrintedType { get; init; }
+
     /// <summary>Render-only: print the "Mena/suma/kurz:" line in the details block.</summary>
     public bool ShowsCurrencyLine { get; init; }
+
+    /// <summary>
+    /// Render-only: details lines whose labels a reader doesn't know, printed after the known ones, e.g.
+    /// ("Pôvodný odosielateľ:", "…"). Their values are no part of the expected record.
+    /// </summary>
+    public IReadOnlyList<(string Label, string Value)> OtherDetails { get; init; } = [];
+
+    /// <summary>
+    /// Render-only: a mark printed right after a card row's value date, e.g. "#" on a refund ("08/10#"). The reader
+    /// drops it.
+    /// </summary>
+    public string? ValueDateMark { get; init; }
+
+    /// <summary>Render-only: a wallet card payment made with Google Pay ("G-PAY") rather than Apple Pay ("A-PAY").</summary>
+    public bool GooglePay { get; init; }
 
     public bool IsFee => Type is TransactionType.AccountFee or TransactionType.FeeReversal;
 
     public bool IsCard => Type is TransactionType.CardPayment or TransactionType.WalletCardPayment;
 
     public bool IsTransfer => Type is TransactionType.Transfer or TransactionType.InstantTransfer;
+
+    /// <summary>Printed like a card payment: card number on the main line, value date on the second.</summary>
+    public bool IsCardRow => IsCard || Type == TransactionType.CashWithdrawal || Type == TransactionType.Unknown && Card is not null;
+
+    /// <summary>Has a details block: transfers, and unknown types printed without a card.</summary>
+    public bool HasDetails => IsTransfer || Type == TransactionType.Unknown && Card is null;
 }

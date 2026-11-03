@@ -24,6 +24,9 @@ public class RandomizedInvariantTests
 
     private static readonly TransactionType[] Types = Enum.GetValues<TransactionType>();
 
+    /// <summary>The types a rule can name: all but the unknown one.</summary>
+    private static readonly TransactionType[] RuleTypes = Types.Where(t => t != TransactionType.Unknown).ToArray();
+
     private static string? MaybeWord(SeededRandom r) => r.Next(4) == 0 ? null : $"{r.Pick(Words)} {r.Pick(Words)}".Trim();
 
     private static Transaction RandomTransaction(SeededRandom r)
@@ -44,6 +47,7 @@ public class RandomizedInvariantTests
             CounterpartyAccount = r.Next(3) == 0 ? r.Pick(Accounts) : null,
             VariableSymbol = r.Next(4) == 0 ? r.Pick(Symbols) : null,
             FeeAmount = type is TransactionType.AccountFee or TransactionType.FeeReversal ? amount : null,
+            PrintedType = type == TransactionType.Unknown ? r.Pick(Words) : null,
         };
     }
 
@@ -52,7 +56,7 @@ public class RandomizedInvariantTests
         var mode = r.Next(2) == 0 ? TextMode.Contains : TextMode.EqualTo;
         switch (r.Next(6))
         {
-            case 0: return new TypeCondition(Enumerable.Range(0, 1 + r.Next(3)).Select(_ => r.Pick(Types)));
+            case 0: return new TypeCondition(Enumerable.Range(0, 1 + r.Next(3)).Select(_ => r.Pick(RuleTypes)));
             case 1: return new TextCondition(r.Pick(Words), mode);
             case 2: return new CounterpartyNameCondition(r.Pick(Names), mode);
             case 3: return new CounterpartyAccountCondition(r.Pick(Accounts));
@@ -119,6 +123,9 @@ public class RandomizedInvariantTests
     {
         var user = config.UserRules.Where(rule => rule.Condition.Matches(transaction))
             .MinBy(rule => (rule.Priority, -rule.Order));
+        // No default rule places a cash withdrawal (work/041-unknown-transaction-kinds/spec.md).
+        if (user is null && transaction.Type == TransactionType.CashWithdrawal)
+            return null;
         return user ?? config.DefaultRules.Where(rule => rule.Condition.Matches(transaction)).MinBy(rule => rule.Priority);
     }
 

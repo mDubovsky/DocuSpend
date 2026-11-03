@@ -19,11 +19,27 @@ internal static partial class TransactionSection
     private static readonly string[] DetailLabels =
         ["Kód kategórie účelu platby:", "Referencia platiteľa:", "Mena/suma/kurz:", "Účel platby:", "Názov:", "BIC:"];
 
+    /// <summary>The type texts of rows printed with a card number, and the type each means.</summary>
+    private static readonly Dictionary<string, TransactionType> CardTypes = new(StringComparer.Ordinal)
+    {
+        ["PLATBA KARTOU"] = TransactionType.CardPayment,
+        ["PLATBA KARTOU A-PAY"] = TransactionType.WalletCardPayment,
+        ["PLATBA KARTOU G-PAY"] = TransactionType.WalletCardPayment,
+        ["VÝBER HOTOVOSTI"] = TransactionType.CashWithdrawal,
+    };
+
     private const string NotStated = "Neuvedené";
     private const string InstantPayment = "SEPA Okamžitá platba";
 
-    /// <summary>Below this the page holds only its footer.</summary>
-    private const double TableEnd = 800.0;
+    /// <summary>
+    /// Below this the page holds only its footer. Real statements print rows down to about 811 pt (a second line's
+    /// baseline, top about 803 pt), so the table is read to 820 pt: above the samples' synthetic-data footer at 826 pt
+    /// (work/041-unknown-transaction-kinds/spec.md).
+    /// </summary>
+    private const double TableEnd = 820.0;
+
+    /// <summary>Printed right after a card payment's value date on some rows ("08/10#"); its meaning isn't printed.</summary>
+    private const char ValueDateMark = '#';
 
     public static IReadOnlyList<Transaction> Read(IReadOnlyList<IReadOnlyList<Line>> pages, DateOnly periodStart, DateOnly periodEnd, string currency)
     {
@@ -77,8 +93,15 @@ internal static partial class TransactionSection
     {
         if (line.StartingAt(VubLayout.DateX) is null)
             return null;
-        return DetailLabels.FirstOrDefault(label => line.Text.StartsWith(label + " ", StringComparison.Ordinal) || line.Text == label);
+        return DetailLabels.FirstOrDefault(label => line.Text.StartsWith(label + " ", StringComparison.Ordinal) || line.Text == label)
+            // A label this reader doesn't know, such as "Pôvodný odosielateľ:". Its value goes nowhere, since only
+            // known labels are ever looked up (work/041-unknown-transaction-kinds/spec.md).
+            ?? (OtherLabel().Match(line.Text) is { Success: true } other ? other.Groups[1].Value : null);
     }
+
+    /// <summary>One to four words of letters and dots, the last ending in ":", at the start of a line.</summary>
+    [GeneratedRegex(@"^((?:\p{L}[\p{L}.]* ){0,3}\p{L}[\p{L}.]*:)(?: |$)")]
+    private static partial Regex OtherLabel();
 
     private static string ValueAfter(Line line, string label) => line.Text[label.Length..].Trim();
 
@@ -119,9 +142,10 @@ internal static partial class TransactionSection
 
             TransactionType type;
             string? card = null;
-            if (typeText is "PLATBA KARTOU" or "PLATBA KARTOU A-PAY")
+            string? printedType = null;
+            if (typeText is not null && CardTypes.TryGetValue(typeText, out var cardType))
             {
-                type = typeText == "PLATBA KARTOU" ? TransactionType.CardPayment : TransactionType.WalletCardPayment;
+                type = cardType;
                 card = CardDigits(cardWord?.Text) ?? throw where.Fail("the card number is missing");
                 account = null;
             }
@@ -134,19 +158,33 @@ internal static partial class TransactionSection
                 var fee = VubText.Amount(feeWord.Text) ?? throw where.Fail("the fee is not an amount");
                 type = fee < 0 ? TransactionType.AccountFee : TransactionType.FeeReversal;
             }
+            else if (account is not null)
+            {
+                // A type this reader doesn't know. Kept as printed; its amount and dates are checked like any other's.
+                type = TransactionType.Unknown;
+                card = CardDigits(cardWord?.Text);
+                printedType = card is null ? account : Main.TextBetween(VubLayout.AccountX, VubLayout.CardX);
+                account = null;
+                if (printedType is null)
+                    throw where.Fail("its type is missing");
+            }
             else
             {
-                throw where.Fail("its kind isn't one this reader knows");
+                throw where.Fail("it has no type, account number or fee");
             }
 
             var isFee = type is TransactionType.AccountFee or TransactionType.FeeReversal;
-            var isCard = type is TransactionType.CardPayment or TransactionType.WalletCardPayment;
+            var isCard = card is not null;
             decimal? feeAmount = isFee ? VubText.Amount(feeWord!.Text) : null;
             var amount = isFee ? feeAmount!.Value
                 : VubText.Amount(amountWord?.Text) ?? throw where.Fail("the amount is missing or not an amount");
 
-            var value = isCard
-                ? Date(Second?.StartingAt(VubLayout.DateX), "the value date")
+            // A card row prints its value date on the line below; an unknown type may print one there too.
+            var valueBelow = Second?.StartingAt(VubLayout.DateX) is { } below && below.Text.EndsWith(ValueDateMark)
+                ? below with { Text = below.Text[..^1] }
+                : Second?.StartingAt(VubLayout.DateX);
+            var value = isCard || valueBelow is not null
+                ? Date(valueBelow, "the value date")
                 : Main.StartingAt(VubLayout.ValueDateX) is { } printed ? Date(printed, "the value date") : booking;
 
             string? Detail(string label) => Details.FirstOrDefault(d => d.Label == label)?.Value is { Length: > 0 } v ? v : null;
@@ -173,6 +211,7 @@ internal static partial class TransactionSection
                 Reference = Second?.StartingAt(VubLayout.VsX)?.Text,
                 FeeType = feeTypeWord is { Text.Length: 1 } ? feeTypeWord.Text : null,
                 FeeAmount = feeAmount,
+                PrintedType = printedType,
             };
         }
 

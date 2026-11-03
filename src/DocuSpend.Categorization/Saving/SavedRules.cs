@@ -36,8 +36,13 @@ public sealed record SavedRulesReading(SavedRulesStatus Status, CategorizationCo
 /// </summary>
 public static class SavedRules
 {
-    /// <summary>The shape <see cref="Write"/> produces. A change to the shape raises it and adds a reader for the old one.</summary>
-    public const int CurrentVersion = 1;
+    /// <summary>
+    /// The shape <see cref="Write"/> produces. A change to the shape raises it and adds a reader for the old one.
+    /// Version 2 has version 1's shape and may name cash withdrawals in a type rule; it was raised so an earlier
+    /// DocuSpend, which doesn't know that type, takes the file for a newer one rather than a damaged one
+    /// (work/041-unknown-transaction-kinds/plan.md). Both versions are read by the same reader.
+    /// </summary>
+    public const int CurrentVersion = 2;
 
     private const string UserPrefix = "user-";
 
@@ -159,6 +164,9 @@ public static class SavedRules
                 return SavedRulesReading.Damaged("A rule has an empty, built-in-like or repeated identifier.");
             if (saved.Priority < 1 || saved.Order < 1 || !orders.Add(saved.Order))
                 return SavedRulesReading.Damaged("A rule has a priority or creation order below 1, or a repeated order.");
+            // A type word this version doesn't know can only come from a later DocuSpend that reads more types.
+            if (saved.Condition is { Kind: "type", Types: { } words } && words.Any(w => Words.ParseType(w) is null))
+                return SavedRulesReading.Newer("A type rule names a transaction type this DocuSpend doesn't have.");
             if (Load(saved.Condition) is not { } condition || condition.Validate() is not null)
                 return SavedRulesReading.Damaged("A rule's condition is unknown, incomplete or has fields of another kind.");
             if (catalog.FindSubcategory(new SubcategoryId(saved.Target)) is null)
@@ -244,6 +252,7 @@ internal static class Words
         (TransactionType.InstantTransfer, "instantTransfer"),
         (TransactionType.AccountFee, "accountFee"),
         (TransactionType.FeeReversal, "feeReversal"),
+        (TransactionType.CashWithdrawal, "cashWithdrawal"),
     ];
 
     public static string Role(CategoryRole value) => Roles.Single(r => r.Value == value).Word;

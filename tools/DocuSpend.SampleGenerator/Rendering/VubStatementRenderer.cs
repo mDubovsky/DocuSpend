@@ -57,7 +57,7 @@ public static class VubStatementRenderer
     {
         options ??= new RenderOptions();
         Validate(scenario);
-        var pages = Paginate(scenario.Transactions);
+        var pages = Paginate(scenario.Transactions, options.TableBottom ?? TableBottom);
         var total = pages.Count + 1; // plus the final notices page
 
         var doc = SyntheticPdf.Create(scenario.IssueDate);
@@ -116,13 +116,13 @@ public static class VubStatementRenderer
     }
 
     /// <summary>Places transactions on pages, never splitting one; a page ends early when the next one doesn't fit.</summary>
-    private static List<PageContent> Paginate(IReadOnlyList<Transaction> transactions)
+    private static List<PageContent> Paginate(IReadOnlyList<Transaction> transactions, double rowsBottom)
     {
         var pages = new List<PageContent> { new(HasTable: true) };
         var y = Page1FirstRowY;
         foreach (var tx in transactions)
         {
-            if (y + BlockHeight(tx) > TableBottom)
+            if (y + BlockHeight(tx) > rowsBottom)
             {
                 pages.Add(new PageContent(HasTable: true));
                 y = NextFirstRowY;
@@ -233,12 +233,12 @@ public static class VubStatementRenderer
         var y2 = y + SecondLine;
         c.Mono(DateX, y, VubFormat.TableDate(tx.BookingDate), bold: true);
 
-        if (tx.IsCard)
+        if (tx.IsCardRow)
         {
-            c.Mono(AccountX, y, tx.Type == TransactionType.WalletCardPayment ? "PLATBA KARTOU A-PAY" : "PLATBA KARTOU", bold: true);
+            c.Mono(AccountX, y, TypeText(tx), bold: true);
             c.Mono(CardX, y, $"KARTA:*{tx.Card}", bold: true);
             c.MonoRight(AmountRight, y, VubFormat.Amount(tx.Amount), bold: true);
-            c.Mono(DateX + 0.2, y2, VubFormat.TableDate(tx.ValueDate));
+            c.Mono(DateX + 0.2, y2, VubFormat.TableDate(tx.ValueDate) + tx.ValueDateMark);
         }
         else
         {
@@ -246,6 +246,8 @@ public static class VubStatementRenderer
                 c.Mono(ValueDateX, y, VubFormat.TableDate(tx.ValueDate));
             if (tx.CounterpartyAccount is not null)
                 c.Mono(AccountX, y, tx.CounterpartyAccount, bold: true);
+            else if (tx.Type == TransactionType.Unknown)
+                c.Mono(AccountX, y, TypeText(tx), bold: true);
             c.Mono(VsX, y, tx.VariableSymbol ?? "");
             c.Mono(KsX, y, tx.ConstantSymbol ?? "");
             c.Mono(SsX, y, tx.SpecificSymbol ?? "");
@@ -272,13 +274,23 @@ public static class VubStatementRenderer
         }
     }
 
+    /// <summary>What a row prints where the type goes, for the types that print one.</summary>
+    private static string TypeText(Transaction tx) => tx.Type switch
+    {
+        TransactionType.CardPayment => "PLATBA KARTOU",
+        TransactionType.WalletCardPayment => tx.GooglePay ? "PLATBA KARTOU G-PAY" : "PLATBA KARTOU A-PAY",
+        TransactionType.CashWithdrawal => "VÝBER HOTOVOSTI",
+        TransactionType.Unknown => tx.PrintedType ?? throw new InvalidOperationException("An unknown type needs its printed type."),
+        _ => throw new InvalidOperationException($"{tx.Type} prints no type text."),
+    };
+
     /// <summary>One printed line of a details block: a labelled line, or a continuation of a wrapped value.</summary>
     private sealed record DetailLine(string? Label, string Text, double X);
 
     private static List<DetailLine> Details(Transaction tx)
     {
         var lines = new List<DetailLine>();
-        if (!tx.IsTransfer)
+        if (!tx.HasDetails)
             return lines;
 
         void Add(string label, string value)
@@ -297,6 +309,7 @@ public static class VubStatementRenderer
         if (tx.PaymentPurpose is not null) Add("Účel platby:", tx.PaymentPurpose);
         if (tx.PurposeCategoryCode is not null) Add("Kód kategórie účelu platby:", tx.PurposeCategoryCode);
         if (tx.ShowsCurrencyLine) Add("Mena/suma/kurz:", $"{tx.Currency}/{VubFormat.Amount(Math.Abs(tx.Amount))}/1,0000000");
+        foreach (var (label, value) in tx.OtherDetails) Add(label, value);
         return lines;
     }
 

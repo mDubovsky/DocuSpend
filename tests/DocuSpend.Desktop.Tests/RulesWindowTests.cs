@@ -71,7 +71,7 @@ public sealed class RulesWindowTests : IDisposable
     [Fact]
     public void While_saving_is_off_my_rules_say_so() => Headless.Run(() =>
     {
-        File.WriteAllText(RulesFile, """{ "version": 2 }""");
+        File.WriteAllText(RulesFile, """{ "version": 99 }""");
         var (window, model) = Start();
         Headless.Wait(model.OpenExampleCommand.ExecuteAsync(null));
         Headless.ShowRules(model);

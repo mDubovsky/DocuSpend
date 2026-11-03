@@ -64,6 +64,7 @@ public static class RecordMapping
         Reference = t.Reference,
         FeeType = t.FeeType,
         FeeAmount = t.FeeAmount,
+        PrintedType = t.PrintedType,
     };
 
     private static StatementRecord Canonical(StatementRecord s) => s with

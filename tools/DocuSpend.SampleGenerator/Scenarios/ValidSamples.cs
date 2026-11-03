@@ -10,7 +10,7 @@ namespace DocuSpend.SampleGenerator.Scenarios;
 public static class ValidSamples
 {
     public static IReadOnlyList<StatementScenario> All() =>
-        [TypicalMonth(), BusyMonth(), AwkwardMonth(), EmptyMonth(), SingleTransactionMonth()];
+        [TypicalMonth(), BusyMonth(), AwkwardMonth(), EmptyMonth(), SingleTransactionMonth(), NewTypesMonth()];
 
     private const string CardA = "2178";
     private const string CardB = "8840";
@@ -227,6 +227,52 @@ public static class ValidSamples
             PeriodEnd = new DateOnly(2025, 11, 30),
             OpeningBalance = 96.15m,
             Transactions = [t.Card(new DateOnly(2025, 11, 14), 1, 23.45m, "MINIMARKET U LIPY PRESOV", "3306", wallet: true)],
+        };
+    }
+
+    /// <summary>
+    /// Sample 10: Google Pay payments, cash withdrawals and two types the reader doesn't know, one laid out like a card
+    /// payment and one like a transfer (work/041-unknown-transaction-kinds). One cash machine's name contains a shop a
+    /// default rule looks for, which must not decide a withdrawal.
+    /// </summary>
+    public static StatementScenario NewTypesMonth()
+    {
+        var t = new Tx();
+        static DateOnly D(int day) => new(2026, 4, day);
+        const string card = "5170";
+
+        Transaction[] transactions =
+        [
+            t.Card(D(1), 1, 3.80m, "PEKAREN U MOSTA NITRA", card, googlePay: true),
+            t.Card(D(2), 1, 27.45m, "MINIMARKET POD HRADOM NITRA", card, wallet: true),
+            t.CashWithdrawal(D(3), 1, 50.00m, "ATM00417 NITRA 10:15", card),
+            t.Incoming(D(6), 1388.90m, "Fiktívne Mlyny a.s.", Iban.Slovak("1100", "000000", "3341927705"), "TATRSKBX",
+                "MZDA 03/2026", vs: "32026", ks: "0138", category: "SALA") with
+            {
+                // Labels the reader didn't know until #41; their values are dropped.
+                OtherDetails = [("Pôvodný odosielateľ:", "Fiktívne Mlyny Holding a.s."), ("Konečný príjemca:", "EVA SKÚŠKOVÁ")],
+            },
+            t.Card(D(8), 2, 61.20m, "CERPACIA STANICA JUH NITRA", card),
+            t.Unknown(D(9), 1, -4.20m, "PLATBA HODINKAMI", "PEKAREN U MOSTA NITRA", card: card),
+            t.Card(D(12), 1, 18.90m, "BISTRO POD HRADOM NITRA", card, googlePay: true),
+            t.CashWithdrawal(D(15), 2, 100.00m, "ATM TESCO ZOBOR NITRA 18:42", card),
+            t.Unknown(D(20), 0, -35.00m, "ZRÁŽKA ZO ZÁLOHY", "Zaloha april", name: "Správa Bytov Zobor",
+                purpose: "Zaloha april", vs: "6204", ks: "0308"),
+            t.Card(D(24), 1, 9.99m, "NETFLIX.COM", card),
+            .. t.AccountFeeReversed(D(30), 6.90m),
+        ];
+
+        return new StatementScenario
+        {
+            Name = "10-new-types-month",
+            AccountHolder = "EVA SKÚŠKOVÁ",
+            HolderAddress = ["Zoborská 31", "949 01 Nitra"],
+            Iban = Iban.Slovak(FictionalBank.BankCode, "000000", "7261038495"),
+            BranchAddress = "ŠTEFÁNIKOVA 12, NITRA",
+            PeriodStart = D(1),
+            PeriodEnd = D(30),
+            OpeningBalance = 412.35m,
+            Transactions = transactions,
         };
     }
 }

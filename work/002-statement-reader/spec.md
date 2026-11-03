@@ -29,7 +29,7 @@ These rules are what a reader has to know that the PDF doesn't say outright. The
 - **Value date.** Card payments always print a value date. A transfer or fee row prints one only when it differs from the booking date; when none is printed, the value date equals the booking date.
 - **Period.** The period start and end are the dates printed with the statement's fee breakdown, not derived from the transactions, so an empty month still has a period.
 - **Currency.** Each transaction's currency is the statement's currency.
-- **Type.** It is not a printed column; it comes from how the row reads:
+- **Type.** It is not a printed column; it comes from how the row reads (Google Pay, cash withdrawals and types the reader doesn't know were added later: [work/041-unknown-transaction-kinds/spec.md](../041-unknown-transaction-kinds/spec.md)):
   - card payment: the row says "PLATBA KARTOU" and a card
   - wallet card payment: the row says "PLATBA KARTOU A-PAY"
   - instant transfer: the description line is "SEPA Okamžitá platba"

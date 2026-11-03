@@ -58,6 +58,143 @@ public class TransactionTests
             Transfer(new DateOnly(2026, 6, 9), new DateOnly(2026, 6, 9))));
     }
 
+    // New and unknown types (work/041-unknown-transaction-kinds/spec.md)
+
+    [Fact]
+    public void A_google_pay_payment_reads_as_a_wallet_card_payment() =>
+        AssertRoundTrip(June(Card(new DateOnly(2026, 6, 10), new DateOnly(2026, 6, 8), -4.60m) with
+        {
+            Type = TransactionType.WalletCardPayment,
+            GooglePay = true,
+        }));
+
+    [Fact]
+    public void A_cash_withdrawal_reads_with_its_card_value_date_description_and_reference() =>
+        AssertRoundTrip(June(Card(new DateOnly(2026, 6, 10), new DateOnly(2026, 6, 9), -50.00m) with
+        {
+            Type = TransactionType.CashWithdrawal,
+            Description = "ATM00417 TRNAVA 10:15",
+        }));
+
+    [Fact]
+    public void An_unknown_type_laid_out_like_a_card_payment_reads_with_its_printed_type_and_card()
+    {
+        var unknown = Card(new DateOnly(2026, 6, 10), new DateOnly(2026, 6, 9), -3.20m) with
+        {
+            Type = TransactionType.Unknown,
+            PrintedType = "PLATBA HODINKAMI",
+        };
+
+        AssertRoundTrip(June(unknown));
+        var read = Reader.Read(VubStatementRenderer.Render(June(unknown))).Statement!.Transactions.Single();
+        Assert.Equal(Statements.Model.TransactionType.Unknown, read.Type);
+        Assert.Equal("PLATBA HODINKAMI", read.PrintedType);
+        Assert.Equal("1111", read.Card);
+    }
+
+    [Fact]
+    public void An_unknown_type_laid_out_like_a_transfer_reads_its_symbols_and_details() =>
+        AssertRoundTrip(June(new Transaction
+        {
+            BookingDate = new DateOnly(2026, 6, 12),
+            ValueDate = new DateOnly(2026, 6, 11),
+            Type = TransactionType.Unknown,
+            PrintedType = "ZRÁŽKA ZO ZÁLOHY",
+            Amount = -35.00m,
+            Description = "Zaloha jun",
+            CounterpartyName = "Správa Bytov Lipa",
+            PaymentPurpose = "Zaloha jun",
+            VariableSymbol = "6202",
+            ConstantSymbol = "0308",
+            Reference = "2606120000001",
+        }));
+
+    [Fact]
+    public void A_long_printed_type_is_kept_whole() =>
+        AssertRoundTrip(June(new Transaction
+        {
+            BookingDate = new DateOnly(2026, 6, 12),
+            ValueDate = new DateOnly(2026, 6, 12),
+            Type = TransactionType.Unknown,
+            PrintedType = "PLATBA HODINKAMI ZA PRSTEN",
+            Amount = -9.90m,
+        }));
+
+    [Fact]
+    public void A_wallet_label_the_reader_does_not_know_stays_an_unknown_type() =>
+        AssertRoundTrip(June(Card(new DateOnly(2026, 6, 10), new DateOnly(2026, 6, 9), -3.20m) with
+        {
+            Type = TransactionType.Unknown,
+            PrintedType = "PLATBA KARTOU X-PAY",
+        }));
+
+    [Fact]
+    public void Details_lines_with_labels_the_reader_does_not_know_are_accepted_and_dropped()
+    {
+        var transfer = new Transaction
+        {
+            BookingDate = new DateOnly(2026, 6, 8),
+            ValueDate = new DateOnly(2026, 6, 8),
+            Type = TransactionType.Transfer,
+            Amount = 900.00m,
+            CounterpartyAccount = Iban.Slovak("1100", "000000", "1234567890"),
+            CounterpartyName = "Fiktívna Firma s.r.o.",
+            CounterpartyBic = "TATRSKBX",
+            PaymentPurpose = "Vyplata",
+            Description = "Vyplata",
+            OtherDetails =
+            [
+                ("Pôvodný odosielateľ:", "Fiktívna Materská Firma a.s."),
+                // Long enough to wrap onto a line of its own.
+                ("Konečný príjemca:", "TESTOVACÍ KLIENT ULICA 1 000 00 MESTO SLOVENSKÁ REPUBLIKA DLHÝ TEXT, KTORÝ SA ZALOMÍ NA ĎALŠÍ RIADOK"),
+            ],
+        };
+
+        AssertRoundTrip(June(transfer));
+    }
+
+    [Fact]
+    public void A_value_date_with_a_hash_after_it_reads_as_the_date() =>
+        AssertRoundTrip(June(Card(new DateOnly(2026, 6, 10), new DateOnly(2026, 6, 8), 3.20m) with { ValueDateMark = "#" }));
+
+    [Fact]
+    public void A_row_as_low_on_the_page_as_real_statements_print_reads_completely()
+    {
+        // Real statements print a card row's value date line as low as about 803 pt (top). Shift the card rows with a
+        // few transfers until one lands there, so the test means something.
+        var day = new DateOnly(2026, 6, 10);
+        var options = new RenderOptions { TableBottom = 815.0 };
+        var account = Iban.Slovak("1100", "000000", "1234567890");
+        Transaction Transfer(int i) => new()
+        {
+            BookingDate = day, ValueDate = day, Type = TransactionType.Transfer, Amount = -(10m + i),
+            CounterpartyAccount = account, CounterpartyName = "Peter Skúšobný",
+        };
+        static bool LowValueDate(byte[] pdf)
+        {
+            using var doc = UglyToad.PdfPig.PdfDocument.Open(pdf);
+            return doc.GetPages().Any(p => p.GetWords().Any(w =>
+                VubTextIsDate(w.Text) && Math.Abs(w.BoundingBox.Left - 45.6) < 0.5 && p.Height - w.BoundingBox.Top is > 800 and < 815));
+        }
+
+        var (scenario, pdf) = Enumerable.Range(0, 8)
+            .Select(k => June([.. Enumerable.Range(0, k).Select(Transfer), .. Enumerable.Range(0, 40).Select(i => Card(day, day.AddDays(-1), -(1m + i)))]))
+            .Select(s => (s, VubStatementRenderer.Render(s, options)))
+            .First(t => LowValueDate(t.Item2));
+
+        var result = Reader.Read(pdf);
+        Assert.True(result.IsSuccess, result.Rejection?.Message);
+        Assert.Equal(RecordMapping.Canonical(ExpectedRecord.ForValid(scenario)), RecordMapping.ToCanonicalJson(scenario.Name, result.Statement!));
+    }
+
+    [Fact]
+    public void Known_types_carry_no_printed_type()
+    {
+        foreach (var name in Samples.Valid)
+            Assert.All(Reader.Read(Samples.Pdf(name)).Statement!.Transactions,
+                t => Assert.Equal(t.Type == Statements.Model.TransactionType.Unknown, t.PrintedType is not null));
+    }
+
     [Fact]
     public void Reading_the_same_file_twice_gives_the_same_result()
     {
@@ -84,6 +221,11 @@ public class TransactionTests
         Description = "OBCHOD NA ROHU",
         Reference = "0000000000001",
     };
+
+    private static bool VubTextIsDate(string text) => System.Text.RegularExpressions.Regex.IsMatch(text, @"^\d{2}/\d{2}$");
+
+    private static StatementScenario June(params Transaction[] transactions) =>
+        Scenario("june", new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 30), transactions);
 
     private static StatementScenario Scenario(string name, DateOnly start, DateOnly end, params Transaction[] transactions) => new()
     {

@@ -315,7 +315,7 @@ public sealed class RuleEditorTests : IDisposable
     public async Task An_edit_while_saving_is_off_applies_and_says_it_lasts_until_DocuSpend_closes()
     {
         Directory.CreateDirectory(_folder);
-        const string Newer = """{ "version": 2 }""";
+        const string Newer = """{ "version": 99 }""";
         File.WriteAllText(RulesFile, Newer);
         var main = await Restart();
         main.RuleForm.Text = "kino";
@@ -366,7 +366,7 @@ public sealed class RuleEditorTests : IDisposable
     }
 
     [Fact]
-    public async Task A_file_saved_after_edits_has_the_first_shape()
+    public async Task A_file_saved_after_edits_has_the_current_shape()
     {
         var main = await StartWith((Text("kino"), Games, 3));
         main.EditRuleCommand.Execute(main.Rules[0]);
@@ -375,7 +375,7 @@ public sealed class RuleEditorTests : IDisposable
 
         var reading = Categorization.Saving.SavedRules.Read(File.ReadAllText(RulesFile), CategorizationConfig.Default);
         Assert.Equal(Categorization.Saving.SavedRulesStatus.Loaded, reading.Status);
-        Assert.Contains("\"version\": 1", File.ReadAllText(RulesFile));
+        Assert.Contains("\"version\": 2", File.ReadAllText(RulesFile));
     }
 
     // Editing: edge cases
@@ -570,7 +570,7 @@ public sealed class RuleEditorTests : IDisposable
     public async Task A_deletion_while_saving_is_off_applies_and_says_the_rule_will_come_back()
     {
         Directory.CreateDirectory(_folder);
-        const string Newer = """{ "version": 2 }""";
+        const string Newer = """{ "version": 99 }""";
         File.WriteAllText(RulesFile, Newer);
         var main = await Restart();
         main.RuleForm.Text = "kino";

@@ -29,6 +29,47 @@ public class ConditionTests
     public void A_type_condition_needs_at_least_one_type() =>
         Assert.Equal(RefusalKind.NoTypeChosen, new TypeCondition([]).Validate()!.Kind);
 
+    // New and unknown types (work/041-unknown-transaction-kinds/spec.md: Categorizing)
+
+    [Fact]
+    public void A_type_condition_for_cash_withdrawals_matches_them_and_nothing_else()
+    {
+        var condition = new TypeCondition([TransactionType.CashWithdrawal]);
+
+        Assert.True(condition.Matches(CashWithdrawal("ATM NITRA")));
+        Assert.False(condition.Matches(Card("ATM NITRA")));
+        Assert.False(condition.Matches(Unknown("VÝBER HOTOVOSTI")));
+    }
+
+    [Fact]
+    public void A_type_condition_can_not_name_the_unknown_type() =>
+        Assert.Equal(RefusalKind.UnknownType, new TypeCondition([TransactionType.Unknown, TransactionType.CardPayment]).Validate()!.Kind);
+
+    [Fact]
+    public void No_valid_type_condition_matches_an_unknown_type()
+    {
+        var everyKnownType = new TypeCondition(Enum.GetValues<TransactionType>().Where(t => t != TransactionType.Unknown));
+
+        Assert.False(everyKnownType.Matches(Unknown("PLATBA HODINKAMI")));
+    }
+
+    [Theory]
+    [InlineData(TextMode.Contains, "hodinkami")]
+    [InlineData(TextMode.Contains, "platba hodinkami")]
+    [InlineData(TextMode.EqualTo, "Platba hodinkami")]
+    public void A_text_rule_finds_an_unknown_types_printed_type(TextMode mode, string text) =>
+        Assert.True(new TextCondition(text, mode).Matches(Unknown("PLATBA HODINKAMI", "PEKAREN U MOSTA")));
+
+    [Fact]
+    public void A_text_rule_does_not_look_at_the_type_of_a_known_type()
+    {
+        // A card payment prints "PLATBA KARTOU", but that text is not part of the transaction.
+        var condition = new TextCondition("kartou", TextMode.Contains);
+
+        Assert.True(condition.Matches(Unknown("PLATBA KARTOU X-PAY")));
+        Assert.False(condition.Matches(Card("PEKAREN U MOSTA")));
+    }
+
     // Text in the description or the payment purpose
 
     [Theory]

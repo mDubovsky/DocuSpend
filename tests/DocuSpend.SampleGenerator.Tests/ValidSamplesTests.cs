@@ -18,7 +18,7 @@ public partial class ValidSamplesTests
     [Fact]
     public void The_five_valid_samples_exist_with_their_spec_names() =>
         Assert.Equal(
-            ["01-typical-month", "02-busy-month", "03-awkward-month", "04-empty-month", "05-single-transaction-month"],
+            ["01-typical-month", "02-busy-month", "03-awkward-month", "04-empty-month", "05-single-transaction-month", "10-new-types-month"],
             ValidSamples.All().Select(s => s.Name));
 
     [Fact]
@@ -146,6 +146,23 @@ public partial class ValidSamplesTests
     public void Single_transaction_month_has_exactly_one() =>
         Assert.Single(Sample("05-single-transaction-month").Scenario.Transactions);
 
+    [Fact]
+    public void New_types_month_prints_google_pay_cash_withdrawals_and_unknown_types_of_both_layouts()
+    {
+        var (s, pdf) = Sample("10-new-types-month");
+        var text = string.Join(' ', PdfText.Words(pdf).Select(w => w.Text));
+
+        Assert.Contains("PLATBA KARTOU G-PAY", text);
+        Assert.Contains("PLATBA KARTOU A-PAY", text);
+        Assert.Contains("VÝBER HOTOVOSTI", text);
+        Assert.Contains("Pôvodný odosielateľ:", text);
+        Assert.Contains("Konečný príjemca:", text);
+        Assert.Contains(s.Transactions, t => t.Type == TransactionType.CashWithdrawal && t.Description!.Contains("TESCO"));
+        Assert.Contains(s.Transactions, t => t.Type == TransactionType.Unknown && t.Card is not null);
+        Assert.Contains(s.Transactions, t => t.Type == TransactionType.Unknown && t.Card is null && t.VariableSymbol is not null);
+        Assert.All(s.Transactions.Where(t => t.Type == TransactionType.Unknown), t => Assert.Contains(t.PrintedType!, text));
+    }
+
     [Theory]
     [MemberData(nameof(Names))]
     public void Record_reconciles(string name)
@@ -223,11 +240,14 @@ public partial class ValidSamplesTests
     [MemberData(nameof(Names))]
     public void Only_transaction_kinds_from_the_intent_are_used(string name)
     {
-        TransactionType[] allowed =
+        List<TransactionType> allowed =
         [
             TransactionType.CardPayment, TransactionType.WalletCardPayment, TransactionType.Transfer,
             TransactionType.InstantTransfer, TransactionType.AccountFee, TransactionType.FeeReversal,
         ];
+        // Sample 10 shows the types added by work/041-unknown-transaction-kinds.
+        if (name == "10-new-types-month")
+            allowed.AddRange([TransactionType.CashWithdrawal, TransactionType.Unknown]);
 
         Assert.All(Sample(name).Scenario.Transactions, t => Assert.Contains(t.Type, allowed));
         Assert.All(Sample(name).Scenario.Transactions, t => Assert.Equal("EUR", t.Currency));

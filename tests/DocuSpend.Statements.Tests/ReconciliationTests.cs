@@ -111,6 +111,83 @@ public class ReconciliationTests
         Assert.Contains("booking date", rejection.Message);
     }
 
+    // An unknown type reads, but a damaged one is rejected like any other (work/041-unknown-transaction-kinds/spec.md).
+
+    private static readonly StatementScenario WithUnknown = Two with
+    {
+        Name = "with-unknown",
+        Transactions =
+        [
+            Two.Transactions[0],
+            Card(new DateOnly(2026, 6, 15), new DateOnly(2026, 6, 14), -7.30m) with { Type = TransactionType.Unknown, PrintedType = "PLATBA HODINKAMI" },
+        ],
+    };
+
+    private static Rejection RejectedWithUnknown(RenderOptions options)
+    {
+        var result = Reader.Read(VubStatementRenderer.Render(WithUnknown, options));
+        Assert.False(result.IsSuccess, "expected a rejection");
+        return result.Rejection!;
+    }
+
+    [Fact]
+    public void The_scenario_with_an_unknown_type_reads() =>
+        Assert.True(Reader.Read(VubStatementRenderer.Render(WithUnknown)).IsSuccess);
+
+    [Fact]
+    public void An_unknown_type_without_an_amount_is_rejected_naming_the_page_and_transaction()
+    {
+        var rejection = RejectedWithUnknown(new RenderOptions { TextTransform = t => t == "-7,30" ? null : t });
+
+        Assert.Equal(RejectionKind.Unreadable, rejection.Kind);
+        Assert.Contains("Transaction 2 on page 1", rejection.Message);
+        Assert.Contains("amount", rejection.Message);
+    }
+
+    [Fact]
+    public void An_unknown_type_with_a_damaged_booking_date_is_rejected()
+    {
+        var rejection = RejectedWithUnknown(new RenderOptions { TextTransform = t => t == "15/06" ? "1S/06" : t });
+
+        Assert.Equal(RejectionKind.Unreadable, rejection.Kind);
+        Assert.Contains("booking date", rejection.Message);
+    }
+
+    [Fact]
+    public void A_statement_with_an_unknown_type_that_does_not_add_up_is_rejected()
+    {
+        var rejection = RejectedWithUnknown(new RenderOptions { PrintedTotals = Two.Totals });
+
+        Assert.Equal(RejectionKind.DoesNotReconcile, rejection.Kind);
+    }
+
+    [Fact]
+    public void A_line_at_the_left_edge_that_is_neither_a_date_nor_a_label_is_rejected()
+    {
+        // The second transaction's booking date damaged into something that is no label either.
+        var rejection = Rejected(new RenderOptions { TextTransform = t => t == "20/06" ? "Platba" : t });
+
+        Assert.Equal(RejectionKind.Unreadable, rejection.Kind);
+        Assert.Contains("booking date", rejection.Message);
+    }
+
+    [Fact]
+    public void A_value_date_with_another_mark_after_it_is_rejected()
+    {
+        var rejection = Rejected(new RenderOptions { TextTransform = t => t == "19/06" ? "19/06*" : t });
+
+        Assert.Equal(RejectionKind.Unreadable, rejection.Kind);
+        Assert.Contains("value date", rejection.Message);
+    }
+
+    [Fact]
+    public void A_damaged_date_that_looks_like_a_label_word_is_still_rejected()
+    {
+        var rejection = Rejected(new RenderOptions { TextTransform = t => t == "20/06" ? "20/06:" : t });
+
+        Assert.Equal(RejectionKind.Unreadable, rejection.Kind);
+    }
+
     [Fact]
     public void Rejection_messages_quote_no_content()
     {

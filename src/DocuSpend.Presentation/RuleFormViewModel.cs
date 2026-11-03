@@ -60,7 +60,8 @@ public sealed partial class RuleFormViewModel : ObservableObject
     ];
 
     public IReadOnlyList<TypeChoice> Types { get; } =
-        Enum.GetValues<TransactionType>().Select(t => new TypeChoice(t, Texts.TypeName(t))).ToList();
+        // A rule can't name an unknown type: nobody knew it when the rule was made.
+        Enum.GetValues<TransactionType>().Where(t => t != TransactionType.Unknown).Select(t => new TypeChoice(t, Texts.TypeName(t))).ToList();
 
     /// <summary>The categories a rule can target, in display order; changes when the user adds a category or sub-category.</summary>
     [ObservableProperty]

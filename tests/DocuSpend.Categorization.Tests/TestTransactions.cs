@@ -39,6 +39,29 @@ internal static class TestTransactions
         VariableSymbol = variableSymbol,
     };
 
+    public static Transaction CashWithdrawal(string description, decimal amount = -50m) => new()
+    {
+        BookingDate = Day,
+        ValueDate = Day,
+        Type = TransactionType.CashWithdrawal,
+        Amount = amount,
+        Currency = "EUR",
+        Card = "1234",
+        Description = description,
+    };
+
+    /// <summary>A transaction of a type the reader doesn't know, with the type text it printed.</summary>
+    public static Transaction Unknown(string printedType, string? description = null, decimal amount = -10m) => new()
+    {
+        BookingDate = Day,
+        ValueDate = Day,
+        Type = TransactionType.Unknown,
+        PrintedType = printedType,
+        Amount = amount,
+        Currency = "EUR",
+        Description = description,
+    };
+
     public static Transaction Fee(decimal amount) => new()
     {
         BookingDate = Day,

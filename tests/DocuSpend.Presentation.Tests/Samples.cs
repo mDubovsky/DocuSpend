@@ -7,7 +7,7 @@ namespace DocuSpend.Presentation.Tests;
 internal static class Samples
 {
     public static readonly string[] Valid =
-        ["01-typical-month", "02-busy-month", "03-awkward-month", "04-empty-month", "05-single-transaction-month"];
+        ["01-typical-month", "02-busy-month", "03-awkward-month", "04-empty-month", "05-single-transaction-month", "10-new-types-month"];
 
     public static readonly string Dir = FindDir();
 

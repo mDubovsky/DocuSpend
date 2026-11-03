@@ -135,7 +135,9 @@ public class RuleFormViewModelTests
         Assert.Equal(["Text v popise", "Protistrana", "Účet protistrany", "Suma", "Typ transakcie", "Variabilný symbol"], form.Kinds.Select(k => k.Label));
         Assert.All(form.Kinds, k => Assert.False(string.IsNullOrWhiteSpace(k.Label)));
         Assert.All(form.TextModes, m => Assert.False(string.IsNullOrWhiteSpace(m.Label)));
-        Assert.Equal(Enum.GetValues<TransactionType>().Length, form.Types.Count);
+        // Every type but the unknown one, which no rule can name (work/041-unknown-transaction-kinds/spec.md).
+        Assert.Equal(Enum.GetValues<TransactionType>().Where(t => t != TransactionType.Unknown), form.Types.Select(t => t.Type));
+        Assert.Contains(form.Types, t => t.Label == "Výber hotovosti");
     }
 
     [Fact]

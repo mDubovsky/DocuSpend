@@ -70,6 +70,10 @@ public sealed partial class StatementViewModel : ObservableObject
     [ObservableProperty]
     public partial string SpendingTotal { get; private set; } = "";
 
+    /// <summary>The note on transactions of types DocuSpend doesn't know, or null when there are none.</summary>
+    [ObservableProperty]
+    public partial string? UnknownTypes { get; private set; }
+
     /// <summary>Largest first.</summary>
     [ObservableProperty]
     public partial IReadOnlyList<PieSlice> Slices { get; private set; } = [];
@@ -129,6 +133,8 @@ public sealed partial class StatementViewModel : ObservableObject
         OpeningBalance = SlovakFormat.Amount(statement.OpeningBalance);
         ClosingBalance = SlovakFormat.Amount(statement.ClosingBalance);
         SpendingTotal = SlovakFormat.Amount(categorized.SpendingTotal);
+        var unknown = statement.Transactions.Count(t => t.Type == TransactionType.Unknown);
+        UnknownTypes = unknown == 0 ? null : Texts.UnknownTypes(unknown);
 
         var spending = categorized.Categories.Where(c => c.Spending > 0).ToList();
         var total = spending.Sum(c => c.Spending!.Value);
@@ -172,11 +178,33 @@ public sealed partial class StatementViewModel : ObservableObject
                 return new TransactionRow(
                     transaction,
                     SlovakFormat.Date(transaction.BookingDate),
-                    transaction.Description ?? transaction.CounterpartyName ?? Texts.NoDescription,
+                    Describe(transaction),
                     subcategory?.Name ?? category.Name,
                     SlovakFormat.Amount(transaction.Amount));
             })
             .ToList();
+    }
+
+    /// <summary>
+    /// A transaction as the list shows it. An unknown type and a cash withdrawal put their type first: the description
+    /// alone gives no hint why an unknown type is there, and names only the cash machine of a withdrawal.
+    /// </summary>
+    private static string Describe(Transaction transaction)
+    {
+        var text = transaction.Description ?? transaction.CounterpartyName;
+        var type = transaction.Type switch
+        {
+            TransactionType.Unknown => transaction.PrintedType,
+            TransactionType.CashWithdrawal => Texts.TypeName(TransactionType.CashWithdrawal),
+            _ => null,
+        };
+        return (type, text) switch
+        {
+            (null, null) => Texts.NoDescription,
+            (null, _) => text,
+            (_, null) => type,
+            _ => type + Texts.TypeSeparator + text,
+        };
     }
 
     private static List<BalancePoint> Balances(Statement statement)

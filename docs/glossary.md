@@ -4,7 +4,9 @@ Shared terms. Use them consistently in docs, specs, and code.
 
 - **Statement:** a document from a bank listing an account's transactions for a period.
 - **Transaction:** a single movement of money on a statement: date, amount, type, counterparty, description.
-- **Transaction type:** how the money moved, e.g. card payment, transfer, instant transfer.
+- **Transaction type:** how the money moved, e.g. card payment, transfer, instant transfer, cash withdrawal (Výber hotovosti: cash taken out at an ATM; no built-in rule sorts it).
+- **Unknown type:** the type of a transaction whose printed type the reader doesn't know. The transaction is still read, so the statement opens; it lands in an uncategorized bucket unless a rule catches it.
+- **Printed type:** the type text exactly as the statement prints it, kept only for an unknown type. Text rules search it too.
 - **Reader:** the part of DocuSpend that turns a statement file into a statement with its transactions, or rejects it.
 - **Rejection:** the reader's answer for a file it can't read completely: one of a few kinds (empty, not a PDF, not a known statement, unreadable part, doesn't add up) with a human-readable reason that never repeats the file's content.
 - **Reconcile:** a read statement reconciles when its transactions add up to its own printed totals and its closing balance follows from its opening balance and totals.

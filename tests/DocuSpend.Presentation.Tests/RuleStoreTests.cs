@@ -250,7 +250,7 @@ public sealed class RuleStoreTests : IDisposable
     public void A_file_from_a_newer_DocuSpend_is_left_untouched_and_saving_is_off()
     {
         Directory.CreateDirectory(Folder);
-        const string Newer = """{ "version": 2, "rulePacks": [ "x" ] }""";
+        const string Newer = """{ "version": 99, "rulePacks": [ "x" ] }""";
         File.WriteAllText(FilePath, Newer);
 
         var store = Store();
