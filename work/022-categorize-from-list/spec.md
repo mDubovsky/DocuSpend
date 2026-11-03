@@ -53,7 +53,7 @@ When the user confirms "Len túto transakciu", a second pop-up box opens over th
 >
 > Aby DocuSpend túto transakciu zaradil rovnako aj nabudúce, uloží si jej odtlačok. Neuloží jej dátum, sumu, popis ani protistranu, len odtlačok vypočítaný z nich. Odtlačok zostáva len v tomto počítači, v priečinku DocuSpend, a nikam sa neposiela.
 >
-> Z odtlačku sa tieto údaje nedajú spätne zistiť. Kto by však mal ten istý výpis a prístup k tomuto počítaču, vedel by overiť, či ste túto transakciu zaradili ručne.
+> Z odtlačku sa tieto údaje nedajú spätne zistiť. Kto by však poznal presné údaje transakcie, napríklad z toho istého výpisu, a mal by váš súbor rules.json, vedel by overiť, či ste túto transakciu zaradili ručne.
 >
 > Odtlačok je uložený spolu s vašimi pravidlami v súbore %APPDATA%\DocuSpend\rules.json. Vymaže sa, keď zaradenie zrušíte tlačidlom „Zrušiť zaradenie“. Všetko, čo si DocuSpend pamätá, odstránite vymazaním priečinka %APPDATA%\DocuSpend.
 
@@ -87,7 +87,7 @@ If "Túto správu už nezobrazovať" can't be saved, it holds until DocuSpend cl
 ### PRIVACY.md and mvp.md
 - **PRIVACY.md**, "What DocuSpend keeps", says in plain words:
   - that `rules.json` now also holds a fingerprint for each transaction the user categorized by hand, with the sub-category chosen, and nothing else about it;
-  - what the fingerprint is made from, that the details can't be read back from it, and that someone with the same statement and access to the computer could check whether a transaction in it was categorized by hand;
+  - what the fingerprint is made from, that the details can't be read back from it, and that someone who knew the transaction's exact details (for example from the same statement) and had the user's `rules.json` could check whether a transaction in it was categorized by hand;
   - that a rule made from a transaction keeps the text, account, symbol or amount it was filled in with, as a rule the user types does: the existing sentence "unless you type it into a rule yourself" becomes "unless you put it into a rule yourself, by typing it or by making a rule from a transaction";
   - how to remove a fingerprint ("Zrušiť zaradenie") and everything (delete the folder), and that `settings.json` also keeps whether the privacy box is switched off.
 - **mvp.md**'s "only rules are saved" says that fingerprints of transactions categorized by hand are saved too, and nothing else from statements.

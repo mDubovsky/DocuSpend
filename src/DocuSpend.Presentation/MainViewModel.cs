@@ -56,6 +56,7 @@ public sealed partial class MainViewModel : ObservableObject
         _loadingLook = true;
         SelectedLook = Looks.Single(l => l.Choice == saved);
         _loadingLook = false;
+        _hideFingerprintNote = settings?.LoadHideFingerprintNote() ?? false;
     }
 
     private readonly bool _loadingLook;
@@ -424,6 +425,159 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Closes an open deletion question; any other change closes it too.</summary>
     private void TakeBackQuestion() => RuleToDelete = null;
 
+    // Categorizing a transaction from the list (work/022-categorize-from-list/spec.md)
+
+    /// <summary>"Túto správu už nezobrazovať" was ticked: hand choices are made without the box about fingerprints.</summary>
+    private bool _hideFingerprintNote;
+
+    /// <summary>The "Zaradiť transakciu" box, while it is open; the rest of the window waits.</summary>
+    [ObservableProperty]
+    public partial CategorizeViewModel? Categorizing { get; private set; }
+
+    /// <summary>"Zaradiť" on a selected row: opens the box, filled in from the transaction.</summary>
+    [RelayCommand]
+    private void Categorize(TransactionRow row)
+    {
+        TakeBackQuestion();
+        Categorizing = new CategorizeViewModel(row, Statement.Config.Catalog);
+    }
+
+    /// <summary>"Zrušiť", or Escape: the box closes and nothing changes.</summary>
+    [RelayCommand]
+    private void CancelCategorize() => Categorizing = null;
+
+    /// <summary>
+    /// "Zaradiť" in the box. For just this transaction, the box about fingerprints opens first unless it was switched
+    /// off; for a rule, the condition must be valid and catch this transaction.
+    /// </summary>
+    [RelayCommand]
+    private void ConfirmCategorize()
+    {
+        if (Categorizing is not { } box)
+            return;
+        if (box.ByRule)
+        {
+            AddRuleFrom(box);
+            return;
+        }
+        if (box.Form.SelectedSubcategory is null)
+        {
+            box.Form.Error = Texts.Refusal(RefusalKind.UnknownTarget);
+            return;
+        }
+        box.Form.Error = null;
+        if (_hideFingerprintNote)
+            MakeHandChoice(box);
+        else
+            box.ShowsPrivacy = true;
+    }
+
+    /// <summary>"Zaradiť" in the box about fingerprints: makes the hand choice, and keeps a tick in "Túto správu už nezobrazovať".</summary>
+    [RelayCommand]
+    private void ConfirmPrivacy()
+    {
+        if (Categorizing is not { ShowsPrivacy: true } box)
+            return;
+        if (box.HideNoteNextTime)
+        {
+            _hideFingerprintNote = true;
+            _settings?.SaveHideFingerprintNote(true);
+        }
+        MakeHandChoice(box);
+    }
+
+    /// <summary>"Späť", or Escape: back to the "Zaradiť" box as it was; the tick isn't kept.</summary>
+    [RelayCommand]
+    private void BackFromPrivacy()
+    {
+        if (Categorizing is not { } box)
+            return;
+        box.ShowsPrivacy = false;
+        box.HideNoteNextTime = false;
+    }
+
+    /// <summary>Escape closes the box on top: the box about fingerprints, the "Zaradiť" box, or the deletion question.</summary>
+    [RelayCommand]
+    private void Escape()
+    {
+        if (Categorizing is { ShowsPrivacy: true })
+            BackFromPrivacy();
+        else if (Categorizing is not null)
+            CancelCategorize();
+        else
+            TakeBackQuestion();
+    }
+
+    /// <summary>"× Zrušiť zaradenie": the transaction goes back to where the rules put it, without asking.</summary>
+    [RelayCommand]
+    private void UndoHandChoice(TransactionRow row)
+    {
+        if (!row.ByHand || row.Fingerprint is not { } print)
+            return;
+        var saved = ApplyUserChange(Statement.Config.RemoveHandChoice(print));
+        var placement = Statement.Categorized!.Transactions[row.Index].Placement;
+        ReportOnList(saved, Texts.HandChoiceUndone(Describe(placement)), Texts.UndoOnlyThisSession, Texts.UndoSaveFailed);
+    }
+
+    private void MakeHandChoice(CategorizeViewModel box)
+    {
+        var target = box.Form.SelectedSubcategory!.Id;
+        var config = Statement.Config.WithFingerprintKey(Statement.Config.FingerprintKey ?? FingerprintKey.Create());
+        var print = Fingerprints.Of(Statement.Categorized!.Statement, config.FingerprintKey!)[box.Row.Index];
+        var outcome = config.SetHandChoice(print, target);
+        if (!outcome.IsSuccess)
+        {
+            box.ShowsPrivacy = false;
+            box.Form.Error = Texts.Refusal(outcome.Refusal!.Kind);
+            return;
+        }
+        Categorizing = null;
+        var saved = ApplyUserChange(outcome.Value!);
+        var placement = Statement.Categorized!.Transactions[box.Row.Index].Placement;
+        ReportOnList(saved, Texts.HandChosen(Describe(placement)), Texts.HandChoiceOnlyThisSession, Texts.HandChoiceSaveFailed);
+    }
+
+    /// <summary>
+    /// Adds the box's rule on top, as "Pridať pravidlo" does. A rule made from a transaction must catch it, and takes
+    /// over from that transaction's own hand choice, so the user sees the rule decide it.
+    /// </summary>
+    private void AddRuleFrom(CategorizeViewModel box)
+    {
+        if (box.Form.TryBuild() is not { } draft)
+            return;
+        if (!draft.Condition.Matches(box.Row.Transaction))
+        {
+            box.Form.Error = Texts.ConditionMissesTransaction;
+            return;
+        }
+        var outcome = Statement.Config.AddUserRuleOnTop(draft.Condition, draft.Target);
+        if (!outcome.IsSuccess)
+        {
+            box.Form.Error = Texts.Refusal(outcome.Refusal!.Kind);
+            return;
+        }
+        var config = box.Row.Fingerprint is { } print ? outcome.Value!.RemoveHandChoice(print) : outcome.Value!;
+        Categorizing = null;
+        var saved = ApplyUserChange(config);
+        var rule = Statement.Config.UserRules[^1].Id;
+        var matched = Statement.Categorized?.Transactions.Count(t => t.Rule?.Id == rule) ?? 0;
+        ReportOnList(saved, Texts.RuleMatched(matched), Texts.RuleOnlyThisSession, Texts.RuleSaveFailed);
+    }
+
+    /// <summary>The transactions card's answer to a change made from the list: the confirmation, or why it won't last.</summary>
+    private void ReportOnList(bool saved, string confirmation, string onlyThisSession, string saveFailed)
+    {
+        Statement.TransactionsMessage = confirmation;
+        Statement.TransactionsError = saved ? null : RulesNotSaving ? onlyThisSession : saveFailed;
+    }
+
+    /// <summary>"Potraviny › Supermarkety", or an Uncategorized bucket's name.</summary>
+    private string Describe(Placement placement)
+    {
+        var (category, subcategory) = Statement.Config.Catalog.Describe(placement);
+        return subcategory is null ? category.Name : $"{category.Name} › {subcategory.Name}";
+    }
+
     /// <summary>
     /// The form's confirmation after a rule was added or changed: how many transactions it now catches, and whether
     /// it will be kept.
@@ -442,6 +596,7 @@ public sealed partial class MainViewModel : ObservableObject
     private bool ApplyUserChange(CategorizationConfig config)
     {
         RulesListMessage = RulesListError = null;
+        Statement.ClearTransactionsMessage();
         var saved = _store.Save(config);
         Statement.Config = config;
         Rules = UserRows();

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using DocuSpend.Categorization;
 using DocuSpend.Categorization.Model;
 using DocuSpend.Categorization.Results;
+using DocuSpend.Categorization.Rules;
 using DocuSpend.Statements.Model;
 
 namespace DocuSpend.Presentation;
@@ -29,7 +30,13 @@ public sealed record CategoryRow(CategoryId Category, string Name, int Count, de
 }
 
 /// <summary>A transaction in the selected category's list.</summary>
-public sealed record TransactionRow(Transaction Transaction, string Date, string Description, string Subcategory, string Amount)
+/// <param name="Index">Its place in the statement, which its fingerprint depends on.</param>
+/// <param name="Target">Its sub-category, or null in an Uncategorized bucket.</param>
+/// <param name="ByHand">The user chose its sub-category for it alone; the row shows "ručne".</param>
+/// <param name="Fingerprint">How its hand choice is found; null before the first hand choice made a key.</param>
+public sealed record TransactionRow(
+    Transaction Transaction, string Date, string Description, string Subcategory, string Amount,
+    int Index = 0, SubcategoryId? Target = null, bool ByHand = false, Fingerprint? Fingerprint = null)
 {
     /// <summary>Money coming in, shown in the positive colour; money going out is the normal case and isn't marked.</summary>
     public bool IsIncoming => Transaction.Amount > 0;
@@ -93,6 +100,21 @@ public sealed partial class StatementViewModel : ObservableObject
     [ObservableProperty]
     public partial IReadOnlyList<TransactionRow> Transactions { get; private set; } = [];
 
+    /// <summary>The transaction selected in the list, which shows "Zaradiť"; cleared whenever the list changes.</summary>
+    [ObservableProperty]
+    public partial TransactionRow? SelectedTransaction { get; set; }
+
+    /// <summary>What the last change made from the list did, under the card's heading, until the next change; or null.</summary>
+    [ObservableProperty]
+    public partial string? TransactionsMessage { get; set; }
+
+    /// <summary>That the last change made from the list won't be kept, until the next change; or null.</summary>
+    [ObservableProperty]
+    public partial string? TransactionsError { get; set; }
+
+    /// <summary>Clears the card's message; choosing another category or opening a statement does too.</summary>
+    public void ClearTransactionsMessage() => TransactionsMessage = TransactionsError = null;
+
     /// <summary>The categorized statement shown, or null before one is shown.</summary>
     public CategorizedStatement? Categorized => _categorized;
 
@@ -111,6 +133,7 @@ public sealed partial class StatementViewModel : ObservableObject
 
     partial void OnSelectedCategoryChanged(CategoryId? value)
     {
+        ClearTransactionsMessage();
         SelectedRow = Categories.FirstOrDefault(c => c.Category == value);
         ListTransactions();
     }
@@ -162,6 +185,7 @@ public sealed partial class StatementViewModel : ObservableObject
 
     private void ListTransactions()
     {
+        SelectedTransaction = null;
         if (_categorized is not { } categorized || SelectedCategory is not { } selected)
         {
             Transactions = [];
@@ -169,10 +193,12 @@ public sealed partial class StatementViewModel : ObservableObject
         }
         var catalog = Config.Catalog;
         Transactions = categorized.Transactions
-            .Where(t => t.Placement.Category == selected)
-            .OrderBy(t => t.Transaction.BookingDate)
-            .Select(t =>
+            .Select((t, index) => (t, index))
+            .Where(x => x.t.Placement.Category == selected)
+            .OrderBy(x => x.t.Transaction.BookingDate)
+            .Select(x =>
             {
+                var (t, index) = x;
                 var (category, subcategory) = catalog.Describe(t.Placement);
                 var transaction = t.Transaction;
                 return new TransactionRow(
@@ -180,7 +206,11 @@ public sealed partial class StatementViewModel : ObservableObject
                     SlovakFormat.Date(transaction.BookingDate),
                     Describe(transaction),
                     subcategory?.Name ?? category.Name,
-                    SlovakFormat.Amount(transaction.Amount));
+                    SlovakFormat.Amount(transaction.Amount),
+                    index,
+                    t.Placement.Subcategory,
+                    t.ByHand,
+                    t.Fingerprint);
             })
             .ToList();
     }
