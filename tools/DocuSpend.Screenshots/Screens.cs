@@ -167,6 +167,17 @@ internal static class Screens
             File.WriteAllText(rules, """{ "version": 99 }""");
             return null;
         }),
+        // Unknown types and cash withdrawals (#41): the note, and the list where they show their type.
+        new("26-unknown-types", main =>
+        {
+            Open(main, "10-new-types-month");
+            main.Statement.SelectedCategory = new CategoryId("uncategorized-out");
+        }),
+        new("26-unknown-types-help", main =>
+        {
+            Open(main, "10-new-types-month");
+            main.Statement.SelectedCategory = new CategoryId("uncategorized-out");
+        }, InWindow: window => ToolTip.SetIsOpen(window.FindControl<Control>("UnknownTypesHelp")!, true)),
         new("17-scroll-bar", main =>
         {
             Open(main, "02-busy-month");
