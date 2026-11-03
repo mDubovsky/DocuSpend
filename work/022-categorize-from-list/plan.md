@@ -86,6 +86,12 @@ PRIVACY.md, docs/mvp.md, docs/glossary.md, AGENTS.md
 - **The shared condition control** may be awkward to bind in two places. Fallback: the box gets its own copy of the fields, and a test compares the two forms' controls so they can't drift.
 - **The fifth column squeezes the description** at the default width. The screenshot review decides; the fallback is buttons over the sub-category column while the row is selected.
 - **Pointer-over is hard to drive headless.** Avalonia's headless platform can send pointer moves (`MouseMove`); if the tag's hover can't be tested that way, it is covered by the screenshot with the tag pointed at, and the test checks the selected row instead.
+- **Found in the build: the box's text field ran past its edge.** The condition fields were laid out for the wide rules card. The text field now sits in a grid column that stretches (minimum 160), so it fits the box; on "Pravidlá" it is a little wider than before.
+- **Found in the build: the shared condition control hid fields from window tests.** Names inside a `UserControl` are in its own scope, so the rules screen's tests look up the fields inside `RuleConditionFields` when the window doesn't have them. What they check is unchanged.
+- **Found in the build: two tests pinned version 2 of the saved shape.** They now follow `SavedRules.CurrentVersion`; the fixed `rules-v1.json` and `rules-v2.json` are untouched and still load.
+- **Found in the build: the screenshot tool hid a scene's exception** behind a font error at shutdown. The scene had picked a category with a single row; it now uses "Nákupy online".
+- **Found in the screenshot review:** the shortened description on a selected hand-chosen row was accepted; the buttons stay in their own column.
+- **Found in the hand check:** nothing. Both choices, undo, a restart and `rules.json` behaved as the spec says on a real statement.
 
 ## Verification
 
