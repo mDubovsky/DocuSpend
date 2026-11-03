@@ -13,7 +13,8 @@
         </DataTemplate>
       </ComboBox.ItemTemplate>
     </ComboBox>
-    <StackPanel x:Name="TextFields" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding IsText}">
+    <!-- The text takes the width there is, so the field fits the narrower "Zaradiť" box too -->
+    <Grid x:Name="TextFields" ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding IsText}">
       <ComboBox ItemsSource="{Binding TextModes}" SelectedItem="{Binding SelectedTextMode}" MinWidth="120">
         <ComboBox.ItemTemplate>
           <DataTemplate x:DataType="vm:TextModeOption">
@@ -21,8 +22,8 @@
           </DataTemplate>
         </ComboBox.ItemTemplate>
       </ComboBox>
-      <TextBox x:Name="TextField" Text="{Binding Text}" MinWidth="240" />
-    </StackPanel>
+      <TextBox x:Name="TextField" Grid.Column="1" Text="{Binding Text}" MinWidth="160" />
+    </Grid>
     <StackPanel x:Name="AmountFields" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding IsAmount}">
       <TextBlock Classes="muted" Text="{x:Static vm:Texts.AmountFrom}" VerticalAlignment="Center" />
       <TextBox Text="{Binding AmountFrom}" Width="110" />
