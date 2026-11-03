@@ -25,6 +25,27 @@ public static class Texts
     public const string NoDescription = "(bez popisu)";
     public const string Balance = "Zostatok";
 
+    // An open row's details (work/045-transaction-details/spec.md: what the details show)
+    public const string DetailCounterpartyName = KindCounterpartyName;
+    public const string DetailCounterpartyAccount = KindCounterpartyAccount;
+    public const string DetailCounterpartyBic = "BIC banky protistrany";
+    public const string DetailDescription = "Popis";
+    public const string DetailPaymentPurpose = "Účel platby";
+    public const string DetailVariableSymbol = KindVariableSymbol;
+    public const string DetailConstantSymbol = "Konštantný symbol";
+    public const string DetailSpecificSymbol = "Špecifický symbol";
+    public const string DetailPayerReference = "Referencia platiteľa";
+    public const string DetailType = KindType;
+    public const string DetailCard = "Karta";
+    public const string DetailBookingDate = "Dátum zaúčtovania";
+    public const string DetailValueDate = "Dátum valuty";
+    public const string DetailPurposeCategoryCode = "Kód účelu platby";
+    public const string DetailFeeType = "Kód poplatku";
+    public const string DetailReference = "Referencia transakcie";
+
+    /// <summary>"**** 2178": the last digits of a card, so they read as the end of a card number.</summary>
+    public static string CardEnding(string digits) => "**** " + digits;
+
     // Opening a statement (spec: starting; opening a statement)
     public const string StartHeading = "Otvorte výpis z účtu";
     public const string StartHint = "Vyberte mesačný výpis z účtu VÚB vo formáte PDF, alebo ho sem pretiahnite.";

@@ -40,6 +40,10 @@ public sealed record TransactionRow(
 {
     /// <summary>Money coming in, shown in the positive colour; money going out is the normal case and isn't marked.</summary>
     public bool IsIncoming => Transaction.Amount > 0;
+
+    /// <summary>What the row shows when it is open (work/045-transaction-details/spec.md). Worked out when asked, so
+    /// two rows of the same transaction stay equal.</summary>
+    public IReadOnlyList<TransactionDetail> Details => TransactionDetails.Of(Transaction);
 }
 
 /// <summary>
