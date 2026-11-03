@@ -122,7 +122,7 @@ public sealed partial class NothingKeptTests : IDisposable
 
     private static string KeptSection()
     {
-        var privacy = File.ReadAllText(Path.Combine(RepoRoot, "PRIVACY.md"));
+        var privacy = File.ReadAllText(Path.Join(RepoRoot, "PRIVACY.md"));
         var start = privacy.IndexOf("## What DocuSpend keeps", StringComparison.Ordinal);
         var end = privacy.IndexOf("## What it never does", StringComparison.Ordinal);
         Assert.True(start >= 0 && end > start, "PRIVACY.md has lost its section on what DocuSpend keeps.");

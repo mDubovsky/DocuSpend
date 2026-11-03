@@ -84,9 +84,9 @@ public sealed class SettingsStoreTests : IDisposable
 /// <summary>"Túto správu už nezobrazovať" in the box about fingerprints (work/022-categorize-from-list/spec.md).</summary>
 public sealed class FingerprintNoteSettingTests : IDisposable
 {
-    private readonly string _folder = Path.Combine(Path.GetTempPath(), "docuspend-tests-" + Guid.NewGuid().ToString("N"));
+    private readonly string _folder = Path.Join(Path.GetTempPath(), "docuspend-tests-" + Guid.NewGuid().ToString("N"));
 
-    private string File_ => Path.Combine(_folder, "DocuSpend", "settings.json");
+    private string File_ => Path.Join(_folder, "DocuSpend", "settings.json");
 
     public void Dispose()
     {

@@ -76,11 +76,12 @@ public static class Fingerprints
     {
         var seen = new Dictionary<string, int>(StringComparer.Ordinal);
         var result = new List<Fingerprint>(statement.Transactions.Count);
+        var text = new StringBuilder();
         foreach (var transaction in statement.Transactions)
         {
             var details = Details(transaction);
             var place = seen[details] = seen.GetValueOrDefault(details) + 1;
-            var text = new StringBuilder(details);
+            text.Clear().Append(details);
             Field(text, place.ToString(CultureInfo.InvariantCulture));
             var hash = key.Hash(Encoding.UTF8.GetBytes(text.ToString()));
             result.Add(new Fingerprint(Convert.ToHexStringLower(hash)));

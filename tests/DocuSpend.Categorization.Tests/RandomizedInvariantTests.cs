@@ -262,7 +262,7 @@ public class RandomizedInvariantTests
         {
             var t = result.Transactions[i];
             if (chosen.TryGetValue(i, out var target))
-                Assert.Equal((true, (SubcategoryId?)target, (RuleId?)null), (t.ByHand, t.Placement.Subcategory, t.Rule?.Id));
+                Assert.Equal<(bool, SubcategoryId?, RuleId?)>((true, target, null), (t.ByHand, t.Placement.Subcategory, t.Rule?.Id));
             else
                 Assert.Equal((false, Oracle(config, statement.Transactions[i])?.Id), (t.ByHand, t.Rule?.Id));
         }
