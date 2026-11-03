@@ -53,6 +53,7 @@ public partial class MainWindow : Window
         model.Statement.PropertyChanged += OnStatementChanged;
         model.Categories.PropertyChanged += OnCategoriesChanged;
         AddHandler(KeyDownEvent, OnCategoryKeyDown, RoutingStrategies.Bubble);
+        TransactionList.AddHandler(KeyDownEvent, OnTransactionListTab, RoutingStrategies.Tunnel);
         model.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(MainViewModel.Look))
@@ -123,6 +124,26 @@ public partial class MainWindow : Window
             _model.AddSubcategoryCommand.Execute(null);
         else
             return;
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Tab and Shift+Tab move between the open row and its buttons ("× Zrušiť zaradenie", "Zaradiť"), then on out of the
+    /// list as usual (work/045-transaction-details/spec.md: with the keyboard). A list is a single Tab stop, so
+    /// without this Tab would leave it from the row and skip the buttons.
+    /// </summary>
+    private void OnTransactionListTab(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Tab || TransactionList.SelectedItem is not { } selected
+            || TransactionList.ContainerFromItem(selected) is not ListBoxItem row)
+            return;
+        var stops = new List<Control> { row };
+        stops.AddRange(row.GetVisualDescendants().OfType<Button>().Where(b => b.IsEffectivelyVisible && b.IsEffectivelyEnabled));
+        var at = FocusManager?.GetFocusedElement() is Control focused ? stops.IndexOf(focused) : -1;
+        var next = at + (e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? -1 : 1);
+        if (at < 0 || next < 0 || next >= stops.Count)
+            return;
+        stops[next].Focus(NavigationMethod.Tab);
         e.Handled = true;
     }
 

@@ -15,7 +15,7 @@ Intent: [intent.md](intent.md)
 - With the list focused, **Up** and **Down** move the selection, so they open the previous or next transaction; the open row follows.
 - **Escape** folds the open row and nothing is selected; the keyboard focus stays on that row. Escape with a pop-up box open closes the box only, as today, and the row stays open.
 - **Space** or **Enter** opens the row that has the keyboard focus, and folds it when it is open.
-- **Tab** moves from the list to "Zaradiť" and "× Zrušiť zaradenie" of the open row, as it does today for the selected row.
+- **Tab** moves from the open row to its buttons, "× Zrušiť zaradenie" (for a hand choice) and then "Zaradiť", and from the last one out of the list; **Shift+Tab** goes back the same way. Before this item, Tab left the list from the row and never reached the buttons.
 
 ### What the details show
 Each detail is a label and a value, one per line, in this order. A detail the transaction doesn't have is left out, with its label. Values are shown as the statement prints them, except where the table says otherwise.
@@ -115,7 +115,7 @@ Keyboard:
 - [ ] Given the list focused with a row open, when the user presses Down or Up, then the next or previous transaction is open and the first is folded.
 - [ ] Given an open row, when the user presses Escape, then it folds and no row is selected; Space or Enter opens it again.
 - [ ] Given the "Zaradiť" box open, when the user presses Escape, then the box closes and the row stays open.
-- [ ] Given an open row, when the user presses Tab, then the focus reaches "Zaradiť" (and "× Zrušiť zaradenie" for a hand choice).
+- [ ] Given an open row, when the user presses Tab, then the focus reaches "× Zrušiť zaradenie" (for a hand choice) and "Zaradiť", then leaves the list; Shift+Tab goes back.
 
 Details:
 - [ ] Given a transfer with every detail (from `02-busy-month`), then the details show, in the table's order and with its labels: Protistrana, Účet protistrany, BIC banky protistrany, Popis, Variabilný symbol, Konštantný symbol, Špecifický symbol, Typ transakcie, Dátum zaúčtovania, Dátum valuty, Referencia transakcie.

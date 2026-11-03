@@ -7,7 +7,7 @@ Spec: [spec.md](spec.md)
 No new dependency, package or file format. Everything is built from what the projects already use (.NET SDK 10.0.100, Avalonia 11.3.22). The privacy lists don't change, and nothing new is saved.
 
 ### Choices to know about first
-- **The list's own toggle selection does the opening and folding.** The transactions `ListBox` gets `SelectionMode="Single,Toggle"`. Avalonia then folds the open row on a second click, and opens or folds it with Space or Enter. Up and Down still move the selection. There is no click or key handling of our own, except Escape (below).
+- **The list's own toggle selection does the opening and folding.** The transactions `ListBox` gets `SelectionMode="Single,Toggle"`. Avalonia then folds the open row on a second click, and opens or folds it with Space or Enter. Up and Down still move the selection. There is no click or key handling of our own, except Escape (below) and Tab, which the build found needed (see "Risks and unknowns").
 - **Escape goes through the window's existing `EscapeCommand`.** It already closes the box on top. With no box and no question open, it now clears `SelectedTransaction`, which folds the row.
 - **The details are worked out in screen logic, not in the window.** `TransactionRow` gains `Details`, a list of label–value pairs already in the spec's order, with the missing ones left out. The window only draws them. All the rules about what to show and in what order are tested without a window.
 - **The open row keeps the selected row's look** (the accent tint and the corner radius 20 of `Look.Radius.Pill`). If a tall open row looks wrong with that radius, the screenshot review decides, and the fallback is the card radius for a selected row in this list only.
@@ -105,6 +105,8 @@ tools/DocuSpend.Screenshots/Screens.cs               three new screens
 - **The pill radius on a tall open row looks odd.** The screenshot review decides. The fallback is the card radius for a selected row in this list (a style in `Look.axaml`).
 - **Labels make the details column too wide in a narrow window.** "Referencia transakcie" is the longest label. If the review finds values squeezed at the minimum window width, the label column gets a maximum width and long labels wrap. That would change the spec's "labels don't wrap", so the spec changes with it.
 - **Keyboard focus is lost when Escape clears the selection.** The step-3 test checks that the focus stays on the row. If it doesn't, the window gives the focus back to the row's container.
+- **Found in the build: Tab never reached the row's buttons.** A list is a single Tab stop, so Tab left it from the row; the spec had wrongly said Tab reached "Zaradiť" already. `MainWindow` now handles Tab and Shift+Tab inside the list: the open row, then its visible buttons, then out of the list as before. The spec says so.
+- **Found in the build:** a mouse click on "Zaradiť" doesn't fold the row, Escape leaves the focus on the row, and a row taller than the list shows its first line, all with no code of ours.
 
 ## Verification
 
@@ -120,7 +122,7 @@ tools/DocuSpend.Screenshots/Screens.cs               three new screens
 | Down and Up move the open row | `TransactionDetailsWindowTests` |
 | Escape folds; Space or Enter opens again | `TransactionDetailsWindowTests`, `MainViewModelTests` |
 | Escape with the "Zaradiť" box open closes only the box | `TransactionDetailsWindowTests`, `MainViewModelTests` |
-| Tab reaches "Zaradiť" (and "× Zrušiť zaradenie") | `TransactionDetailsWindowTests` |
+| Tab and Shift+Tab reach "× Zrušiť zaradenie" and "Zaradiť", then leave the list | `TransactionDetailsWindowTests` |
 | A full transfer's details, in order and with the labels | `TransactionDetailsTests` |
 | A card payment: the card format, no counterparty lines | `TransactionDetailsTests` |
 | "Účel platby" only when it differs | `TransactionDetailsTests` |
