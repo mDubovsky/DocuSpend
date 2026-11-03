@@ -97,6 +97,36 @@ public sealed partial class NothingKeptTests : IDisposable
             Assert.DoesNotContain(forbidden, text, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public async Task Opening_folding_and_moving_between_rows_writes_nothing()
+    {
+        // work/045-transaction-details/spec.md: what is kept.
+        var folder = Path.Combine(_appData, "DocuSpend");
+        var main = new MainViewModel(new RuleStore(Path.Combine(folder, "rules.json")), new SettingsStore(Path.Combine(folder, "settings.json")));
+        await main.OpenFileAsync(Samples.Path("02-busy-month"));
+        var before = Snapshot();
+
+        foreach (var category in main.Statement.Categories.Select(c => c.Category).ToList())
+        {
+            main.Statement.SelectedCategory = category;
+            foreach (var row in main.Statement.Transactions)
+            {
+                main.Statement.SelectedTransaction = row;
+                Assert.NotEmpty(row.Details);
+            }
+            main.EscapeCommand.Execute(null);
+        }
+
+        Assert.Equal(before, Snapshot());
+    }
+
+    /// <summary>Every file under the test's application data, with its content and when it was last written.</summary>
+    private List<(string, string, DateTime)> Snapshot() =>
+        Directory.EnumerateFiles(_appData, "*", SearchOption.AllDirectories)
+            .Order(StringComparer.Ordinal)
+            .Select(f => (f, File.ReadAllText(f), File.GetLastWriteTimeUtc(f)))
+            .ToList();
+
     /// <summary>Puts each transaction of the open statement into the first sub-category, for it alone; returns how many.</summary>
     private static int HandChooseEverything(MainViewModel main)
     {

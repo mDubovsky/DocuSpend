@@ -440,4 +440,52 @@ public sealed class MainViewModelTests : IDisposable
     {
         Assert.Equal(expected, Texts.RuleMatched(count));
     }
+
+    // Escape and the open row (work/045-transaction-details/spec.md: with the keyboard)
+
+    private static TransactionRow OpenARow(MainViewModel main)
+    {
+        main.Statement.SelectedCategory = new CategoryId("uncategorized-out");
+        var row = main.Statement.Transactions[0];
+        main.Statement.SelectedTransaction = row;
+        return row;
+    }
+
+    [Fact]
+    public async Task Escape_folds_the_open_row()
+    {
+        var main = await Start();
+        OpenARow(main);
+
+        main.EscapeCommand.Execute(null);
+
+        Assert.Null(main.Statement.SelectedTransaction);
+    }
+
+    [Fact]
+    public async Task Escape_with_the_Zaradit_box_open_closes_only_the_box()
+    {
+        var main = await Start();
+        var row = OpenARow(main);
+        main.CategorizeCommand.Execute(row);
+
+        main.EscapeCommand.Execute(null);
+
+        Assert.Null(main.Categorizing);
+        Assert.Equal(row, main.Statement.SelectedTransaction);
+    }
+
+    [Fact]
+    public async Task Escape_with_the_deletion_question_open_closes_only_the_question()
+    {
+        var main = await Start();
+        AddRuleForAnUncategorizedPayment(main);
+        var row = OpenARow(main);
+        main.AskToDeleteCommand.Execute(main.Rules[0]);
+
+        main.EscapeCommand.Execute(null);
+
+        Assert.Null(main.RuleToDelete);
+        Assert.Equal(row, main.Statement.SelectedTransaction);
+    }
 }
