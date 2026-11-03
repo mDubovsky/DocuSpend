@@ -235,7 +235,21 @@ internal static class Screens
             Target(main.Categorizing!.Form, "leisure.games");
             main.ConfirmCategorizeCommand.Execute(null);
         }),
+        // An open row and its details (#45).
+        new("30-open-transfer", main => OpenRow(main, "02-busy-month", t => t.Type == DocuSpend.Statements.Model.TransactionType.Transfer && t.SpecificSymbol is not null)),
+        new("30-open-card-payment", main => OpenRow(main, "02-busy-month", t => t.Type == DocuSpend.Statements.Model.TransactionType.CardPayment)),
+        new("30-open-long-purpose", main => OpenRow(main, "03-awkward-month", t => t.PaymentPurpose?.Length > 100)),
     ];
+
+    /// <summary>Opens the sample, shows the category of the first transaction that matches, and opens its row.</summary>
+    private static void OpenRow(MainViewModel main, string sample, Func<DocuSpend.Statements.Model.Transaction, bool> which)
+    {
+        Open(main, sample);
+        var all = main.Statement.Categorized!.Transactions;
+        var index = Enumerable.Range(0, all.Count).First(i => which(all[i].Transaction));
+        main.Statement.SelectedCategory = all[index].Placement.Category;
+        main.Statement.SelectedTransaction = main.Statement.Transactions.Single(r => r.Index == index);
+    }
 
     private static void OpenTheBoxOnTheFirstUncategorized(MainViewModel main)
     {

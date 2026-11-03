@@ -91,7 +91,7 @@ tools/DocuSpend.Screenshots/Screens.cs               three new screens
    - a folded row is as tall as before this change.
 
    The look test passes.
-4. **Screenshots**, in both looks, added to `tools/DocuSpend.Screenshots`: an open transfer (`02-busy-month`), an open card payment, and the transfer with the long purpose (`03-awkward-month`). The tool's tall window hides scrolling, so one screen also shows the open row at the default 1280 × 940 size. **Stop: the maintainer reviews them.** Changes from the review go into the spec and are built before going on.
+4. **Screenshots**, in both looks, added to `tools/DocuSpend.Screenshots`: an open transfer (`02-busy-month`), an open card payment, and the transfer with the long purpose (`03-awkward-month`). **Stop: the maintainer reviews them.** Changes from the review go into the spec and are built before going on.
 5. **Hand check. Stop: the maintainer** opens transactions of each kind on a real statement and finds that what each shows matches the statement, nothing is missing and nothing shows twice.
 6. **Finish** with the `finish-item` skill:
    - AGENTS.md: the open row is the selected row, through the list's toggle selection;
