@@ -108,6 +108,7 @@ tools/DocuSpend.Screenshots/Screens.cs               three new screens
 - **Found in the build: Tab never reached the row's buttons.** A list is a single Tab stop, so Tab left it from the row; the spec had wrongly said Tab reached "Zaradiť" already. `MainWindow` now handles Tab and Shift+Tab inside the list: the open row, then its visible buttons, then out of the list as before. The spec says so.
 - **Found in the build:** a mouse click on "Zaradiť" doesn't fold the row, Escape leaves the focus on the row, and a row taller than the list shows its first line, all with no code of ours.
 - **Found in the screenshot review:** an open transfer fills the transactions card at the default window size, and its later details are reached by scrolling the list. The maintainer accepted it as it is, with the pill radius.
+- **Found in the hand check:** nothing. On a real statement, each kind of transaction showed what the statement says, with nothing missing or twice, and the keyboard worked as the spec says.
 
 ## Verification
 
