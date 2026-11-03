@@ -24,6 +24,13 @@ Added during the build, after the hand check found a transfer whose details bloc
 
 Inside a transaction, a line at the left edge that starts with a label the reader doesn't know (one to four words, the last ending in ":") is a detail like any other, and a value that wraps continues on the lines below it. Its value isn't kept: no field of the transaction holds it, so it doesn't show and no rule looks at it. A line at the left edge that is neither a date, nor a known label, nor a label at all still rejects the statement, as today.
 
+### A mark after the value date, and rows low on the page
+
+Also found by the hand check, and decided by the maintainer:
+
+- **"#" after a value date.** A card payment's value date may be printed with a "#" right after it ("08/10#"); on the statement seen it was a card payment with money coming in, probably a refund. Its meaning isn't printed. The value date reads as the date, and the mark is dropped. Any other character after a date still makes it unreadable.
+- **Rows down to the bottom of the page.** The table can run down to about 811 pt from the top of a page, lower than the 800 pt measured on the first statement, so a row near the bottom had its second line cut off. The reader now reads the table down to 820 pt (it still stops at the fee breakdown on the last page).
+
 ### What still rejects a statement
 
 Nothing about rejections changes except that an unfamiliar type is no longer a reason. A statement is still rejected when:
@@ -95,6 +102,8 @@ Reading:
 - [ ] Known types carry no printed type; every committed sample reads exactly as its record says, and the existing reader tests pass unchanged.
 - [ ] Given a transfer whose details block has lines with labels the reader doesn't know ("Pôvodný odosielateľ:", "Konečný príjemca:"), one of them wrapping, then the statement opens and the transfer reads as if those lines weren't there.
 - [ ] Given a line at the left edge of the table that is not a date and not a label, then the statement is still rejected.
+- [ ] Given a card payment whose value date is printed with "#" after it, then it reads with that value date; a value date with any other character after it is still rejected.
+- [ ] Given a page whose last row's second line is printed below 800 pt (as low as real statements print), then the row reads completely.
 
 Categorizing:
 - [ ] A type rule for wallet card payments catches a G-PAY transaction; a type rule for cash withdrawals catches a cash withdrawal; no type rule catches a transaction of an unknown type.

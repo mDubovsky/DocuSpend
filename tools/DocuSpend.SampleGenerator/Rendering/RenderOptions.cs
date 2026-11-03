@@ -16,4 +16,10 @@ public sealed record RenderOptions
     /// The synthetic marking (margin and footer) is never transformed.
     /// </summary>
     public Func<string, string?>? TextTransform { get; init; }
+
+    /// <summary>
+    /// The lowest top a transaction's last line may have, instead of <see cref="VubStatementRenderer.TableBottom"/>.
+    /// Real statements print rows lower than the samples do; this draws them that low without moving the samples.
+    /// </summary>
+    public double? TableBottom { get; init; }
 }

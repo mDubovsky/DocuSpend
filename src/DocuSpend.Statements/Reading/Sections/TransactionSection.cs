@@ -31,8 +31,15 @@ internal static partial class TransactionSection
     private const string NotStated = "Neuvedené";
     private const string InstantPayment = "SEPA Okamžitá platba";
 
-    /// <summary>Below this the page holds only its footer.</summary>
-    private const double TableEnd = 800.0;
+    /// <summary>
+    /// Below this the page holds only its footer. Real statements print rows down to about 811 pt (a second line's
+    /// baseline, top about 803 pt), so the table is read to 820 pt: above the samples' synthetic-data footer at 826 pt
+    /// (work/041-unknown-transaction-kinds/spec.md).
+    /// </summary>
+    private const double TableEnd = 820.0;
+
+    /// <summary>Printed right after a card payment's value date on some rows ("08/10#"); its meaning isn't printed.</summary>
+    private const char ValueDateMark = '#';
 
     public static IReadOnlyList<Transaction> Read(IReadOnlyList<IReadOnlyList<Line>> pages, DateOnly periodStart, DateOnly periodEnd, string currency)
     {
@@ -173,7 +180,9 @@ internal static partial class TransactionSection
                 : VubText.Amount(amountWord?.Text) ?? throw where.Fail("the amount is missing or not an amount");
 
             // A card row prints its value date on the line below; an unknown type may print one there too.
-            var valueBelow = Second?.StartingAt(VubLayout.DateX);
+            var valueBelow = Second?.StartingAt(VubLayout.DateX) is { } below && below.Text.EndsWith(ValueDateMark)
+                ? below with { Text = below.Text[..^1] }
+                : Second?.StartingAt(VubLayout.DateX);
             var value = isCard || valueBelow is not null
                 ? Date(valueBelow, "the value date")
                 : Main.StartingAt(VubLayout.ValueDateX) is { } printed ? Date(printed, "the value date") : booking;

@@ -172,6 +172,15 @@ public class ReconciliationTests
     }
 
     [Fact]
+    public void A_value_date_with_another_mark_after_it_is_rejected()
+    {
+        var rejection = Rejected(new RenderOptions { TextTransform = t => t == "19/06" ? "19/06*" : t });
+
+        Assert.Equal(RejectionKind.Unreadable, rejection.Kind);
+        Assert.Contains("value date", rejection.Message);
+    }
+
+    [Fact]
     public void A_damaged_date_that_looks_like_a_label_word_is_still_rejected()
     {
         var rejection = Rejected(new RenderOptions { TextTransform = t => t == "20/06" ? "20/06:" : t });

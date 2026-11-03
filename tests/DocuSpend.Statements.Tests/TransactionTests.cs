@@ -154,6 +154,40 @@ public class TransactionTests
     }
 
     [Fact]
+    public void A_value_date_with_a_hash_after_it_reads_as_the_date() =>
+        AssertRoundTrip(June(Card(new DateOnly(2026, 6, 10), new DateOnly(2026, 6, 8), 3.20m) with { ValueDateMark = "#" }));
+
+    [Fact]
+    public void A_row_as_low_on_the_page_as_real_statements_print_reads_completely()
+    {
+        // Real statements print a card row's value date line as low as about 803 pt (top). Shift the card rows with a
+        // few transfers until one lands there, so the test means something.
+        var day = new DateOnly(2026, 6, 10);
+        var options = new RenderOptions { TableBottom = 815.0 };
+        var account = Iban.Slovak("1100", "000000", "1234567890");
+        Transaction Transfer(int i) => new()
+        {
+            BookingDate = day, ValueDate = day, Type = TransactionType.Transfer, Amount = -(10m + i),
+            CounterpartyAccount = account, CounterpartyName = "Peter Skúšobný",
+        };
+        static bool LowValueDate(byte[] pdf)
+        {
+            using var doc = UglyToad.PdfPig.PdfDocument.Open(pdf);
+            return doc.GetPages().Any(p => p.GetWords().Any(w =>
+                VubTextIsDate(w.Text) && Math.Abs(w.BoundingBox.Left - 45.6) < 0.5 && p.Height - w.BoundingBox.Top is > 800 and < 815));
+        }
+
+        var (scenario, pdf) = Enumerable.Range(0, 8)
+            .Select(k => June([.. Enumerable.Range(0, k).Select(Transfer), .. Enumerable.Range(0, 40).Select(i => Card(day, day.AddDays(-1), -(1m + i)))]))
+            .Select(s => (s, VubStatementRenderer.Render(s, options)))
+            .First(t => LowValueDate(t.Item2));
+
+        var result = Reader.Read(pdf);
+        Assert.True(result.IsSuccess, result.Rejection?.Message);
+        Assert.Equal(RecordMapping.Canonical(ExpectedRecord.ForValid(scenario)), RecordMapping.ToCanonicalJson(scenario.Name, result.Statement!));
+    }
+
+    [Fact]
     public void Known_types_carry_no_printed_type()
     {
         foreach (var name in Samples.Valid)
@@ -187,6 +221,8 @@ public class TransactionTests
         Description = "OBCHOD NA ROHU",
         Reference = "0000000000001",
     };
+
+    private static bool VubTextIsDate(string text) => System.Text.RegularExpressions.Regex.IsMatch(text, @"^\d{2}/\d{2}$");
 
     private static StatementScenario June(params Transaction[] transactions) =>
         Scenario("june", new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 30), transactions);

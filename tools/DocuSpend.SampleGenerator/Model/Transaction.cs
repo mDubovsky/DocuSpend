@@ -61,6 +61,12 @@ public sealed record Transaction
     /// </summary>
     public IReadOnlyList<(string Label, string Value)> OtherDetails { get; init; } = [];
 
+    /// <summary>
+    /// Render-only: a mark printed right after a card row's value date, e.g. "#" on a refund ("08/10#"). The reader
+    /// drops it.
+    /// </summary>
+    public string? ValueDateMark { get; init; }
+
     /// <summary>Render-only: a wallet card payment made with Google Pay ("G-PAY") rather than Apple Pay ("A-PAY").</summary>
     public bool GooglePay { get; init; }
 

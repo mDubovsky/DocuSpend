@@ -57,7 +57,7 @@ public static class VubStatementRenderer
     {
         options ??= new RenderOptions();
         Validate(scenario);
-        var pages = Paginate(scenario.Transactions);
+        var pages = Paginate(scenario.Transactions, options.TableBottom ?? TableBottom);
         var total = pages.Count + 1; // plus the final notices page
 
         var doc = SyntheticPdf.Create(scenario.IssueDate);
@@ -116,13 +116,13 @@ public static class VubStatementRenderer
     }
 
     /// <summary>Places transactions on pages, never splitting one; a page ends early when the next one doesn't fit.</summary>
-    private static List<PageContent> Paginate(IReadOnlyList<Transaction> transactions)
+    private static List<PageContent> Paginate(IReadOnlyList<Transaction> transactions, double rowsBottom)
     {
         var pages = new List<PageContent> { new(HasTable: true) };
         var y = Page1FirstRowY;
         foreach (var tx in transactions)
         {
-            if (y + BlockHeight(tx) > TableBottom)
+            if (y + BlockHeight(tx) > rowsBottom)
             {
                 pages.Add(new PageContent(HasTable: true));
                 y = NextFirstRowY;
@@ -238,7 +238,7 @@ public static class VubStatementRenderer
             c.Mono(AccountX, y, TypeText(tx), bold: true);
             c.Mono(CardX, y, $"KARTA:*{tx.Card}", bold: true);
             c.MonoRight(AmountRight, y, VubFormat.Amount(tx.Amount), bold: true);
-            c.Mono(DateX + 0.2, y2, VubFormat.TableDate(tx.ValueDate));
+            c.Mono(DateX + 0.2, y2, VubFormat.TableDate(tx.ValueDate) + tx.ValueDateMark);
         }
         else
         {
