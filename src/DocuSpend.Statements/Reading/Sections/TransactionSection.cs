@@ -86,8 +86,15 @@ internal static partial class TransactionSection
     {
         if (line.StartingAt(VubLayout.DateX) is null)
             return null;
-        return DetailLabels.FirstOrDefault(label => line.Text.StartsWith(label + " ", StringComparison.Ordinal) || line.Text == label);
+        return DetailLabels.FirstOrDefault(label => line.Text.StartsWith(label + " ", StringComparison.Ordinal) || line.Text == label)
+            // A label this reader doesn't know, such as "Pôvodný odosielateľ:". Its value goes nowhere, since only
+            // known labels are ever looked up (work/041-unknown-transaction-kinds/spec.md).
+            ?? (OtherLabel().Match(line.Text) is { Success: true } other ? other.Groups[1].Value : null);
     }
+
+    /// <summary>One to four words of letters and dots, the last ending in ":", at the start of a line.</summary>
+    [GeneratedRegex(@"^((?:\p{L}[\p{L}.]* ){0,3}\p{L}[\p{L}.]*:)(?: |$)")]
+    private static partial Regex OtherLabel();
 
     private static string ValueAfter(Line line, string label) => line.Text[label.Length..].Trim();
 

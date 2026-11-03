@@ -162,6 +162,24 @@ public class ReconciliationTests
     }
 
     [Fact]
+    public void A_line_at_the_left_edge_that_is_neither_a_date_nor_a_label_is_rejected()
+    {
+        // The second transaction's booking date damaged into something that is no label either.
+        var rejection = Rejected(new RenderOptions { TextTransform = t => t == "20/06" ? "Platba" : t });
+
+        Assert.Equal(RejectionKind.Unreadable, rejection.Kind);
+        Assert.Contains("booking date", rejection.Message);
+    }
+
+    [Fact]
+    public void A_damaged_date_that_looks_like_a_label_word_is_still_rejected()
+    {
+        var rejection = Rejected(new RenderOptions { TextTransform = t => t == "20/06" ? "20/06:" : t });
+
+        Assert.Equal(RejectionKind.Unreadable, rejection.Kind);
+    }
+
+    [Fact]
     public void Rejection_messages_quote_no_content()
     {
         var rejection = Rejected(new RenderOptions { PrintedTotals = Two.Totals with { TotalWithdrawals = -20.00m } });

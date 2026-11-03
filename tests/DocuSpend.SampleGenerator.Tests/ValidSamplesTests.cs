@@ -155,6 +155,8 @@ public partial class ValidSamplesTests
         Assert.Contains("PLATBA KARTOU G-PAY", text);
         Assert.Contains("PLATBA KARTOU A-PAY", text);
         Assert.Contains("VÝBER HOTOVOSTI", text);
+        Assert.Contains("Pôvodný odosielateľ:", text);
+        Assert.Contains("Konečný príjemca:", text);
         Assert.Contains(s.Transactions, t => t.Type == TransactionType.CashWithdrawal && t.Description!.Contains("TESCO"));
         Assert.Contains(s.Transactions, t => t.Type == TransactionType.Unknown && t.Card is not null);
         Assert.Contains(s.Transactions, t => t.Type == TransactionType.Unknown && t.Card is null && t.VariableSymbol is not null);

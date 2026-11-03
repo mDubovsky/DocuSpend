@@ -247,7 +247,11 @@ public static class ValidSamples
             t.Card(D(2), 1, 27.45m, "MINIMARKET POD HRADOM NITRA", card, wallet: true),
             t.CashWithdrawal(D(3), 1, 50.00m, "ATM00417 NITRA 10:15", card),
             t.Incoming(D(6), 1388.90m, "Fiktívne Mlyny a.s.", Iban.Slovak("1100", "000000", "3341927705"), "TATRSKBX",
-                "MZDA 03/2026", vs: "32026", ks: "0138", category: "SALA"),
+                "MZDA 03/2026", vs: "32026", ks: "0138", category: "SALA") with
+            {
+                // Labels the reader didn't know until #41; their values are dropped.
+                OtherDetails = [("Pôvodný odosielateľ:", "Fiktívne Mlyny Holding a.s."), ("Konečný príjemca:", "EVA SKÚŠKOVÁ")],
+            },
             t.Card(D(8), 2, 61.20m, "CERPACIA STANICA JUH NITRA", card),
             t.Unknown(D(9), 1, -4.20m, "PLATBA HODINKAMI", "PEKAREN U MOSTA NITRA", card: card),
             t.Card(D(12), 1, 18.90m, "BISTRO POD HRADOM NITRA", card, googlePay: true),

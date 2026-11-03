@@ -309,6 +309,7 @@ public static class VubStatementRenderer
         if (tx.PaymentPurpose is not null) Add("Účel platby:", tx.PaymentPurpose);
         if (tx.PurposeCategoryCode is not null) Add("Kód kategórie účelu platby:", tx.PurposeCategoryCode);
         if (tx.ShowsCurrencyLine) Add("Mena/suma/kurz:", $"{tx.Currency}/{VubFormat.Amount(Math.Abs(tx.Amount))}/1,0000000");
+        foreach (var (label, value) in tx.OtherDetails) Add(label, value);
         return lines;
     }
 

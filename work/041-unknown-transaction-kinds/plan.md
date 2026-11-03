@@ -89,6 +89,7 @@ work/041-unknown-transaction-kinds/screenshots/22-unknown-types-{light,dark}.png
 5. **Presentation.** Tests first: type names, plural texts for 1, 3, 5 and 0 (none), the help text, form choices without `Unknown`, transaction row descriptions, `UnknownTypes` on sample 10 and its absence on sample 01.
 6. **Desktop and StatementCheck.** Window tests: the note is visible with sample 10 and hidden with 01, and its help mark has the tooltip; the window still fits at 1280 × 940 (`FitWindowTests` with sample 10). StatementCheck prints the count (`SampleVerifierTests` or a new test on sample 10's output) and no content.
 7. **Screenshots.** Add `22-unknown-types`. Generate, check that the screens touched by the key figures (01, 02, 03 …) still match `work/011-modern-look/screenshots/` apart from intended changes. **Review stop: the maintainer reviews the screenshots.** After approval, commit them under `work/041-unknown-transaction-kinds/screenshots/`.
+7a. **Details labels the reader doesn't know** (added after the first hand check; spec: Details with a label the reader doesn't know). Tests first: a transfer with "Pôvodný odosielateľ:" and a wrapping "Konečný príjemca:" reads as without them; a non-label line still rejects. `TransactionSection.Blocks` accepts a line at the date column that matches a label pattern (one to four words of letters and dots, the last ending in ":") as a detail under that label; `Detail(...)` lookups only ask for known labels, so the value is dropped. The generator gets a render-only `OtherDetails` list on a transaction, the leak-check probe prints both labels, and sample 10's salary transfer gets them (its record doesn't change).
 8. **Hand check.** **Stop: the maintainer**, with their go-ahead, runs `dotnet run --project tools/DocuSpend.StatementCheck` on `samples/private/` (the October statement reads OK with 0 of unknown type), then opens it in DocuSpend: G-PAY payments are "Platba mobilom" and the cash withdrawal is in Nezaradené výdavky with "Výber hotovosti · …".
 9. **Finish** with `finish-item`: glossary (transaction type: cash withdrawal, unknown type, printed type), AGENTS.md (saved shape at version 2, `rules-v2.json`), the reader spec's type list in #2 pointed at this item, the intent to `done`.
 
@@ -114,6 +115,8 @@ Each step is one commit, made once all tests pass.
 | Unknown row with damaged booking date rejected | `TransactionTests` (step 1) |
 | Unknown type in a statement that doesn't add up rejected as not reconciling | `ReconciliationTests` (step 1) |
 | Known types carry no printed type; samples read as recorded; existing reader tests pass | sample tests over 01 to 05 and 10; existing tests unchanged |
+| Details lines with unknown labels, one wrapping, are accepted and dropped | `TransactionTests`; sample 10 (step 7a) |
+| A left-edge line that is neither a date nor a label still rejects | `ReconciliationTests` (step 7a) |
 | Type rules: wallet catches G-PAY, cash catches cash, none catches unknown | `ConditionTests` (step 3) |
 | Text rule on printed type catches unknown, not a known type printing the same word | `ConditionTests` (step 3) |
 | Cash withdrawal with "TESCO" goes to Nezaradené výdavky; user text or type rule catches it | `CategorizerTests` (step 3) |

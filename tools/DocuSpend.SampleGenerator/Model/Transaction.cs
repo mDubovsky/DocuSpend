@@ -55,6 +55,12 @@ public sealed record Transaction
     /// <summary>Render-only: print the "Mena/suma/kurz:" line in the details block.</summary>
     public bool ShowsCurrencyLine { get; init; }
 
+    /// <summary>
+    /// Render-only: details lines whose labels a reader doesn't know, printed after the known ones, e.g.
+    /// ("Pôvodný odosielateľ:", "…"). Their values are no part of the expected record.
+    /// </summary>
+    public IReadOnlyList<(string Label, string Value)> OtherDetails { get; init; } = [];
+
     /// <summary>Render-only: a wallet card payment made with Google Pay ("G-PAY") rather than Apple Pay ("A-PAY").</summary>
     public bool GooglePay { get; init; }
 

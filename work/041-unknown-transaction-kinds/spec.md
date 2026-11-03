@@ -18,6 +18,12 @@ DocuSpend doesn't guess what an unknown type means: a transaction with a card nu
 
 Every other type keeps no printed type: only unknown types have one.
 
+### Details with a label the reader doesn't know
+
+Added during the build, after the hand check found a transfer whose details block also prints "Pôvodný odosielateľ:" (original sender) and "Konečný príjemca:" (ultimate beneficiary), which the reader didn't know ([#41](https://github.com/mDubovsky/DocuSpend/issues/41)).
+
+Inside a transaction, a line at the left edge that starts with a label the reader doesn't know (one to four words, the last ending in ":") is a detail like any other, and a value that wraps continues on the lines below it. Its value isn't kept: no field of the transaction holds it, so it doesn't show and no rule looks at it. A line at the left edge that is neither a date, nor a known label, nor a label at all still rejects the statement, as today.
+
 ### What still rejects a statement
 
 Nothing about rejections changes except that an unfamiliar type is no longer a reason. A statement is still rejected when:
@@ -87,6 +93,8 @@ Reading:
 - [ ] Given a row of an unknown type with a damaged booking date, then the statement is rejected as before.
 - [ ] Given a statement with a transaction of an unknown type whose totals don't add up, then it is rejected as not reconciling.
 - [ ] Known types carry no printed type; every committed sample reads exactly as its record says, and the existing reader tests pass unchanged.
+- [ ] Given a transfer whose details block has lines with labels the reader doesn't know ("Pôvodný odosielateľ:", "Konečný príjemca:"), one of them wrapping, then the statement opens and the transfer reads as if those lines weren't there.
+- [ ] Given a line at the left edge of the table that is not a date and not a label, then the statement is still rejected.
 
 Categorizing:
 - [ ] A type rule for wallet card payments catches a G-PAY transaction; a type rule for cash withdrawals catches a cash withdrawal; no type rule catches a transaction of an unknown type.
@@ -126,6 +134,7 @@ Checking and privacy:
 
 - A built-in category for cash, or any default rule for cash withdrawals (intent decision).
 - Types beyond G-PAY and cash withdrawal; new types are added by later items when one turns out to deserve it.
+- Keeping the values of details labels the reader doesn't know, or making them searchable.
 - A type condition that names a printed type; type rules for unknown types.
 - Showing a transaction's type for known types in the transaction list.
 - Accepting statements that don't reconcile, or rows with unreadable dates or amounts.
@@ -141,6 +150,7 @@ Checking and privacy:
 - **An unknown type with a card number stays unknown.** The intent rules out guessing.
 - **The saved file must be recognised as newer by older versions.** Today an unknown type word makes a saved file "damaged", and a damaged file is moved aside, which would cost a user switching between versions their rules. How (for example raising the shape's version) is for the plan.
 - **The reject message for an unknown kind goes away**, since that case no longer rejects.
+- **A details label the reader doesn't know is accepted and its value dropped**, decided by the maintainer during the hand check. It is the same idea as unknown types: unfamiliar printed text doesn't block a statement whose numbers are right. Keeping the values as searchable fields was considered and left for later.
 
 ## Open questions
 

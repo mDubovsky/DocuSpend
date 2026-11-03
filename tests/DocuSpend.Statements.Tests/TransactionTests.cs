@@ -129,6 +129,31 @@ public class TransactionTests
         }));
 
     [Fact]
+    public void Details_lines_with_labels_the_reader_does_not_know_are_accepted_and_dropped()
+    {
+        var transfer = new Transaction
+        {
+            BookingDate = new DateOnly(2026, 6, 8),
+            ValueDate = new DateOnly(2026, 6, 8),
+            Type = TransactionType.Transfer,
+            Amount = 900.00m,
+            CounterpartyAccount = Iban.Slovak("1100", "000000", "1234567890"),
+            CounterpartyName = "Fiktívna Firma s.r.o.",
+            CounterpartyBic = "TATRSKBX",
+            PaymentPurpose = "Vyplata",
+            Description = "Vyplata",
+            OtherDetails =
+            [
+                ("Pôvodný odosielateľ:", "Fiktívna Materská Firma a.s."),
+                // Long enough to wrap onto a line of its own.
+                ("Konečný príjemca:", "TESTOVACÍ KLIENT ULICA 1 000 00 MESTO SLOVENSKÁ REPUBLIKA DLHÝ TEXT, KTORÝ SA ZALOMÍ NA ĎALŠÍ RIADOK"),
+            ],
+        };
+
+        AssertRoundTrip(June(transfer));
+    }
+
+    [Fact]
     public void Known_types_carry_no_printed_type()
     {
         foreach (var name in Samples.Valid)
