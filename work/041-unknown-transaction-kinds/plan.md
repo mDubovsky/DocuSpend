@@ -103,6 +103,9 @@ Each step is one commit, made once all tests pass.
 - **Text rules on printed types and diacritics.** Text matching already ignores case and diacritics; the printed type goes through the same test. Nothing new.
 - **Screenshots shift.** The key figures row gets a second column; at 1280 wide nothing should move when the note is absent. If the existing screenshots change, that is investigated before review rather than accepted.
 - **Sample regeneration changes old samples.** Guarded by `CommittedSamplesTests`; the G-PAY switch defaults to A-PAY so old rows render as before.
+- **Found in the build:** adding the two type values broke the type names, the rule form and the saved type words at once, so step 1 gave them entries that steps 4 and 5 then finished with their tests.
+- **Found in the build:** screenshot numbers 22 to 25 were already taken, so the new screens are `26-unknown-types` and `26-unknown-types-help` (the help tooltip open), not `22-unknown-types`.
+- **Found in the hand check:** the October statement still didn't open after step 7. It had details labels the reader didn't know, a value date printed with a "#" after it, and rows printed below 800 pt, the reader's old end of the table. Steps 7a and 7b added to the spec and plan accept any unfamiliar label (its value is dropped), drop a trailing "#", and read the table down to 820 pt. The statement then read with 133 transactions, 0 of unknown type, and the maintainer found it worked in DocuSpend as the spec says.
 
 ## Verification
 
