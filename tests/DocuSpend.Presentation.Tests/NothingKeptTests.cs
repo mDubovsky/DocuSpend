@@ -81,12 +81,76 @@ public sealed partial class NothingKeptTests : IDisposable
         main.RuleForm.SelectedSubcategory = main.RuleForm.Subcategories[0];
         main.AddRuleCommand.Execute(null);
         Assert.Single(main.Rules);
+        // Every transaction of every valid sample categorized by hand, the note about fingerprints switched off on the way.
+        var handChoices = 0;
+        foreach (var name in Samples.Valid)
+        {
+            await main.OpenFileAsync(Samples.Path(name));
+            handChoices += HandChooseEverything(main);
+        }
+        Assert.Equal(handChoices, main.Statement.Config.HandChoices.Count);
 
         var written = Directory.EnumerateFiles(_appData, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal).ToList();
         Assert.Equal([movedAside, rulesFile, settingsFile], written);
         var text = string.Concat(written.Select(File.ReadAllText));
         foreach (var forbidden in Forbidden())
             Assert.DoesNotContain(forbidden, text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>Puts each transaction of the open statement into the first sub-category, for it alone; returns how many.</summary>
+    private static int HandChooseEverything(MainViewModel main)
+    {
+        var all = main.Statement.Categorized!.Transactions;
+        for (var index = 0; index < all.Count; index++)
+        {
+            main.Statement.SelectedCategory = main.Statement.Categorized!.Transactions[index].Placement.Category;
+            main.CategorizeCommand.Execute(main.Statement.Transactions.Single(r => r.Index == index));
+            var form = main.Categorizing!.Form;
+            form.SelectedCategory = form.Categories[0];
+            form.SelectedSubcategory = form.Subcategories[0];
+            main.ConfirmCategorizeCommand.Execute(null);
+            if (main.Categorizing is { ShowsPrivacy: true } box)
+            {
+                box.HideNoteNextTime = true;
+                main.ConfirmPrivacyCommand.Execute(null);
+            }
+            Assert.Null(main.Categorizing);
+            Assert.True(main.Statement.Categorized!.Transactions[index].ByHand);
+        }
+        return all.Count;
+    }
+
+    private static string KeptSection()
+    {
+        var privacy = File.ReadAllText(Path.Combine(RepoRoot, "PRIVACY.md"));
+        var start = privacy.IndexOf("## What DocuSpend keeps", StringComparison.Ordinal);
+        var end = privacy.IndexOf("## What it never does", StringComparison.Ordinal);
+        Assert.True(start >= 0 && end > start, "PRIVACY.md has lost its section on what DocuSpend keeps.");
+        return privacy[start..end];
+    }
+
+    /// <summary>
+    /// The box about fingerprints and PRIVACY.md say the same about where a fingerprint is and how to remove it
+    /// (work/022-categorize-from-list/spec.md). One is in Slovak and one in English, so the facts are compared.
+    /// </summary>
+    [Fact]
+    public void The_box_about_fingerprints_and_PRIVACY_md_agree()
+    {
+        var box = string.Join(" ", Texts.FingerprintWhat, Texts.FingerprintLimits, Texts.FingerprintWhere);
+        var kept = KeptSection();
+        foreach (var fact in new[] { @"%APPDATA%\DocuSpend", "rules.json", "Zrušiť zaradenie" })
+        {
+            Assert.Contains(fact, box, StringComparison.Ordinal);
+            Assert.Contains(fact, kept, StringComparison.Ordinal);
+        }
+        Assert.Contains("v tomto počítači", box, StringComparison.Ordinal);
+        Assert.Contains("on this computer", kept, StringComparison.Ordinal);
+        foreach (var detail in new[] { "dátum", "sumu", "popis", "protistranu" })
+            Assert.Contains(detail, Texts.FingerprintWhat, StringComparison.Ordinal);
+        foreach (var detail in new[] { "booking date", "amount", "description", "counterparty" })
+            Assert.Contains(detail, kept, StringComparison.Ordinal);
+        Assert.Contains(Texts.DontShowAgain, kept, StringComparison.Ordinal);
+        Assert.Contains("by making a rule from a transaction", kept, StringComparison.Ordinal);
     }
 
     /// <summary>The samples' file names, their folder, and every identifying text, date and amount inside the valid ones.</summary>
