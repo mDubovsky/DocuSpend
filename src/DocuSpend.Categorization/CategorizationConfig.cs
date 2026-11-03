@@ -18,11 +18,15 @@ namespace DocuSpend.Categorization;
 /// </summary>
 public sealed class CategorizationConfig
 {
-    private CategorizationConfig(CategoryCatalog catalog, IReadOnlyList<Rule> defaultRules, IReadOnlyList<Rule> userRules)
+    private CategorizationConfig(
+        CategoryCatalog catalog, IReadOnlyList<Rule> defaultRules, IReadOnlyList<Rule> userRules,
+        IReadOnlyList<HandChoice> handChoices, FingerprintKey? fingerprintKey)
     {
         Catalog = catalog;
         DefaultRules = defaultRules;
         UserRules = userRules;
+        HandChoices = handChoices;
+        FingerprintKey = fingerprintKey;
     }
 
     /// <summary>The built-in categories and default rules, and no user rules.</summary>
@@ -43,10 +47,21 @@ public sealed class CategorizationConfig
     public IReadOnlyList<Rule> UserRules { get; }
 
     /// <summary>
+    /// Sub-categories the user chose for single transactions, in the order chosen. Each wins over every rule for the
+    /// transaction with its fingerprint (work/022-categorize-from-list/spec.md: "Len túto transakciu").
+    /// </summary>
+    public IReadOnlyList<HandChoice> HandChoices { get; }
+
+    /// <summary>The key fingerprints are made with; null until the user first categorizes a transaction by hand.</summary>
+    public FingerprintKey? FingerprintKey { get; }
+
+    /// <summary>
     /// Builds a configuration from its parts, checking them. Throws when the parts break an invariant, since for
     /// default rules that is a mistake in the program, not something a user did.
     /// </summary>
-    internal static CategorizationConfig Create(CategoryCatalog catalog, IEnumerable<Rule> defaultRules, IEnumerable<Rule>? userRules = null)
+    internal static CategorizationConfig Create(
+        CategoryCatalog catalog, IEnumerable<Rule> defaultRules, IEnumerable<Rule>? userRules = null,
+        IEnumerable<HandChoice>? handChoices = null, FingerprintKey? fingerprintKey = null)
     {
         var defaults = defaultRules.OrderBy(r => r.Priority).ToList();
         var users = (userRules ?? []).OrderBy(r => r.Order).ToList();
@@ -62,8 +77,15 @@ public sealed class CategorizationConfig
             throw new ArgumentException("Default rules must have distinct priority numbers.");
         if (users.Select(r => r.Order).Distinct().Count() != users.Count)
             throw new ArgumentException("User rules must have distinct creation orders.");
+        var choices = (handChoices ?? []).ToList();
+        if (choices.Count > 0 && fingerprintKey is null)
+            throw new ArgumentException("Hand choices need the key their fingerprints were made with.");
+        if (choices.Any(c => catalog.FindSubcategory(c.Target) is null))
+            throw new ArgumentException("A hand choice targets a sub-category that doesn't exist.");
+        if (choices.Select(c => c.Fingerprint).Distinct().Count() != choices.Count)
+            throw new ArgumentException("Hand choices must have distinct fingerprints.");
 
-        return new CategorizationConfig(catalog, defaults, users);
+        return new CategorizationConfig(catalog, defaults, users, choices, fingerprintKey);
     }
 
     /// <summary>
@@ -88,7 +110,7 @@ public sealed class CategorizationConfig
 
         var order = UserRules.Count == 0 ? 1 : UserRules.Max(r => r.Order) + 1;
         var rule = new Rule(new RuleId($"user-{Guid.NewGuid():N}"), RuleSource.User, priority, order, condition, target);
-        return Outcome<CategorizationConfig>.Ok(new CategorizationConfig(Catalog, DefaultRules, [.. UserRules, rule]));
+        return Outcome<CategorizationConfig>.Ok(Copy(userRules: [.. UserRules, rule]));
     }
 
     /// <summary>
@@ -131,13 +153,57 @@ public sealed class CategorizationConfig
         if (UserRules.All(r => r.Id != id))
             return Outcome<CategorizationConfig>.Refused(UnknownRule);
 
-        return Outcome<CategorizationConfig>.Ok(new CategorizationConfig(Catalog, DefaultRules, UserRules.Where(r => r.Id != id).ToList()));
+        return Outcome<CategorizationConfig>.Ok(Copy(userRules: UserRules.Where(r => r.Id != id).ToList()));
     }
+
+    /// <summary>
+    /// The configuration with a key for fingerprints. A key is set once: changing it would make every existing hand
+    /// choice unrecognisable, so a configuration that has one keeps it.
+    /// </summary>
+    public CategorizationConfig WithFingerprintKey(FingerprintKey key) =>
+        FingerprintKey is null ? Copy(fingerprintKey: key) : this;
+
+    /// <summary>
+    /// Puts the transaction with this fingerprint in <paramref name="target"/>, whatever the rules say, replacing an
+    /// earlier hand choice for it. Needs a key, since the fingerprint was made with it.
+    /// </summary>
+    public Outcome<CategorizationConfig> SetHandChoice(Fingerprint fingerprint, SubcategoryId target)
+    {
+        if (FingerprintKey is null)
+            throw new InvalidOperationException("A hand choice needs a fingerprint key; set one first.");
+        if (Catalog.FindSubcategory(target) is null)
+            return Outcome<CategorizationConfig>.Refused(new Refusal(RefusalKind.UnknownTarget, "A hand choice's target is not an existing sub-category."));
+
+        var choice = new HandChoice(fingerprint, target);
+        var index = HandChoices.ToList().FindIndex(c => c.Fingerprint == fingerprint);
+        var choices = HandChoices.ToList();
+        if (index >= 0)
+            choices[index] = choice;
+        else
+            choices.Add(choice);
+        return Outcome<CategorizationConfig>.Ok(Copy(handChoices: choices));
+    }
+
+    /// <summary>Removes the hand choice for this fingerprint, if there is one; without one, nothing changes.</summary>
+    public CategorizationConfig RemoveHandChoice(Fingerprint fingerprint) =>
+        HandChoices.Any(c => c.Fingerprint == fingerprint)
+            ? Copy(handChoices: HandChoices.Where(c => c.Fingerprint != fingerprint).ToList())
+            : this;
+
+    /// <summary>The hand choice's target for this fingerprint, or null.</summary>
+    public SubcategoryId? HandChoiceFor(Fingerprint fingerprint) =>
+        HandChoices.FirstOrDefault(c => c.Fingerprint == fingerprint)?.Target;
 
     private static Refusal UnknownRule => new(RefusalKind.UnknownRule, "There is no user rule with this identifier.");
 
+    /// <summary>This configuration with some parts replaced; every change goes through here.</summary>
+    private CategorizationConfig Copy(
+        CategoryCatalog? catalog = null, IReadOnlyList<Rule>? userRules = null,
+        IReadOnlyList<HandChoice>? handChoices = null, FingerprintKey? fingerprintKey = null) =>
+        new(catalog ?? Catalog, DefaultRules, userRules ?? UserRules, handChoices ?? HandChoices, fingerprintKey ?? FingerprintKey);
+
     private CategorizationConfig Replaced(RuleId id, Func<Rule, Rule> change) =>
-        new(Catalog, DefaultRules, UserRules.Select(r => r.Id == id ? change(r) : r).ToList());
+        Copy(userRules: UserRules.Select(r => r.Id == id ? change(r) : r).ToList());
 
     private Refusal? Check(Condition condition, SubcategoryId target, int priority)
     {
@@ -161,6 +227,9 @@ public sealed class CategorizationConfig
 
     private Outcome<CategorizationConfig> With(Outcome<CategoryCatalog> catalog) =>
         catalog.IsSuccess
-            ? Outcome<CategorizationConfig>.Ok(new CategorizationConfig(catalog.Value!, DefaultRules, UserRules))
+            ? Outcome<CategorizationConfig>.Ok(Copy(catalog: catalog.Value!))
             : Outcome<CategorizationConfig>.Refused(catalog.Refusal!);
 }
+
+/// <summary>A sub-category the user chose for one transaction, recognised by its fingerprint.</summary>
+public sealed record HandChoice(Fingerprint Fingerprint, SubcategoryId Target);

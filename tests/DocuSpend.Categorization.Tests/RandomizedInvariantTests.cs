@@ -234,6 +234,42 @@ public class RandomizedInvariantTests
         }
     }
 
+    /// <summary>
+    /// With hand choices for some random transactions (work/022-categorize-from-list): each of those is where it was
+    /// put, every other one is where the rules put it, and nothing is lost.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Seeds))]
+    public void Hand_choices_decide_their_transactions_and_only_those(int seed)
+    {
+        var random = new SeededRandom((ulong)seed);
+        var config = RandomConfig(random).WithFingerprintKey(FingerprintKey.Create());
+        var statement = RandomStatement(random);
+        var prints = Fingerprints.Of(statement, config.FingerprintKey!);
+        var targets = config.Catalog.Categories.SelectMany(c => c.Subcategories).Select(s => s.Id).ToList();
+        var chosen = new Dictionary<int, SubcategoryId>();
+        for (var i = 0; i < statement.Transactions.Count; i++)
+        {
+            if (random.Next(4) != 0)
+                continue;
+            chosen[i] = random.Pick(targets);
+            config = config.SetHandChoice(prints[i], chosen[i]).Value!;
+        }
+
+        var result = Categorizer.Categorize(statement, config);
+
+        for (var i = 0; i < statement.Transactions.Count; i++)
+        {
+            var t = result.Transactions[i];
+            if (chosen.TryGetValue(i, out var target))
+                Assert.Equal((true, (SubcategoryId?)target, (RuleId?)null), (t.ByHand, t.Placement.Subcategory, t.Rule?.Id));
+            else
+                Assert.Equal((false, Oracle(config, statement.Transactions[i])?.Id), (t.ByHand, t.Rule?.Id));
+        }
+        Assert.Equal(statement.Transactions.Sum(t => t.Amount), result.Categories.Sum(c => c.Total.Amount));
+        Assert.True(result.IsComplete);
+    }
+
     [Fact]
     public void The_random_cases_are_not_all_trivial()
     {

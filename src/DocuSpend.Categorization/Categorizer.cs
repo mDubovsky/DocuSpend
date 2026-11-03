@@ -25,16 +25,36 @@ public static class Categorizer
         var catalog = config.Catalog;
         var rules = config.RulesInOrder().ToList();
         var categorized = new List<CategorizedTransaction>(statement.Transactions.Count);
+        var fingerprints = config.FingerprintKey is { } key ? Fingerprints.Of(statement, key) : null;
+        var choices = config.HandChoices.ToDictionary(c => c.Fingerprint, c => c.Target);
 
-        foreach (var transaction in statement.Transactions)
+        for (var i = 0; i < statement.Transactions.Count; i++)
         {
+            var transaction = statement.Transactions[i];
+            var fingerprint = fingerprints?[i];
+
+            // A hand choice wins over every rule (work/022-categorize-from-list/spec.md: "Len túto transakciu").
+            if (fingerprint is { } print && choices.TryGetValue(print, out var target) && catalog.FindSubcategory(target) is { } chosen)
+            {
+                categorized.Add(new CategorizedTransaction(
+                    transaction,
+                    new Placement(chosen.Category.Id, chosen.Subcategory.Id),
+                    Rule: null,
+                    chosen.Category.Role == CategoryRole.Spending,
+                    ByHand: true,
+                    fingerprint));
+                continue;
+            }
+
             var rule = rules.FirstOrDefault(r => Applies(r, transaction) && r.Condition.Matches(transaction));
             var (category, placement) = Place(catalog, rule, transaction);
             categorized.Add(new CategorizedTransaction(
                 transaction,
                 placement,
                 rule is null ? null : new RuleReference(rule.Id, rule.Source),
-                category.Role == CategoryRole.Spending));
+                category.Role == CategoryRole.Spending,
+                ByHand: false,
+                fingerprint));
         }
 
         var summaries = Summarize(catalog, categorized);
