@@ -1,0 +1,43 @@
+<!-- A rule's condition: the kind, and that kind's fields. Shared by the rule form on "Pravidlá" and the "Zaradiť" box,
+     so both offer and check the same (work/022-categorize-from-list/plan.md). Its data is a RuleFormViewModel. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:DocuSpend.Presentation"
+             x:Class="DocuSpend.Desktop.ConditionFields"
+             x:DataType="vm:RuleFormViewModel">
+  <StackPanel Spacing="{StaticResource Look.Space.Medium}">
+    <ComboBox x:Name="KindChoice" ItemsSource="{Binding Kinds}" SelectedItem="{Binding SelectedKindOption}" MinWidth="200">
+      <ComboBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:KindOption">
+          <TextBlock Text="{Binding Label}" />
+        </DataTemplate>
+      </ComboBox.ItemTemplate>
+    </ComboBox>
+    <StackPanel x:Name="TextFields" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding IsText}">
+      <ComboBox ItemsSource="{Binding TextModes}" SelectedItem="{Binding SelectedTextMode}" MinWidth="120">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:TextModeOption">
+            <TextBlock Text="{Binding Label}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+      <TextBox x:Name="TextField" Text="{Binding Text}" MinWidth="240" />
+    </StackPanel>
+    <StackPanel x:Name="AmountFields" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding IsAmount}">
+      <TextBlock Classes="muted" Text="{x:Static vm:Texts.AmountFrom}" VerticalAlignment="Center" />
+      <TextBox Text="{Binding AmountFrom}" Width="110" />
+      <TextBlock Classes="muted" Text="{x:Static vm:Texts.AmountTo}" VerticalAlignment="Center" />
+      <TextBox Text="{Binding AmountTo}" Width="110" />
+      <TextBlock Classes="muted" Text="€" VerticalAlignment="Center" />
+    </StackPanel>
+    <TextBox x:Name="AccountField" Text="{Binding Account}" MinWidth="300" IsVisible="{Binding IsAccount}" />
+    <ItemsControl x:Name="TypeChoices" ItemsSource="{Binding Types}" IsVisible="{Binding IsType}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:TypeChoice">
+          <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" />
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <TextBox x:Name="SymbolField" Text="{Binding Symbol}" MinWidth="200" IsVisible="{Binding IsSymbol}" />
+  </StackPanel>
+</UserControl>

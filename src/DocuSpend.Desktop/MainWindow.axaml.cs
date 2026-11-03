@@ -61,6 +61,16 @@ public partial class MainWindow : Window
             // Tab moves among its buttons rather than through the dimmed window behind it.
             if (e.PropertyName == nameof(MainViewModel.RuleToDelete) && model.RuleToDelete is not null)
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => DeleteDialogBox.Focus());
+            // The "Zaradiť" box and the box about fingerprints take the focus the same way, the one on top first.
+            if (e.PropertyName == nameof(MainViewModel.Categorizing) && model.Categorizing is { } box)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => CategorizeDialogBox.Focus());
+                box.PropertyChanged += (_, change) =>
+                {
+                    if (change.PropertyName == nameof(CategorizeViewModel.ShowsPrivacy))
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() => (box.ShowsPrivacy ? PrivacyDialogBox : CategorizeDialogBox).Focus());
+                };
+            }
             // The charts are hidden on the start screen. LiveCharts measures a chart only after it has painted a
             // frame since its last measure, and resets that only when the chart scrolls into view, so charts that
             // were hidden stayed empty until scrolled away and back. That is also the case when the user comes back from the

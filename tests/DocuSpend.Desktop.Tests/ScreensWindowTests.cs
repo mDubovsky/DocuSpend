@@ -34,7 +34,9 @@ public sealed class ScreensWindowTests : IDisposable
         return (window, model);
     }
 
-    private static Control Named(Window window, string name) => window.FindControl<Control>(name)!;
+    /// <summary>A control by name, in the window or in the rule form's condition fields (a control of their own since #22).</summary>
+    private static Control Named(Window window, string name) =>
+        window.FindControl<Control>(name) ?? window.FindControl<ConditionFields>("RuleConditionFields")!.FindControl<Control>(name)!;
 
     private static void Choose(MainWindow window, MainViewModel model, AppScreen screen)
     {
