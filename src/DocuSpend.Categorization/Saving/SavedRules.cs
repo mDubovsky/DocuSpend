@@ -40,9 +40,10 @@ public static class SavedRules
     /// The shape <see cref="Write"/> produces. A change to the shape raises it and adds a reader for the old one.
     /// Version 2 has version 1's shape and may name cash withdrawals in a type rule; it was raised so an earlier
     /// DocuSpend, which doesn't know that type, takes the file for a newer one rather than a damaged one
-    /// (work/041-unknown-transaction-kinds/plan.md). Both versions are read by the same reader.
+    /// (work/041-unknown-transaction-kinds/plan.md). Version 3 adds the hand choices and the key their fingerprints are
+    /// made with (work/022-categorize-from-list/plan.md); versions 1 and 2 read as having none. One reader reads all.
     /// </summary>
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
 
     private const string UserPrefix = "user-";
 
@@ -60,7 +61,9 @@ public static class SavedRules
         var rules = config.UserRules
             .Select(r => new SavedRule(r.Id.Value, r.Priority, r.Order, r.Target.Value, Save(r.Condition)))
             .ToList();
-        return JsonSerializer.Serialize(new SavedFile(CurrentVersion, categories, subcategories, rules), SavedRulesJson.Strict.SavedFile);
+        var handChoices = config.HandChoices.Select(c => new SavedHandChoice(c.Fingerprint.Value, c.Target.Value)).ToList();
+        var file = new SavedFile(CurrentVersion, categories, subcategories, rules, config.FingerprintKey?.ToText(), handChoices);
+        return JsonSerializer.Serialize(file, SavedRulesJson.Strict.SavedFile);
     }
 
     /// <summary>
@@ -99,7 +102,13 @@ public static class SavedRules
         {
             return SavedRulesReading.Damaged($"The text doesn't have the shape of version {version}: {e.Path}.");
         }
-        return file is null ? SavedRulesReading.Damaged("The text is null.") : Restore(file, defaults);
+        if (file is null)
+            return SavedRulesReading.Damaged("The text is null.");
+        if (version < 3 && (file.FingerprintKey is not null || file.HandChoices is not null))
+            return SavedRulesReading.Damaged($"A text of version {version} has hand choices, which came with version 3.");
+        if (version >= 3 && file.HandChoices is null)
+            return SavedRulesReading.Damaged("A text of version 3 has no list of hand choices.");
+        return Restore(file, defaults);
     }
 
     private static SavedRulesReading Restore(SavedFile file, CategorizationConfig defaults)
@@ -176,9 +185,29 @@ public static class SavedRules
             rules.Add(new Rule(new RuleId(saved.Id), RuleSource.User, saved.Priority, saved.Order, condition, new SubcategoryId(saved.Target)));
         }
 
+        // The hand choices, and the key their fingerprints were made with.
+        FingerprintKey? key = null;
+        if (file.FingerprintKey is not null && (key = FingerprintKey.FromText(file.FingerprintKey)) is null)
+            return SavedRulesReading.Damaged("The fingerprint key is not 32 bytes of base64.");
+        var choices = new List<HandChoice>();
+        var prints = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var saved in file.HandChoices ?? [])
+        {
+            if (!Fingerprint.IsValid(saved.Fingerprint) || !prints.Add(saved.Fingerprint))
+                return SavedRulesReading.Damaged("A hand choice has a malformed or repeated fingerprint.");
+            if (catalog.FindSubcategory(new SubcategoryId(saved.Target)) is null)
+                return IsUser(saved.Target)
+                    ? SavedRulesReading.Damaged("A hand choice targets a user sub-category that isn't there.")
+                    : SavedRulesReading.Newer("A hand choice targets a built-in sub-category this DocuSpend doesn't have.");
+            choices.Add(new HandChoice(new Fingerprint(saved.Fingerprint), new SubcategoryId(saved.Target)));
+        }
+        if (choices.Count > 0 && key is null)
+            return SavedRulesReading.Damaged("There are hand choices but no key their fingerprints were made with.");
+
         try
         {
-            return new SavedRulesReading(SavedRulesStatus.Loaded, CategorizationConfig.Create(catalog, defaults.DefaultRules, rules), null);
+            var config = CategorizationConfig.Create(catalog, defaults.DefaultRules, rules, choices, key);
+            return new SavedRulesReading(SavedRulesStatus.Loaded, config, null);
         }
         catch (ArgumentException e)
         {

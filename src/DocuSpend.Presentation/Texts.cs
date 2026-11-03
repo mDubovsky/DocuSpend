@@ -205,6 +205,34 @@ public static class Texts
     /// <summary>Joins a transaction's type and its description in the transaction list.</summary>
     public const string TypeSeparator = " · ";
 
+    // Categorizing a transaction from the list (work/022-categorize-from-list/spec.md)
+    public const string Categorize = "Zaradiť";
+    public const string CategorizeHeading = "Zaradiť transakciu";
+    public const string JustThisTransaction = "Len túto transakciu";
+    public const string ByRule = "Pravidlom pre všetky podobné transakcie";
+    public const string ConditionMissesTransaction = "Táto transakcia podmienke nezodpovedá. Upravte podmienku.";
+    public const string UndoHandChoice = "× Zrušiť zaradenie";
+    public const string ByHandTag = "ručne";
+    public const string ByHandTooltip = "Zaradené ručne, len táto transakcia.";
+    public const string HandChoiceOnlyThisSession = "Zaradenie platí len do zatvorenia DocuSpend.";
+    public const string HandChoiceSaveFailed = "Zaradenie sa nepodarilo uložiť, preto po zatvorení DocuSpend zmizne. Pri ďalšej zmene sa DocuSpend pokúsi uložiť znova.";
+    public const string UndoOnlyThisSession = "Zaradenie sa po zatvorení DocuSpend vráti.";
+    public const string UndoSaveFailed = "Zrušenie sa nepodarilo uložiť, preto sa zaradenie po zatvorení DocuSpend vráti. Pri ďalšej zmene sa DocuSpend pokúsi uložiť znova.";
+
+    /// <summary>"Transakcia je zaradená do „Potraviny › Supermarkety“."</summary>
+    public static string HandChosen(string target) => $"Transakcia je zaradená do „{target}“.";
+
+    /// <summary>"Zaradenie je zrušené. Transakcia je opäť v „Nezaradené výdavky“."</summary>
+    public static string HandChoiceUndone(string where) => $"Zaradenie je zrušené. Transakcia je opäť v „{where}“.";
+
+    // The box about fingerprints, shown before a hand choice is made (spec: the privacy box)
+    public const string FingerprintHeading = "Čo si DocuSpend zapamätá";
+    public const string FingerprintWhat = "Aby DocuSpend túto transakciu zaradil rovnako aj nabudúce, uloží si jej odtlačok. Neuloží jej dátum, sumu, popis ani protistranu, len odtlačok vypočítaný z nich. Odtlačok zostáva len v tomto počítači, v priečinku DocuSpend, a nikam sa neposiela.";
+    public const string FingerprintLimits = "Z odtlačku sa tieto údaje nedajú spätne zistiť. Kto by však poznal presné údaje transakcie, napríklad z toho istého výpisu, a mal by váš súbor rules.json, vedel by overiť, či ste túto transakciu zaradili ručne.";
+    public const string FingerprintWhere = "Odtlačok je uložený spolu s vašimi pravidlami v súbore %APPDATA%\\DocuSpend\\rules.json. Vymaže sa, keď zaradenie zrušíte tlačidlom „Zrušiť zaradenie“. Všetko, čo si DocuSpend pamätá, odstránite vymazaním priečinka %APPDATA%\\DocuSpend.";
+    public const string DontShowAgain = "Túto správu už nezobrazovať";
+    public const string Back = "Späť";
+
     /// <summary>"Pravidlo zaradilo 1 transakciu / 3 transakcie / 5 transakcií."</summary>
     public static string RuleMatched(int count) => count switch
     {

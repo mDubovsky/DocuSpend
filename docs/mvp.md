@@ -34,7 +34,7 @@ A user uploads one monthly PDF statement from Všeobecná úverová banka, a.s. 
 ## Out of scope (for the MVP)
 
 - Other banks or statement formats
-- Saving parsed statements between sessions (only rules are saved)
+- Saving parsed statements between sessions (only rules are saved, and a fingerprint of each transaction categorized by hand, from which its details can't be read back; nothing else from statements)
 - Weekly, yearly, or multi-month views
 - Rule types beyond the ones listed above (e.g. combining conditions, matching on card, purpose category code, or direction)
 

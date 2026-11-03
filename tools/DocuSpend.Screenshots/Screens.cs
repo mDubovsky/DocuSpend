@@ -183,7 +183,83 @@ internal static class Screens
             Open(main, "02-busy-month");
             SelectTheLongestCategory(main);
         }, InWindow: ScrollTransactionsAndPointAtTheHandle),
+
+        // Categorizing a transaction from the list (work/022-categorize-from-list/spec.md)
+        new("27-hand-choice-made", main =>
+        {
+            Open(main, "01-typical-month");
+            HandChooseTheFirstUncategorized(main);
+        }),
+        new("27-row-selected", main =>
+        {
+            Open(main, "01-typical-month");
+            HandChooseTheFirstUncategorized(main);
+            main.Statement.SelectedCategory = new CategoryId("online-shopping");
+            main.Statement.SelectedTransaction = main.Statement.Transactions.First(r => !r.ByHand);
+        }),
+        new("27-hand-row-selected", main =>
+        {
+            Open(main, "01-typical-month");
+            HandChooseTheFirstUncategorized(main);
+            main.Statement.SelectedCategory = new CategoryId("online-shopping");
+            main.Statement.SelectedTransaction = main.Statement.Transactions.First(r => r.ByHand);
+        }),
+        new("27-hand-tag-pointed", main =>
+        {
+            Open(main, "01-typical-month");
+            HandChooseTheFirstUncategorized(main);
+            main.Statement.SelectedCategory = new CategoryId("online-shopping");
+        }, InWindow: window => PointAt(window, window.GetVisualDescendants().OfType<Border>().First(b => b.Classes.Contains("byHand") && b.IsEffectivelyVisible))),
+        new("28-box-just-this", main =>
+        {
+            OpenTheBoxOnTheFirstUncategorized(main);
+            Target(main.Categorizing!.Form, "leisure.games");
+        }),
+        new("28-box-rule", main =>
+        {
+            OpenTheBoxOnTheFirstUncategorized(main);
+            Target(main.Categorizing!.Form, "leisure.games");
+            main.Categorizing.ByRule = true;
+        }),
+        new("28-box-rule-refused", main =>
+        {
+            OpenTheBoxOnTheFirstUncategorized(main);
+            Target(main.Categorizing!.Form, "leisure.games");
+            main.Categorizing.ByRule = true;
+            main.Categorizing.Form.Text = "NIČ TAKÉ";
+            main.ConfirmCategorizeCommand.Execute(null);
+        }),
+        new("29-fingerprint-box", main =>
+        {
+            OpenTheBoxOnTheFirstUncategorized(main);
+            Target(main.Categorizing!.Form, "leisure.games");
+            main.ConfirmCategorizeCommand.Execute(null);
+        }),
     ];
+
+    private static void OpenTheBoxOnTheFirstUncategorized(MainViewModel main)
+    {
+        Open(main, "01-typical-month");
+        main.Statement.SelectedCategory = new CategoryId("uncategorized-out");
+        main.Statement.SelectedTransaction = main.Statement.Transactions[0];
+        main.CategorizeCommand.Execute(main.Statement.Transactions[0]);
+    }
+
+    /// <summary>Puts the first uncategorized transaction in "Nákupy online › Ostatné" by hand, through both boxes.</summary>
+    private static void HandChooseTheFirstUncategorized(MainViewModel main)
+    {
+        OpenTheBoxOnTheFirstUncategorized(main);
+        Target(main.Categorizing!.Form, "online-shopping.other");
+        main.ConfirmCategorizeCommand.Execute(null);
+        main.ConfirmPrivacyCommand.Execute(null);
+    }
+
+    private static void Target(RuleFormViewModel form, string subcategory)
+    {
+        var id = new SubcategoryId(subcategory);
+        form.SelectedCategory = form.Categories.Single(c => c.Subcategories.Any(s => s.Id == id));
+        form.SelectedSubcategory = form.Subcategories.Single(s => s.Id == id);
+    }
 
     private static void ShowRules(MainViewModel main) => main.SelectedScreen = main.Screens.Single(s => s.Screen == AppScreen.Rules);
 

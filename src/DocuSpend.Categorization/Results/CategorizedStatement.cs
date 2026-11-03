@@ -11,7 +11,11 @@ public sealed record RuleReference(RuleId Id, RuleSource Source);
 /// <param name="Placement">A sub-category, or for the two Uncategorized buckets just the category.</param>
 /// <param name="Rule">The rule that decided, or <c>null</c> when no rule matched and the transaction went to an Uncategorized bucket.</param>
 /// <param name="CountsAsSpending">Whether the category's role is spending. Money coming back into a spending category counts too, as a reduction.</param>
-public sealed record CategorizedTransaction(Transaction Transaction, Placement Placement, RuleReference? Rule, bool CountsAsSpending);
+/// <param name="ByHand">The user chose its sub-category for it alone; <paramref name="Rule"/> is then null.</param>
+/// <param name="Fingerprint">How a hand choice recognises it; null while the configuration has no fingerprint key.</param>
+public sealed record CategorizedTransaction(
+    Transaction Transaction, Placement Placement, RuleReference? Rule, bool CountsAsSpending,
+    bool ByHand = false, Fingerprint? Fingerprint = null);
 
 /// <summary>How many transactions, and what they add up to: the sum of their signed amounts (negative for money going out).</summary>
 public sealed record Balance(int Count, decimal Amount);

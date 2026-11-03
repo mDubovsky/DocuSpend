@@ -174,6 +174,53 @@ public sealed partial class RuleFormViewModel : ObservableObject
         EditingRule = rule.Id;
     }
 
+    /// <summary>The transaction the form was filled in from, while it is (work/022-categorize-from-list/spec.md).</summary>
+    private Transaction? _prefill;
+
+    /// <summary>
+    /// Fills every kind's fields from a transaction and chooses the kind most likely to catch the same kind of
+    /// transaction (spec: what the condition starts with). <paramref name="target"/> is chosen when given.
+    /// </summary>
+    public void Prefill(Transaction transaction, SubcategoryId? target)
+    {
+        Reset();
+        _prefill = transaction;
+        SelectedTextMode = TextModes[0];
+        Account = transaction.CounterpartyAccount ?? "";
+        var size = SlovakFormat.AmountInput(Math.Abs(transaction.Amount));
+        AmountFrom = AmountTo = size;
+        foreach (var choice in Types)
+            choice.IsChecked = choice.Type == transaction.Type;
+        Symbol = transaction.VariableSymbol ?? "";
+        SelectedKind = FirstKind(transaction);
+        Text = PrefilledText(transaction, SelectedKind);
+        if (target is { } id && Categories.FirstOrDefault(c => c.Subcategories.Any(s => s.Id == id)) is { } category)
+        {
+            SelectedCategory = category;
+            SelectedSubcategory = Subcategories.FirstOrDefault(s => s.Id == id);
+        }
+    }
+
+    /// <summary>A card or mobile payment's description is the merchant; another transaction's counterparty is what repeats.</summary>
+    public static ConditionKind FirstKind(Transaction transaction) => transaction switch
+    {
+        { Type: TransactionType.CardPayment or TransactionType.WalletCardPayment } => ConditionKind.Text,
+        { CounterpartyName: { Length: > 0 } } => ConditionKind.CounterpartyName,
+        { CounterpartyAccount: { Length: > 0 } } => ConditionKind.CounterpartyAccount,
+        _ => ConditionKind.Text,
+    };
+
+    private static string PrefilledText(Transaction transaction, ConditionKind kind) => kind == ConditionKind.CounterpartyName
+        ? transaction.CounterpartyName ?? ""
+        : transaction.Description ?? transaction.CounterpartyName ?? "";
+
+    /// <summary>The two text kinds share one field, so switching between them while prefilled shows the other's text.</summary>
+    partial void OnSelectedKindChanged(ConditionKind oldValue, ConditionKind newValue)
+    {
+        if (_prefill is { } transaction && oldValue != newValue && newValue is ConditionKind.Text or ConditionKind.CounterpartyName)
+            Text = PrefilledText(transaction, newValue);
+    }
+
     /// <summary>
     /// The typed priority: a whole number from 1 to <see cref="CategorizationConfig.MaxUserPriority"/>, spaces around
     /// it allowed; or null with <see cref="Error"/> saying why not.
@@ -190,6 +237,7 @@ public sealed partial class RuleFormViewModel : ObservableObject
     /// <summary>Back to an empty "Nové pravidlo": no rule open, no values, no target. Messages are left to the caller.</summary>
     public void Reset()
     {
+        _prefill = null;
         Clear();
         EditingRule = null;
         Priority = "";

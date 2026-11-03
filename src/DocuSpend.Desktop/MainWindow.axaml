@@ -5,16 +5,37 @@
         xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
         xmlns:look="using:DocuSpend.Desktop.Look"
         xmlns:lookvm="using:DocuSpend.Presentation.Look"
+        xmlns:local="using:DocuSpend.Desktop"
         x:Class="DocuSpend.Desktop.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="{x:Static vm:Texts.AppTitle}"
         Width="1280" Height="940" MinWidth="720" MinHeight="520"
         DragDrop.AllowDrop="True">
 
+  <Window.Styles>
+    <!-- Which of a transaction row's controls show (work/022-categorize-from-list/spec.md: the mark and undoing it).
+         Only visibility is set here; the look of each comes from Look/Look.axaml. -->
+    <Style Selector="ListBox#TransactionList Button.rowAction">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="ListBox#TransactionList ListBoxItem:selected Button.rowAction">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <Style Selector="ListBox#TransactionList Panel.handMark:pointerover Button.undo">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <Style Selector="ListBox#TransactionList Panel.handMark:pointerover Border.byHand">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="ListBox#TransactionList ListBoxItem:selected Border.byHand">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+  </Window.Styles>
+
   <Window.KeyBindings>
     <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenCommand}" />
-    <!-- Escape takes back a row's "Odstrániť toto pravidlo?"; it does nothing while no row asks -->
-    <KeyBinding Gesture="Escape" Command="{Binding KeepRuleCommand}" />
+    <!-- Escape closes the box on top: the box about fingerprints, the "Zaradiť" box, or "Odstrániť toto pravidlo?" -->
+    <KeyBinding Gesture="Escape" Command="{Binding EscapeCommand}" />
   </Window.KeyBindings>
 
   <!-- Only the arrangement lives here; every colour, size and spacing comes from Look/Look.axaml. -->
@@ -191,18 +212,40 @@
               <TextBlock Classes="heading" Text="{x:Static vm:Texts.Transactions}" />
               <TextBlock Classes="heading muted" Text="{Binding Statement.SelectedRow.Name, FallbackValue=''}" />
             </StackPanel>
+            <!-- What the last change made from the list did, and whether it will be kept -->
+            <Border x:Name="TransactionsMessage" Classes="message confirmation" DockPanel.Dock="Top"
+                    IsVisible="{Binding Statement.TransactionsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <TextBlock Text="{Binding Statement.TransactionsMessage}" TextWrapping="Wrap" />
+            </Border>
+            <Border x:Name="TransactionsError" Classes="message error" DockPanel.Dock="Top"
+                    IsVisible="{Binding Statement.TransactionsError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <TextBlock Text="{Binding Statement.TransactionsError}" TextWrapping="Wrap" />
+            </Border>
             <Panel>
               <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoCategorySelected}"
                          IsVisible="{Binding Statement.SelectedRow, Converter={x:Static ObjectConverters.IsNull}}" />
-              <ListBox ItemsSource="{Binding Statement.Transactions}"
+              <!-- A selected row shows "Zaradiť"; a hand-chosen one shows "ručne", which turns into "× Zrušiť zaradenie"
+                   when pointed at or when the row is selected (the styles at the top of this file) -->
+              <ListBox x:Name="TransactionList" ItemsSource="{Binding Statement.Transactions}" SelectedItem="{Binding Statement.SelectedTransaction}"
                        IsVisible="{Binding Statement.SelectedRow, Converter={x:Static ObjectConverters.IsNotNull}}">
                 <ListBox.ItemTemplate>
                   <DataTemplate x:DataType="vm:TransactionRow">
-                    <Grid ColumnDefinitions="90,*,*,110">
-                      <TextBlock Classes="muted" Text="{Binding Date}" />
-                      <TextBlock Grid.Column="1" Text="{Binding Description}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" />
-                      <TextBlock Grid.Column="2" Classes="muted" Text="{Binding Subcategory}" TextTrimming="CharacterEllipsis" />
-                      <TextBlock Grid.Column="3" Text="{Binding Amount}" HorizontalAlignment="Right" Classes.incoming="{Binding IsIncoming}" />
+                    <Grid ColumnDefinitions="90,*,*,Auto,110">
+                      <TextBlock Classes="muted" Text="{Binding Date}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="1" Text="{Binding Description}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="2" Classes="muted" Text="{Binding Subcategory}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                      <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Small}" Margin="{StaticResource Look.Margin.Gap}">
+                        <Panel Classes="handMark" Background="Transparent" IsVisible="{Binding ByHand}" ToolTip.Tip="{x:Static vm:Texts.ByHandTooltip}">
+                          <Border Classes="tag byHand">
+                            <TextBlock Text="{x:Static vm:Texts.ByHandTag}" />
+                          </Border>
+                          <Button Classes="small secondary rowAction undo" Content="{x:Static vm:Texts.UndoHandChoice}"
+                                  Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).UndoHandChoiceCommand}" CommandParameter="{Binding}" />
+                        </Panel>
+                        <Button Classes="small primary rowAction categorize" Content="{x:Static vm:Texts.Categorize}"
+                                Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).CategorizeCommand}" CommandParameter="{Binding}" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="4" Text="{Binding Amount}" HorizontalAlignment="Right" VerticalAlignment="Center" Classes.incoming="{Binding IsIncoming}" />
                     </Grid>
                   </DataTemplate>
                 </ListBox.ItemTemplate>
@@ -220,41 +263,7 @@
             <TextBlock x:Name="FormHeading" Classes="heading" Text="{Binding RuleForm.Heading}" />
             <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="{StaticResource Look.Space.Medium}">
               <TextBlock Classes="muted" Text="{x:Static vm:Texts.Condition}" VerticalAlignment="Center" />
-              <StackPanel Grid.Column="1" Spacing="{StaticResource Look.Space.Medium}">
-                <ComboBox ItemsSource="{Binding RuleForm.Kinds}" SelectedItem="{Binding RuleForm.SelectedKindOption}" MinWidth="200">
-                  <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="vm:KindOption">
-                      <TextBlock Text="{Binding Label}" />
-                    </DataTemplate>
-                  </ComboBox.ItemTemplate>
-                </ComboBox>
-                <StackPanel x:Name="TextFields" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding RuleForm.IsText}">
-                  <ComboBox ItemsSource="{Binding RuleForm.TextModes}" SelectedItem="{Binding RuleForm.SelectedTextMode}" MinWidth="120">
-                    <ComboBox.ItemTemplate>
-                      <DataTemplate x:DataType="vm:TextModeOption">
-                        <TextBlock Text="{Binding Label}" />
-                      </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                  </ComboBox>
-                  <TextBox Text="{Binding RuleForm.Text}" MinWidth="240" />
-                </StackPanel>
-                <StackPanel x:Name="AmountFields" Orientation="Horizontal" Spacing="{StaticResource Look.Space.Medium}" IsVisible="{Binding RuleForm.IsAmount}">
-                  <TextBlock Classes="muted" Text="{x:Static vm:Texts.AmountFrom}" VerticalAlignment="Center" />
-                  <TextBox Text="{Binding RuleForm.AmountFrom}" Width="110" />
-                  <TextBlock Classes="muted" Text="{x:Static vm:Texts.AmountTo}" VerticalAlignment="Center" />
-                  <TextBox Text="{Binding RuleForm.AmountTo}" Width="110" />
-                  <TextBlock Classes="muted" Text="€" VerticalAlignment="Center" />
-                </StackPanel>
-                <TextBox x:Name="AccountField" Text="{Binding RuleForm.Account}" MinWidth="300" IsVisible="{Binding RuleForm.IsAccount}" />
-                <ItemsControl x:Name="TypeChoices" ItemsSource="{Binding RuleForm.Types}" IsVisible="{Binding RuleForm.IsType}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:TypeChoice">
-                      <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" />
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                <TextBox x:Name="SymbolField" Text="{Binding RuleForm.Symbol}" MinWidth="200" IsVisible="{Binding RuleForm.IsSymbol}" />
-              </StackPanel>
+              <local:ConditionFields x:Name="RuleConditionFields" Grid.Column="1" DataContext="{Binding RuleForm}" />
 
               <TextBlock Grid.Row="1" Classes="muted" Text="{x:Static vm:Texts.TargetCategory}" VerticalAlignment="Center" />
               <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding RuleForm.Categories}"
@@ -520,6 +529,75 @@
           <StackPanel Classes="dialogButtons">
             <Button x:Name="DeleteDialogDelete" Classes="primary" Content="{x:Static vm:Texts.Delete}" Command="{Binding DeleteRuleCommand}" />
             <Button x:Name="DeleteDialogKeep" Classes="secondary" Content="{x:Static vm:Texts.Keep}" Command="{Binding KeepRuleCommand}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Panel>
+
+    <!-- "Zaradiť transakciu": a pop-up over the dimmed window, filled in from the transaction (work/022-categorize-from-list/spec.md) -->
+    <Panel x:Name="CategorizeDialog" IsVisible="{Binding Categorizing, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <Border Classes="scrim" />
+      <Border x:Name="CategorizeDialogBox" Classes="card dialog" KeyboardNavigation.TabNavigation="Cycle" Focusable="True" FocusAdorner="{x:Null}">
+        <StackPanel Spacing="{StaticResource Look.Space.Medium}">
+          <TextBlock Classes="heading" Text="{x:Static vm:Texts.CategorizeHeading}" />
+          <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{StaticResource Look.Space.Medium}">
+            <TextBlock Classes="muted" Text="{Binding Categorizing.Date, FallbackValue=''}" />
+            <TextBlock x:Name="CategorizeDialogDescription" Grid.Column="1" Text="{Binding Categorizing.Row.Description, FallbackValue=''}" TextTrimming="CharacterEllipsis" />
+            <TextBlock Grid.Column="2" Text="{Binding Categorizing.Row.Amount, FallbackValue=''}" />
+          </Grid>
+          <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto" RowSpacing="{StaticResource Look.Space.Medium}">
+            <TextBlock Classes="muted" Text="{x:Static vm:Texts.TargetCategory}" VerticalAlignment="Center" />
+            <ComboBox x:Name="CategorizeCategory" Grid.Column="1" ItemsSource="{Binding Categorizing.Form.Categories, FallbackValue={x:Null}}"
+                      SelectedItem="{Binding Categorizing.Form.SelectedCategory, FallbackValue={x:Null}}" MinWidth="300">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="cat:Category">
+                  <TextBlock Text="{Binding Name}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Grid.Row="1" Classes="muted" Text="{x:Static vm:Texts.TargetSubcategory}" VerticalAlignment="Center" />
+            <ComboBox x:Name="CategorizeSubcategory" Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Categorizing.Form.Subcategories, FallbackValue={x:Null}}"
+                      SelectedItem="{Binding Categorizing.Form.SelectedSubcategory, FallbackValue={x:Null}}" MinWidth="300">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="cat:Subcategory">
+                  <TextBlock Text="{Binding Name}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </Grid>
+          <RadioButton x:Name="JustThisChoice" GroupName="CategorizeScope" Content="{x:Static vm:Texts.JustThisTransaction}"
+                       IsChecked="{Binding Categorizing.JustThis, FallbackValue=True}" />
+          <RadioButton x:Name="ByRuleChoice" GroupName="CategorizeScope" Content="{x:Static vm:Texts.ByRule}"
+                       IsChecked="{Binding Categorizing.ByRule, FallbackValue=False}" />
+          <Grid x:Name="CategorizeCondition" ColumnDefinitions="110,*" IsVisible="{Binding Categorizing.ByRule, FallbackValue=False}">
+            <TextBlock Classes="muted" Text="{x:Static vm:Texts.Condition}" VerticalAlignment="Top" Margin="{StaticResource Look.Margin.FieldLabel}" />
+            <local:ConditionFields x:Name="CategorizeConditionFields" Grid.Column="1" DataContext="{Binding Categorizing.Form, FallbackValue={x:Null}}" />
+          </Grid>
+          <Border x:Name="CategorizeError" Classes="message error"
+                  IsVisible="{Binding Categorizing.Form.Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}">
+            <TextBlock Text="{Binding Categorizing.Form.Error, FallbackValue=''}" TextWrapping="Wrap" />
+          </Border>
+          <StackPanel Classes="dialogButtons">
+            <Button x:Name="CategorizeDialogConfirm" Classes="primary" Content="{x:Static vm:Texts.Categorize}" Command="{Binding ConfirmCategorizeCommand}" />
+            <Button x:Name="CategorizeDialogCancel" Classes="secondary" Content="{x:Static vm:Texts.CancelEdit}" Command="{Binding CancelCategorizeCommand}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Panel>
+
+    <!-- "Čo si DocuSpend zapamätá": over the "Zaradiť" box, before a transaction is categorized just for itself -->
+    <Panel x:Name="PrivacyDialog" IsVisible="{Binding Categorizing.ShowsPrivacy, FallbackValue=False}">
+      <Border Classes="scrim" />
+      <Border x:Name="PrivacyDialogBox" Classes="card dialog" KeyboardNavigation.TabNavigation="Cycle" Focusable="True" FocusAdorner="{x:Null}">
+        <StackPanel Spacing="{StaticResource Look.Space.Medium}">
+          <TextBlock Classes="heading" Text="{x:Static vm:Texts.FingerprintHeading}" />
+          <TextBlock x:Name="PrivacyWhat" Text="{x:Static vm:Texts.FingerprintWhat}" TextWrapping="Wrap" />
+          <TextBlock x:Name="PrivacyLimits" Text="{x:Static vm:Texts.FingerprintLimits}" TextWrapping="Wrap" />
+          <TextBlock x:Name="PrivacyWhere" Text="{x:Static vm:Texts.FingerprintWhere}" TextWrapping="Wrap" />
+          <CheckBox x:Name="DontShowAgain" Content="{x:Static vm:Texts.DontShowAgain}" IsChecked="{Binding Categorizing.HideNoteNextTime, FallbackValue=False}" />
+          <StackPanel Classes="dialogButtons">
+            <Button x:Name="PrivacyDialogConfirm" Classes="primary" Content="{x:Static vm:Texts.Categorize}" Command="{Binding ConfirmPrivacyCommand}" />
+            <Button x:Name="PrivacyDialogBack" Classes="secondary" Content="{x:Static vm:Texts.Back}" Command="{Binding BackFromPrivacyCommand}" />
           </StackPanel>
         </StackPanel>
       </Border>

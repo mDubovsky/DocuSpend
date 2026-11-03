@@ -12,12 +12,23 @@ Windows' own "open file" window may remember the folder you last opened a file f
 
 ## What DocuSpend keeps
 
-DocuSpend keeps two things for itself, in its own folder, `%APPDATA%\DocuSpend`:
+DocuSpend keeps two things for itself, on this computer, in its own folder, `%APPDATA%\DocuSpend`:
 
-- `settings.json`: whether you chose the light or the dark look.
-- `rules.json`: the rules and categories you made: what each rule looks for, where it puts it, and its priority. It is saved every time you change a rule, and it is a plain text file you can open.
+- `settings.json`: whether you chose the light or the dark look, and whether you switched off the note about fingerprints ("Túto správu už nezobrazovať").
+- `rules.json`: the rules and categories you made (what each rule looks for, where it puts it, and its priority), and a fingerprint for each transaction you categorized by hand, with the sub-category you chose. It is saved every time you change a rule or categorize a transaction by hand, and it is a plain text file you can open.
 
-Neither contains anything from a statement, unless you type it into a rule yourself: a rule that looks for a shop's name contains that name. Nothing records which statements you opened.
+Neither contains anything from a statement, unless you put it into a rule yourself, by typing it or by making a rule from a transaction: a rule that looks for a shop's name contains that name, and a rule made from a transaction keeps the text, account, symbol or amount it was filled in with. Nothing records which statements you opened.
+
+### Fingerprints of transactions you categorized by hand
+
+When you categorize one transaction by hand ("Len túto transakciu"), DocuSpend has to recognise it the next time you open a statement that contains it. It doesn't keep the transaction for that. It keeps a fingerprint: a code of 64 letters and digits, calculated from the transaction's booking date, amount, description and counterparty (name and account), and from its place among the transactions of the statement that have all of those the same. Next to it, it keeps only the sub-category you chose. No date, amount, description, counterparty or account is kept, and nothing about the statement file.
+
+- **The details can't be read back from a fingerprint.** It is calculated with a secret key that DocuSpend made at random on this computer the first time you categorized a transaction by hand (technically, an HMAC-SHA256 of the details), so the same transaction gives a different fingerprint on another computer.
+- **The limit.** The key is kept in `rules.json` too. Someone who knew a transaction's exact details, for example from the same statement, and had your `rules.json`, could check whether you categorized that transaction by hand.
+- **It stays on this computer.** Like everything else here, a fingerprint is never sent anywhere.
+- **Removing it.** "× Zrušiť zaradenie" on the transaction removes its fingerprint from `rules.json`. Deleting the folder (below) removes all of them, and the key.
+
+DocuSpend tells you this, in Slovak, every time you categorize a transaction by hand, before anything is saved, until you tick "Túto správu už nezobrazovať".
 
 If `rules.json` is ever damaged, DocuSpend doesn't throw it away. It moves it aside in the same folder, as `rules.damaged-` followed by the date and time, and tells you where. You may also find `spike-rules.json` there, from a development version; DocuSpend no longer uses it.
 

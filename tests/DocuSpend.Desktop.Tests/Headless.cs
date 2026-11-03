@@ -40,7 +40,9 @@ internal static class Headless
         while (!task.IsCompleted)
         {
             if (DateTime.UtcNow > deadline)
-                throw new TimeoutException("The task didn't finish.");
+                throw new TimeoutException(
+                    $"The task didn't finish: {task.Status}; thread pool: {ThreadPool.ThreadCount} threads, " +
+                    $"{ThreadPool.PendingWorkItemCount} items waiting, {ThreadPool.CompletedWorkItemCount} done.");
             Dispatcher.UIThread.RunJobs();
             Thread.Sleep(1);
         }
