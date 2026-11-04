@@ -81,6 +81,7 @@ tests/DocuSpend.Desktop.Tests/LookSwitchWindowTests.cs      green and red in bot
 - **The header gets crowded at the default size.** Four key figures and the unknown-types note might not fit on one line at 1280 pixels. The `WrapPanel` then moves a figure to a second line, which the spec allows. The screenshots in step 3 show it. If the maintainer finds it untidy, the fallback is a smaller margin between figures in `Look.axaml`, with the spec's sketch updated.
 - **The help mark changes the label's height** and lifts "Bilancia" out of line with the balances. The fallback is aligning the help mark to the label's text, as the "Kategórie" form does, and checking it in the screenshots.
 - **The red is read as an error.** It is the error colour on purpose (see alternatives). If the screenshot review finds it alarming, a separate colour becomes a palette change with its own contrast pairs, and the spec is updated.
+- **Found in the screenshot review:** nothing to change. The four figures and the unknown-types note fit on one line at the default size in both looks. `01-typical-month` shows +554,99 € in green, `02-busy-month` −5 359,17 € in red, and `04-empty-month` 0,00 € in green. The help mark makes the label row about 2 pixels taller than the balances' labels, and the maintainer accepted it as it is.
 - **A test relies on the header's figures by position** (for example the third text in the header). Step 2 runs the whole suite. Such a test is changed to find what it means by name.
 
 ## Verification
