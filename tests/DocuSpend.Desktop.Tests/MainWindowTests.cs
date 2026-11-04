@@ -1,6 +1,9 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
+using DocuSpend.Categorization.Rules;
 using DocuSpend.Presentation;
 
 namespace DocuSpend.Desktop.Tests;
@@ -87,6 +90,47 @@ public sealed class MainWindowTests : IDisposable
         var transactions = lists.Single(l => ReferenceEquals(l.ItemsSource, model.Statement.Transactions));
         Assert.True(transactions.IsVisible);
         Assert.Equal(model.Statement.Categories[0].Count, transactions.ItemCount);
+        window.Close();
+    });
+
+    [Fact]
+    public void A_chosen_category_that_moves_out_of_sight_is_scrolled_into_view() => Headless.Run(() =>
+    {
+        // The busiest sample has more categories than the card shows (work/047-largest-first/plan.md).
+        var (window, model) = Open("02-busy-month");
+        var view = model.Statement;
+        var categories = All<ListBox>(window).Single(l => ReferenceEquals(l.ItemsSource, view.Categories));
+        var scroller = categories.GetVisualDescendants().OfType<ScrollViewer>().First();
+        Assert.True(scroller.Extent.Height > scroller.Viewport.Height);
+
+        // Choose the largest category, at the top of the card.
+        var chosen = view.Categories[0];
+        view.SelectedCategory = chosen.Category;
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(0, scroller.Offset.Y);
+        var rowHeight = categories.ContainerFromIndex(0)!.Bounds.Height;
+
+        // Move all but its smallest transaction by hand to the smallest category that has sub-categories, so the chosen
+        // one drops down the card.
+        view.Config = view.Config.WithFingerprintKey(FingerprintKey.Create());
+        var its = view.Categorized!.Transactions.Where(t => t.Placement.Category == chosen.Category).ToList();
+        var kept = its.MinBy(t => Math.Abs(t.Transaction.Amount))!;
+        var smallest = view.Categories.Last(c => view.Config.Catalog.Categories.Single(k => k.Id == c.Category).Subcategories.Count > 0);
+        var target = view.Config.Catalog.Categories.Single(k => k.Id == smallest.Category).Subcategories[0].Id;
+        var config = view.Config;
+        foreach (var moved in its.Where(t => t != kept))
+            config = config.SetHandChoice(moved.Fingerprint!.Value, target).Value!;
+        view.Config = config;
+        Dispatcher.UIThread.RunJobs();
+
+        // Where it is now would be out of sight had the card stayed at the top.
+        var after = view.Categories.ToList().FindIndex(c => c.Category == chosen.Category);
+        Assert.True((after + 1) * rowHeight > scroller.Viewport.Height, $"row {after} of {view.Categories.Count}");
+        Assert.Equal(chosen.Category, view.SelectedCategory);
+        Assert.Equal(after, categories.SelectedIndex);
+        var row = categories.ContainerFromIndex(after)!;
+        var top = row.TranslatePoint(new Point(0, 0), scroller)!.Value.Y;
+        Assert.InRange(top, 0, scroller.Viewport.Height - row.Bounds.Height);
         window.Close();
     });
 

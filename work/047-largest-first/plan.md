@@ -56,7 +56,7 @@ Existing tests that relied on the date order or on the first category being the 
    - The `CategorizedStatement` keeps the catalog's order, and the slices stay by spending.
 
    Existing tests elsewhere that break because they took the first row or the first category are updated to pick what they mean by name or by property.
-2. **The window**, in `MainWindowTests`: with `02-busy-month`, choose the category at the bottom of the card, scroll the card to the top, add a rule that moves enough into that category to make it the largest, and find it chosen and in view. The existing window tests for the open row and "Zaradiť" (`TransactionDetailsWindowTests`, `CategorizeWindowTests`) pass in the new order, and the look test passes.
+2. **The window**, in `MainWindowTests`: with `02-busy-month`, choose the largest category at the top of the card, move all but its smallest transaction elsewhere by hand so it drops below the visible part of the card, and find it chosen and in view. The existing window tests for the open row and "Zaradiť" (`TransactionDetailsWindowTests`, `CategorizeWindowTests`) pass in the new order, and the look test passes.
 3. **Screenshots** in both looks, with `dotnet run --project tools/DocuSpend.Screenshots`. **Stop: the maintainer reviews them** against the spec's sketch. Changes from the review go into the spec and are built before going on.
 4. **Hand check. Stop: the maintainer** opens a real statement and finds the largest categories and transactions at the top of each card, and the order unchanged on the "Kategórie" screen and in the rule form.
 5. **Finish** with the `finish-item` skill:
@@ -67,6 +67,8 @@ Existing tests that relied on the date order or on the first category being the 
 ## Risks and unknowns
 - **A test or screenshot relies on the old order** (the first category, the first transaction). Step 1 and 2 find them by running the whole suite; they are changed to name what they need, never to sort back.
 - **The re-sort doesn't scroll the card in the real window**, unlike the probe (for instance because the selection is set before the new items are laid out). Step 2's test catches it. The fallback is calling `ScrollIntoView` on the categories list in `MainWindow` when `SelectedRow` changes.
+- **Found in the build: a small move doesn't test the scrolling.** Moving one large transaction only took a category four rows, which stayed in sight, and the window test passed with the list's scrolling switched off. Rules on the description couldn't move more, since the sample's payments share descriptions. The test now moves transactions by hand, takes the chosen category from row 0 to row 10 of 12, first checks that the new row lies outside the visible part, and fails when `AutoScrollToSelectedItem` is switched off (checked once by hand). No window code was needed.
+- **Found in the build:** two tests picked rows by their place in the date order (`UnknownTypesTests`, `CategorizeTests`). They now pick by the transaction's place in the statement.
 - **Equal records keep the old selection object.** After a change that leaves the chosen category's count and total the same, its row is equal to the old one and no change is raised. The probe showed the list keeps it selected; step 1's test checks the view model side.
 
 ## Verification
