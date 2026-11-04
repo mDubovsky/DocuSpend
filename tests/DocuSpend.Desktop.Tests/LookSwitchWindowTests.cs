@@ -7,6 +7,8 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using DocuSpend.Categorization.Model;
+using DocuSpend.Categorization.Rules;
 using DocuSpend.Presentation;
 using DocuSpend.Presentation.Look;
 
@@ -107,6 +109,36 @@ public sealed class LookSwitchWindowTests : IDisposable
         AssertCentred(Chosen(window.RuleViewSwitch));
         Finish(window);
     });
+
+    [Theory]
+    [MemberData(nameof(Variants))]
+    public void The_net_figure_is_green_ahead_and_turns_red_when_a_rule_puts_it_behind(LookChoice look) => Headless.Run(() =>
+    {
+        var (window, model) = Start(look);
+        Headless.Wait(model.OpenFileAsync(MainWindowTests.Sample("01-typical-month")));
+        Dispatcher.UIThread.RunJobs();
+        var net = window.FindControl<TextBlock>("Net")!;
+        var palette = PaletteOf(look);
+
+        Assert.False(model.Statement.IsBehind);
+        Assert.Equal(palette.Positive, Colour(net.Foreground));
+
+        // Move every payment that came in out of the count, as a user's rule to their own transfers would.
+        var config = model.Statement.Config;
+        foreach (var description in model.Statement.Categorized!.Transactions
+                     .Where(t => t.Transaction.Amount > 0)
+                     .Select(t => t.Transaction.Description ?? t.Transaction.CounterpartyName!).Distinct())
+            config = config.AddUserRuleOnTop(new TextCondition(description, TextMode.EqualTo), new SubcategoryId("own-transfers.other")).Value!;
+        model.Statement.Config = config;
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.True(model.Statement.IsBehind);
+        Assert.Equal(palette.Error, Colour(net.Foreground));
+        Finish(window);
+    });
+
+    private static string? Colour(IBrush? brush) =>
+        brush is ISolidColorBrush solid ? $"#{solid.Color.R:X2}{solid.Color.G:X2}{solid.Color.B:X2}" : null;
 
     private static Palette PaletteOf(LookChoice look) => look == LookChoice.Dark ? Palette.Dark : Palette.Light;
 

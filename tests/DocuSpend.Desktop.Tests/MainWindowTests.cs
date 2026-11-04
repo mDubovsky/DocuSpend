@@ -57,6 +57,27 @@ public sealed class MainWindowTests : IDisposable
     });
 
     [Fact]
+    public void The_header_shows_the_net_figure_after_spending_and_before_the_balances_with_its_help_mark() => Headless.Run(() =>
+    {
+        var (window, model) = Open();
+        var figure = window.FindControl<StackPanel>("NetFigure")!;
+        var figures = ((Panel)figure.Parent!).Children;
+
+        Assert.Equal(1, figures.IndexOf(figure));
+        Assert.Contains(All<TextBlock>((Control)figures[0]), t => t.Text == Texts.SpendingTotal);
+        Assert.Contains(All<TextBlock>((Control)figures[2]), t => t.Text == Texts.OpeningBalance);
+        Assert.Contains(All<TextBlock>(figure), t => t.Text == Texts.Net);
+        Assert.Equal(model.Statement.Net, window.FindControl<TextBlock>("Net")!.Text);
+        Assert.StartsWith("+", model.Statement.Net);
+
+        var help = window.FindControl<Button>("NetHelp")!;
+        Assert.Equal(Texts.NetHelp, ToolTip.GetTip(help));
+        Assert.True(help.Focusable && help.IsTabStop && help.IsEffectivelyEnabled);
+        Assert.True(help.Focus());
+        window.Close();
+    });
+
+    [Fact]
     public void A_statement_without_unknown_types_shows_no_note() => Headless.Run(() =>
     {
         var (window, _) = Open("01-typical-month");
