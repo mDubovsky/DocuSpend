@@ -163,7 +163,7 @@ public sealed class CategorizeTests : IDisposable
         main.Statement.Show(StatementOf(Stall(), Stall(), Stall(-5m)));
         main.Statement.SelectedCategory = new CategoryId("uncategorized-out");
 
-        JustThis(main, main.Statement.Transactions[1], Taxi);
+        JustThis(main, main.Statement.Transactions.Single(t => t.Index == 1), Taxi);
 
         var placed = main.Statement.Categorized!.Transactions.Select(t => t.Placement.Subcategory?.Value ?? t.Placement.Category.Value);
         Assert.Equal(["uncategorized-out", "transport.taxi", "uncategorized-out"], placed);
