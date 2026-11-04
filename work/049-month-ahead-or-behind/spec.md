@@ -5,7 +5,7 @@ Intent: [intent.md](intent.md)
 ## Behavior
 
 ### The number
-With a statement open, the header of the window shows a new key figure, "Bilancia", right after "Výdavky spolu" and before "Počiatočný zostatok". It is in the header, so it is there on all three screens ("Výpis", "Pravidlá", "Kategórie"), like the other key figures.
+With a statement open, the header of the window shows a new key figure, "Bilancia", right after "Výdavky spolu" and before "Počiatočný zostatok". Like the other key figures, it shows while "Výpis" is chosen, and not on "Pravidlá" or "Kategórie".
 
 Its value is income minus spending for the statement:
 
@@ -30,7 +30,7 @@ Put together, "Bilancia" is the sum of the balances of every category that isn't
 
 ## Screens
 
-The header with a statement open (shown on every screen). Only the "Bilancia" figure is new:
+The header with a statement open and "Výpis" chosen. Only the "Bilancia" figure is new:
 
 ```
 +--------------------------------------------------------------------------------------------+
@@ -46,7 +46,7 @@ The header with a statement open (shown on every screen). Only the "Bilancia" fi
 The help text appears as the usual tooltip under the "?", over the window; nothing else moves. When the window is too narrow, the key figures wrap to a second line as they do today, each label staying with its number.
 
 ## Acceptance criteria
-- [ ] Given a statement is open, then the header shows "Bilancia" with its amount after "Výdavky spolu" and before "Počiatočný zostatok", on "Výpis", "Pravidlá" and "Kategórie".
+- [ ] Given a statement is open, then the header shows "Bilancia" with its amount after "Výdavky spolu" and before "Počiatočný zostatok" while "Výpis" is chosen, and not on "Pravidlá" or "Kategórie", like the other key figures.
 - [ ] Given a statement with no "Mimo výdavkov" money, then "Bilancia" equals the closing balance minus the opening balance.
 - [ ] Given a statement, then "Bilancia" equals the income total minus "Výdavky spolu", and money in "Mimo výdavkov" categories, in or out, doesn't change it.
 - [ ] Given uncategorized money in and out, then the money in counts as income and the money out as spending.
@@ -58,7 +58,7 @@ The help text appears as the usual tooltip under the "?", over the window; nothi
 - [ ] Given a statement is open, when a rule is added, changed or deleted, a transaction is categorized by hand, or a hand choice is undone, so that money moves into or out of a "Mimo výdavkov" category, then "Bilancia", its sign and its colour change with it.
 - [ ] Given a value that turns from positive to negative or back, then the colour turns with it, without reopening the statement.
 - [ ] The green and the red are readable on the header in both looks (contrast at least 4.5 to 1, checked by the existing contrast test).
-- [ ] Screenshots of every screen in both looks show "Bilancia" in the header; the maintainer checks them by hand before the build is finished.
+- [ ] Screenshots of "Výpis" in both looks show "Bilancia" in the header; the maintainer checks them by hand before the build is finished.
 - [ ] Nothing in this item adds networking, telemetry or an unreviewed dependency; the privacy checks pass.
 - [ ] Hand check (maintainer): on a real statement, "Bilancia" matches income minus spending worked out by hand from the "Kategórie" card.
 
@@ -69,7 +69,7 @@ The help text appears as the usual tooltip under the "?", over the window; nothi
 - **Transactions of an unknown type:** they land in an uncategorized bucket unless a rule catches them, and count by their direction like any uncategorized money.
 - **Large amounts:** the number is written in full, like the other key figures, and the header wraps rather than cutting it off.
 - **A statement that doesn't add up** is rejected by the reader before anything is shown, so "Bilancia" is never shown for one.
-- **No statement open:** no header figures, as today.
+- **No statement open, or "Pravidlá" or "Kategórie" chosen:** no header figures, as today.
 - Nothing here reads or writes a file, so there is no new failure to report.
 
 ## Out of scope
