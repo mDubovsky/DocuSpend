@@ -470,6 +470,136 @@ public class StatementViewModelTests
         Assert.Contains(view.Transactions, t => t.Amount == SlovakFormat.Amount(15.00m));
     }
 
+    [Theory]
+    [MemberData(nameof(Valid))]
+    public void The_net_figure_is_income_minus_spending_which_is_the_balance_change_without_excluded_money(string sample)
+    {
+        var view = Show(sample);
+        var statement = Samples.Read(sample);
+        var categorized = Categorizer.Categorize(statement, CategorizationConfig.Default);
+        var net = categorized.IncomeTotal - categorized.SpendingTotal;
+
+        Assert.Equal(statement.ClosingBalance - statement.OpeningBalance - categorized.ExcludedTotal, net);
+        Assert.Equal(SlovakFormat.SignedAmount(net), view.Net);
+        Assert.Equal(net < 0, view.IsBehind);
+    }
+
+    private static readonly DateOnly Day = new(2026, 3, 10);
+
+    private static StatementViewModel ShowBuilt(CategorizationConfig config, params Transaction[] transactions)
+    {
+        var view = new StatementViewModel(config);
+        view.Show(Statement(transactions));
+        return view;
+    }
+
+    [Fact]
+    public void Money_in_and_out_of_excluded_categories_does_not_change_the_net_figure()
+    {
+        var config = RuleFor("MZDA", "income.salary", "SPORENIE", "own-transfers.other", "FOND", "investments.other");
+        var income = Card(Day, 1000.00m, "MZDA");
+        var spending = Card(Day, -300.00m, "PEKAREN");
+
+        var without = ShowBuilt(config, income, spending);
+        var with = ShowBuilt(config, income, spending,
+            Card(Day, -500.00m, "SPORENIE"), Card(Day, 200.00m, "SPORENIE"), Card(Day, -150.00m, "FOND"), Card(Day, 40.00m, "FOND"));
+
+        Assert.Equal("+700,00 €", Plain(without.Net));
+        Assert.Equal(without.Net, with.Net);
+    }
+
+    [Fact]
+    public void Uncategorized_money_in_counts_as_income_and_uncategorized_money_out_as_spending()
+    {
+        var view = ShowBuilt(CategorizationConfig.Default, Card(Day, 50.00m, "NIECO"), Card(Day, -20.00m, "NIECO INE"));
+
+        Assert.Equal("+30,00 €", Plain(view.Net));
+    }
+
+    [Fact]
+    public void Money_out_of_income_lowers_it_and_money_back_into_spending_lowers_spending()
+    {
+        var config = RuleFor("MZDA", "income.salary", "LEKAREN", "health.drugstore");
+
+        var view = ShowBuilt(config,
+            Card(Day, 1000.00m, "MZDA"), Card(Day, -100.00m, "MZDA VRATENA"),
+            Card(Day, -10.00m, "LEKAREN"), Card(Day, 15.00m, "LEKAREN"));
+
+        Assert.Equal("+905,00 €", Plain(view.Net));
+    }
+
+    [Fact]
+    public void Ahead_has_a_plus_behind_has_a_minus_and_even_has_no_sign_and_is_not_behind()
+    {
+        var config = RuleFor("MZDA", "income.salary");
+
+        var ahead = ShowBuilt(config, Card(Day, 1000.00m, "MZDA"), Card(Day, -445.00m, "PEKAREN"));
+        var behind = ShowBuilt(config, Card(Day, 100.00m, "MZDA"), Card(Day, -220.00m, "PEKAREN"));
+        var even = ShowBuilt(config, Card(Day, 100.00m, "MZDA"), Card(Day, -100.00m, "PEKAREN"));
+
+        Assert.Equal("+555,00 €", Plain(ahead.Net));
+        Assert.False(ahead.IsBehind);
+        Assert.Equal("-120,00 €", Plain(behind.Net));
+        Assert.True(behind.IsBehind);
+        Assert.Equal("0,00 €", Plain(even.Net));
+        Assert.False(even.IsBehind);
+    }
+
+    [Fact]
+    public void An_empty_month_is_even()
+    {
+        var view = Show("04-empty-month");
+
+        Assert.Equal("0,00 €", Plain(view.Net));
+        Assert.False(view.IsBehind);
+    }
+
+    [Fact]
+    public void A_rule_that_moves_income_out_of_the_count_turns_the_figure_and_deleting_it_turns_it_back()
+    {
+        var config = RuleFor("MZDA", "income.salary");
+        var view = ShowBuilt(config, Card(Day, 1000.00m, "MZDA"), Card(Day, -300.00m, "PEKAREN"));
+        var changed = new List<string?>();
+        view.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        Assert.Equal("+700,00 €", Plain(view.Net));
+
+        view.Config = config.AddUserRuleOnTop(new TextCondition("MZDA", TextMode.Contains), new SubcategoryId("own-transfers.other")).Value!;
+
+        Assert.Equal("-300,00 €", Plain(view.Net));
+        Assert.True(view.IsBehind);
+        Assert.Contains(nameof(StatementViewModel.Net), changed);
+        Assert.Contains(nameof(StatementViewModel.IsBehind), changed);
+
+        view.Config = config;
+
+        Assert.Equal("+700,00 €", Plain(view.Net));
+        Assert.False(view.IsBehind);
+    }
+
+    [Fact]
+    public void A_hand_choice_into_an_excluded_category_turns_the_figure_and_its_undo_turns_it_back()
+    {
+        var statement = Statement(Card(Day, 1000.00m, "MZDA"), Card(Day, -300.00m, "PEKAREN"));
+        var key = FingerprintKey.Create();
+        var config = RuleFor("MZDA", "income.salary").WithFingerprintKey(key);
+        var view = new StatementViewModel(config);
+        view.Show(statement);
+        var fingerprint = Fingerprints.Of(statement, key)[0];
+
+        view.Config = config.SetHandChoice(fingerprint, new SubcategoryId("investments.other")).Value!;
+
+        Assert.Equal("-300,00 €", Plain(view.Net));
+        Assert.True(view.IsBehind);
+
+        view.Config = view.Config.RemoveHandChoice(fingerprint);
+
+        Assert.Equal("+700,00 €", Plain(view.Net));
+        Assert.False(view.IsBehind);
+    }
+
+    /// <summary>The Slovak group separator and the space before € are no-break spaces; compare them as plain spaces.</summary>
+    private static string Plain(string text) => text.Replace(' ', ' ').Replace(' ', ' ');
+
     private static Transaction Card(DateOnly date, decimal amount, string merchant) => new()
     {
         BookingDate = date,

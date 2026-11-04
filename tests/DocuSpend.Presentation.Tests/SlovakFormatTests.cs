@@ -21,6 +21,25 @@ public class SlovakFormatTests
         Assert.Equal(expected, Plain(SlovakFormat.Amount(amount)));
     }
 
+    [Theory]
+    [InlineData(555, "+555,00 €")]
+    [InlineData(1349.87, "+1 349,87 €")]
+    [InlineData(-120, "-120,00 €")]
+    [InlineData(0, "0,00 €")]
+    public void Signed_amounts_have_a_plus_above_zero_a_minus_below_and_no_sign_at_zero(decimal amount, string expected)
+    {
+        Assert.Equal(expected, Plain(SlovakFormat.SignedAmount(amount)));
+    }
+
+    [Fact]
+    public void A_negative_zero_has_no_sign()
+    {
+        var negativeZero = -(0m);
+
+        Assert.Equal("0,00 €", Plain(SlovakFormat.SignedAmount(negativeZero)));
+        Assert.Equal("0,00 €", Plain(SlovakFormat.SignedAmount(10m - 10.00m)));
+    }
+
     [Fact]
     public void Dates_and_periods_are_formatted_the_slovak_way()
     {

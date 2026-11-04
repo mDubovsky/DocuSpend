@@ -14,6 +14,9 @@ public static class SlovakFormat
     /// <summary>"1 349,87 €". Statements are in euros.</summary>
     public static string Amount(decimal amount) => amount.ToString("C2", Culture);
 
+    /// <summary>"+555,00 €" above zero, "-120,00 €" below, "0,00 €" at zero (a negative zero too, which prints unsigned).</summary>
+    public static string SignedAmount(decimal amount) => amount > 0 ? "+" + Amount(amount) : Amount(amount);
+
     /// <summary>
     /// An amount as the user would type it into a field: a decimal comma, no thousands spaces and no "€", with the
     /// amount's own decimal places ("12,50"), so <see cref="TryParseAmount"/> reads it back unchanged.

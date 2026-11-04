@@ -57,7 +57,6 @@ tests/DocuSpend.Desktop.Tests/LookSwitchWindowTests.cs      green and red in bot
    - `SlovakFormatTests`: `SignedAmount` gives "+555,00 €", "-120,00 €", "0,00 €", and "0,00 €" for a negative zero.
    - `StatementViewModelTests`:
      - For every valid sample, `Net` is `SignedAmount(IncomeTotal − SpendingTotal)`, and that value equals closing − opening − `ExcludedTotal`.
-     - `01-typical-month`: the exact text.
      - Statements built in the test:
        - Money in and out of "Prevody medzi vlastnými účtami" and "Investície" doesn't change `Net`.
        - Uncategorized money in raises it and uncategorized money out lowers it.

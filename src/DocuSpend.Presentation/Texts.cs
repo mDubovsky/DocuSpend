@@ -16,6 +16,8 @@ public static class Texts
     public const string OpeningBalance = "Počiatočný zostatok";
     public const string ClosingBalance = "Konečný zostatok";
     public const string SpendingTotal = "Výdavky spolu";
+    public const string Net = "Bilancia";
+    public const string NetHelp = "Príjmy mínus výdavky za obdobie výpisu. Kategórie mimo výdavkov, napríklad prevody medzi vlastnými účtami alebo investície, sa nezapočítajú, preto sa bilancia môže líšiť od rozdielu zostatkov.";
     public const string SpendingChart = "Výdavky podľa kategórií";
     public const string BalanceChart = "Zostatok na účte";
     public const string Categories = "Kategórie";
