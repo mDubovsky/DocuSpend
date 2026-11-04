@@ -107,7 +107,7 @@ public class UnknownTypesTests
 
         Assert.Equal(
             ["ZRÁŽKA ZO ZÁLOHY · SPRAVA BYTOV ZOBOR", "PLATBA HODINKAMI", "Výber hotovosti · ATM00417 NITRA", "OBCHOD NA ROHU"],
-            view.Transactions.Select(t => t.Description));
+            view.Transactions.OrderBy(t => t.Index).Select(t => t.Description));
     }
 
     [Fact]

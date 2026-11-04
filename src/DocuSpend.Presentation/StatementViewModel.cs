@@ -96,11 +96,11 @@ public sealed partial class StatementViewModel : ObservableObject
     [ObservableProperty]
     public partial IReadOnlyList<BalancePoint> BalancePoints { get; private set; } = [];
 
-    /// <summary>In the catalog's order.</summary>
+    /// <summary>Largest total first, whether money went out or came in; equal totals in the order the other screens use.</summary>
     [ObservableProperty]
     public partial IReadOnlyList<CategoryRow> Categories { get; private set; } = [];
 
-    /// <summary>The selected category's transactions, by booking date.</summary>
+    /// <summary>The selected category's transactions, largest amount first, then by booking date, then as the statement lists them.</summary>
     [ObservableProperty]
     public partial IReadOnlyList<TransactionRow> Transactions { get; private set; } = [];
 
@@ -173,8 +173,13 @@ public sealed partial class StatementViewModel : ObservableObject
         HasSpending = Slices.Count > 0;
 
         BalancePoints = Balances(statement);
+        // Largest first, money out and in alike, equal sizes in the order the other screens use
+        // (work/047-largest-first/spec.md). The categorization's own list keeps the catalog's order.
+        var screens = CatalogOrder.Categories(Config.Catalog).Select((c, i) => (c.Id, i)).ToDictionary(x => x.Id, x => x.i);
         Categories = categorized.Categories
             .Where(c => c.Total.Count > 0)
+            .OrderByDescending(c => Math.Abs(c.Total.Amount))
+            .ThenBy(c => screens[c.Category.Id])
             .Select(c => new CategoryRow(c.Category.Id, c.Category.Name, c.Total.Count, c.Total.Amount, SlovakFormat.Amount(c.Total.Amount)))
             .ToList();
 
@@ -199,7 +204,9 @@ public sealed partial class StatementViewModel : ObservableObject
         Transactions = categorized.Transactions
             .Select((t, index) => (t, index))
             .Where(x => x.t.Placement.Category == selected)
-            .OrderBy(x => x.t.Transaction.BookingDate)
+            .OrderByDescending(x => Math.Abs(x.t.Transaction.Amount))
+            .ThenBy(x => x.t.Transaction.BookingDate)
+            .ThenBy(x => x.index)
             .Select(x =>
             {
                 var (t, index) = x;
