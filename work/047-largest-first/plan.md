@@ -70,6 +70,7 @@ Existing tests that relied on the date order or on the first category being the 
 - **Found in the build: a small move doesn't test the scrolling.** Moving one large transaction only took a category four rows, which stayed in sight, and the window test passed with the list's scrolling switched off. Rules on the description couldn't move more, since the sample's payments share descriptions. The test now moves transactions by hand, takes the chosen category from row 0 to row 10 of 12, first checks that the new row lies outside the visible part, and fails when `AutoScrollToSelectedItem` is switched off (checked once by hand). No window code was needed.
 - **Found in the build:** two tests picked rows by their place in the date order (`UnknownTypesTests`, `CategorizeTests`). They now pick by the transaction's place in the statement.
 - **Found in the screenshot review:** nothing to change. The first screenshot now opens on "Príjmy", the largest category of `01-typical-month`, with its one transaction; the maintainer accepted it as it is.
+- **Found in the hand check:** nothing. On a real statement, the largest categories and transactions were at the top of each card, and the "Kategórie" screen and the rule form kept their order.
 - **Equal records keep the old selection object.** After a change that leaves the chosen category's count and total the same, its row is equal to the old one and no change is raised. The probe showed the list keeps it selected; step 1's test checks the view model side.
 
 ## Verification
