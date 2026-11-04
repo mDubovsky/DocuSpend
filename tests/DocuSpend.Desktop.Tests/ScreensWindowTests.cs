@@ -52,6 +52,24 @@ public sealed class ScreensWindowTests : IDisposable
         window.GetVisualDescendants().OfType<ListBox>().Single(l => ReferenceEquals(l.ItemsSource, items));
 
     [Fact]
+    public void The_net_figure_shows_on_Vypis_only_like_the_other_key_figures() => Headless.Run(() =>
+    {
+        var (window, model) = StartWithStatement();
+
+        Assert.True(Shows(window, Texts.Net));
+        Assert.True(window.FindControl<TextBlock>("Net")!.IsEffectivelyVisible);
+
+        foreach (var screen in new[] { AppScreen.Rules, AppScreen.Categories })
+        {
+            Choose(window, model, screen);
+            Assert.False(Shows(window, Texts.Net));
+            Assert.False(window.FindControl<TextBlock>("Net")!.IsEffectivelyVisible);
+            Assert.False(Shows(window, Texts.SpendingTotal));
+        }
+        window.Close();
+    });
+
+    [Fact]
     public void The_start_screen_has_no_switch_between_screens() => Headless.Run(() =>
     {
         var model = new MainViewModel(new RuleStore(RulesFile));

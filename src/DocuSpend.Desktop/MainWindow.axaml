@@ -117,6 +117,14 @@
                 <TextBlock Classes="label" Text="{x:Static vm:Texts.SpendingTotal}" />
                 <TextBlock Classes="keyNumber main" Text="{Binding Statement.SpendingTotal}" />
               </StackPanel>
+              <!-- Income minus spending: green when ahead or even, red when behind (work/049-month-ahead-or-behind/spec.md) -->
+              <StackPanel x:Name="NetFigure" Margin="{StaticResource Look.Margin.KeyFigure}" VerticalAlignment="Bottom">
+                <StackPanel Classes="headingRow">
+                  <TextBlock Classes="label" Text="{x:Static vm:Texts.Net}" VerticalAlignment="Center" />
+                  <Button x:Name="NetHelp" Classes="help" Content="?" ToolTip.Tip="{x:Static vm:Texts.NetHelp}" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock x:Name="Net" Classes="keyNumber ahead" Classes.behind="{Binding Statement.IsBehind}" Text="{Binding Statement.Net}" />
+              </StackPanel>
               <StackPanel Margin="{StaticResource Look.Margin.KeyFigure}" VerticalAlignment="Bottom">
                 <TextBlock Classes="label" Text="{x:Static vm:Texts.OpeningBalance}" />
                 <TextBlock Classes="keyNumber" Text="{Binding Statement.OpeningBalance}" />

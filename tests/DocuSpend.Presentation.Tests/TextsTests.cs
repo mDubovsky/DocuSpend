@@ -26,6 +26,15 @@ public class TextsTests
         Assert.Equal(names.Count, names.Distinct().Count());
     }
 
+    [Fact]
+    public void The_net_figure_and_its_help_are_the_specs_texts()
+    {
+        Assert.Equal("Bilancia", Texts.Net);
+        Assert.Equal(
+            "Príjmy mínus výdavky za obdobie výpisu. Kategórie mimo výdavkov, napríklad prevody medzi vlastnými účtami alebo investície, sa nezapočítajú, preto sa bilancia môže líšiť od rozdielu zostatkov.",
+            Texts.NetHelp);
+    }
+
     public static TheoryData<RefusalKind> Refusals => new(Enum.GetValues<RefusalKind>());
 
     [Theory]

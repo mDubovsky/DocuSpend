@@ -81,6 +81,14 @@ public sealed partial class StatementViewModel : ObservableObject
     [ObservableProperty]
     public partial string SpendingTotal { get; private set; } = "";
 
+    /// <summary>Income minus spending, signed ("+555,00 €"); categories excluded from spending don't count.</summary>
+    [ObservableProperty]
+    public partial string Net { get; private set; } = "";
+
+    /// <summary>Whether income minus spending is below zero; zero is not behind.</summary>
+    [ObservableProperty]
+    public partial bool IsBehind { get; private set; }
+
     /// <summary>The note on transactions of types DocuSpend doesn't know, or null when there are none.</summary>
     [ObservableProperty]
     public partial string? UnknownTypes { get; private set; }
@@ -160,6 +168,9 @@ public sealed partial class StatementViewModel : ObservableObject
         OpeningBalance = SlovakFormat.Amount(statement.OpeningBalance);
         ClosingBalance = SlovakFormat.Amount(statement.ClosingBalance);
         SpendingTotal = SlovakFormat.Amount(categorized.SpendingTotal);
+        var net = categorized.IncomeTotal - categorized.SpendingTotal;
+        Net = SlovakFormat.SignedAmount(net);
+        IsBehind = net < 0;
         var unknown = statement.Transactions.Count(t => t.Type == TransactionType.Unknown);
         UnknownTypes = unknown == 0 ? null : Texts.UnknownTypes(unknown);
 

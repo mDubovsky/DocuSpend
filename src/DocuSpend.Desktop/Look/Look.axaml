@@ -195,6 +195,13 @@
   <Style Selector="TextBlock.keyNumber.main">
     <Setter Property="FontSize" Value="{StaticResource Look.FontSize.KeyNumberMain}" />
   </Style>
+  <!-- "Bilancia": green when the month ended ahead or even, red when behind; the two-class selector wins -->
+  <Style Selector="TextBlock.keyNumber.ahead">
+    <Setter Property="Foreground" Value="{DynamicResource Look.Positive}" />
+  </Style>
+  <Style Selector="TextBlock.keyNumber.ahead.behind">
+    <Setter Property="Foreground" Value="{DynamicResource Look.Error}" />
+  </Style>
   <Style Selector="TextBlock.ringTotal">
     <Setter Property="FontSize" Value="{StaticResource Look.FontSize.RingTotal}" />
     <Setter Property="FontWeight" Value="Bold" />
