@@ -83,6 +83,8 @@ tests/DocuSpend.Desktop.Tests/LookSwitchWindowTests.cs      green and red in bot
 - **The red is read as an error.** It is the error colour on purpose (see alternatives). If the screenshot review finds it alarming, a separate colour becomes a palette change with its own contrast pairs, and the spec is updated.
 - **Found in the screenshot review:** nothing to change. The four figures and the unknown-types note fit on one line at the default size in both looks. `01-typical-month` shows +554,99 € in green, `02-busy-month` −5 359,17 € in red, and `04-empty-month` 0,00 € in green. The help mark makes the label row about 2 pixels taller than the balances' labels, and the maintainer accepted it as it is.
 - **A test relies on the header's figures by position** (for example the third text in the header). Step 2 runs the whole suite. Such a test is changed to find what it means by name.
+- **Found in the build:** nothing broke, and no test relied on the header's figures by position. The planned exact-text check on `01-typical-month` was dropped, because its only source would have been the code under test. The statements built in the tests pin the exact texts instead, and every sample is checked against closing − opening − excluded.
+- **Found in the hand check:** nothing. On a real statement, "Bilancia" matched income minus spending worked out by hand.
 
 ## Verification
 
