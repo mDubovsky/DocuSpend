@@ -162,6 +162,19 @@ public class StatementViewModelTests
     }
 
     [Fact]
+    public void Every_row_carries_its_transactions_details_and_none_is_open_at_first()
+    {
+        var view = Show("02-busy-month");
+
+        foreach (var row in view.Categories)
+        {
+            view.SelectedCategory = row.Category;
+            Assert.Null(view.SelectedTransaction);
+            Assert.All(view.Transactions, t => Assert.Equal(TransactionDetails.Of(t.Transaction), t.Details));
+        }
+    }
+
+    [Fact]
     public void The_selected_row_of_the_category_list_follows_the_selected_category_both_ways()
     {
         var view = Show("01-typical-month");

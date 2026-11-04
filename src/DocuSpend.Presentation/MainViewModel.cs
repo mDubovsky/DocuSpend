@@ -496,7 +496,10 @@ public sealed partial class MainViewModel : ObservableObject
         box.HideNoteNextTime = false;
     }
 
-    /// <summary>Escape closes the box on top: the box about fingerprints, the "Zaradiť" box, or the deletion question.</summary>
+    /// <summary>
+    /// Escape closes the box on top: the box about fingerprints, the "Zaradiť" box, or the deletion question. With none
+    /// open, it folds the open row of the transactions list (work/045-transaction-details/spec.md).
+    /// </summary>
     [RelayCommand]
     private void Escape()
     {
@@ -504,8 +507,10 @@ public sealed partial class MainViewModel : ObservableObject
             BackFromPrivacy();
         else if (Categorizing is not null)
             CancelCategorize();
-        else
+        else if (RuleToDelete is not null)
             TakeBackQuestion();
+        else
+            Statement.SelectedTransaction = null;
     }
 
     /// <summary>"× Zrušiť zaradenie": the transaction goes back to where the rules put it, without asking.</summary>

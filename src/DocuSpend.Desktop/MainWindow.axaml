@@ -30,6 +30,13 @@
     <Style Selector="ListBox#TransactionList ListBoxItem:selected Border.byHand">
       <Setter Property="IsVisible" Value="False" />
     </Style>
+    <!-- The selected row is the open row, which shows its details (work/045-transaction-details/spec.md) -->
+    <Style Selector="ListBox#TransactionList ItemsControl.details">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="ListBox#TransactionList ListBoxItem:selected ItemsControl.details">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
   </Window.Styles>
 
   <Window.KeyBindings>
@@ -224,13 +231,15 @@
             <Panel>
               <TextBlock Classes="empty" Text="{x:Static vm:Texts.NoCategorySelected}"
                          IsVisible="{Binding Statement.SelectedRow, Converter={x:Static ObjectConverters.IsNull}}" />
-              <!-- A selected row shows "Zaradiť"; a hand-chosen one shows "ručne", which turns into "× Zrušiť zaradenie"
-                   when pointed at or when the row is selected (the styles at the top of this file) -->
+              <!-- A selected row is open: it shows its details and "Zaradiť"; a hand-chosen one shows "ručne", which turns
+                   into "× Zrušiť zaradenie" when pointed at or when the row is selected (the styles at the top of this
+                   file). Toggle selection folds the open row on a second click, Space or Enter. -->
               <ListBox x:Name="TransactionList" ItemsSource="{Binding Statement.Transactions}" SelectedItem="{Binding Statement.SelectedTransaction}"
+                       SelectionMode="Single,Toggle"
                        IsVisible="{Binding Statement.SelectedRow, Converter={x:Static ObjectConverters.IsNotNull}}">
                 <ListBox.ItemTemplate>
                   <DataTemplate x:DataType="vm:TransactionRow">
-                    <Grid ColumnDefinitions="90,*,*,Auto,110">
+                    <Grid ColumnDefinitions="90,*,*,Auto,110" RowDefinitions="Auto,Auto">
                       <TextBlock Classes="muted" Text="{Binding Date}" VerticalAlignment="Center" />
                       <TextBlock Grid.Column="1" Text="{Binding Description}" TextTrimming="CharacterEllipsis" Margin="{StaticResource Look.Margin.Gap}" VerticalAlignment="Center" />
                       <TextBlock Grid.Column="2" Classes="muted" Text="{Binding Subcategory}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
@@ -246,6 +255,22 @@
                                 Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).CategorizeCommand}" CommandParameter="{Binding}" />
                       </StackPanel>
                       <TextBlock Grid.Column="4" Text="{Binding Amount}" HorizontalAlignment="Right" VerticalAlignment="Center" Classes.incoming="{Binding IsIncoming}" />
+                      <!-- The details, under the description; the labels share one width -->
+                      <ItemsControl x:Name="TransactionDetails" Classes="details" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4"
+                                    ItemsSource="{Binding Details}" Grid.IsSharedSizeScope="True">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="vm:TransactionDetail">
+                            <Grid Classes="detail" Classes.groupStart="{Binding StartsGroup}">
+                              <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="DetailLabel" />
+                                <ColumnDefinition Width="*" />
+                              </Grid.ColumnDefinitions>
+                              <TextBlock Classes="muted detailLabel" Text="{Binding Label}" />
+                              <TextBlock Grid.Column="1" Classes="detailValue" Text="{Binding Value}" TextWrapping="Wrap" />
+                            </Grid>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
                     </Grid>
                   </DataTemplate>
                 </ListBox.ItemTemplate>
